@@ -1,0 +1,34 @@
+﻿version: "3.9"
+
+services:
+  Stark:
+    image: Stark
+    container_name: StarkBot
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    env_file:
+      - config.env
+    restart: unless-stopped
+
+    depends_on:
+      - mongo
+    environment:
+      DB_URI: "mongodb://mongo:27017/?replicaSet=rs0"
+
+  mongo:
+    image: "mongo:latest"
+    container_name: starkMongo
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    volumes:
+      - "mongo_stark:/data/db"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mongo_stark:
