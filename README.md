@@ -1,39 +1,44 @@
-# Anjani
+# SmartBot Monorepo
 
-[![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
+A monorepo housing multiple independent Telegram bots. Each bot lives in its own folder under `bots/` with its own dependencies, config, and Docker setup — fully isolated and independently deployable.
 
-[![DeepSource](https://deepsource.io/gh/userbotindo/Anjani.svg/?label=active+issues)](https://deepsource.io/gh/userbotindo/Anjani/?ref=repository-badge)
-[![PyPI](https://img.shields.io/pypi/v/anjani.svg)](https://pypi.org/project/anjani/)
+## Structure
 
-Can be found on Telegram as [Anjani](https://t.me/dAnjani_bot).
+```
+bots/
+├── anjani/       # Telegram group management bot
+└── ...           # future bots go here
+```
 
-Anjani is a modern, easy-to-develop, fully async Telegram group managing bot for Telegram.
+Each bot folder is self-contained:
 
-## Requirements
+```
+bots/<bot-name>/
+├── <bot-name>/       # Python source
+├── test/
+├── Dockerfile
+├── docker-compose.yml
+├── pyproject.toml
+├── poetry.lock
+├── config.env        # gitignored — copy from config.env_sample
+└── config.env_sample
+```
 
--   Python 3.9 or higher.
--   [Telegram API key](https://docs.pyrogram.org/intro/setup#api-keys).
--   [Telegram Bot Token](https://t.me/botfather)
--   [MongoDB Database](https://cloud.mongodb.com/).
+## Adding a New Bot
 
-## Features
+1. Create a new folder under `bots/`
+2. Add its source code, `Dockerfile`, `docker-compose.yml`, and `pyproject.toml`
+3. Copy `config.env_sample` → `config.env` and fill in the values
+4. Run it independently from its own folder
 
--   Easy to develop with object oriented models.
--   Fully asynchronous with async / await.
--   Type-hinted method making it easy to create plugins.
--   Localization support.
--   Class based plugin system.
+## Bots
 
-## [Documentation](https://userbotindo.com/anjani/docs/home)
+| Bot | Description | Docs |
+|-----|-------------|------|
+| [anjani](./bots/anjani) | Telegram group management bot | [README](./bots/anjani/README.md) |
 
-## [Installing](https://userbotindo.com/anjani/docs/install)
+## Repo-level Files
 
-## Plugin
-
-If you want to make your custom plugins, refer to [Anjani's Plugins Guide](https://userbotindo.com/anjani/docs/plugin/creating-your-own-plugin).
-
-## Credits
-
--   [Marie](https://github.com/PaulSonOfLars/tgbot)
--   [Pyrobud](https://github.com/kdrag0n/pyrobud)
--   [All Contributors 👥](https://github.com/userbotindo/Anjani/graphs/contributors)
+- `.github/` — CI/CD workflows shared across all bots
+- `.editorconfig` — consistent editor settings
+- `.gitignore` — ignores `config.env` across all bot folders
