@@ -26,7 +26,7 @@ import colorlog
 import dotenv
 
 from . import DEFAULT_CONFIG_PATH
-from .core import stark
+from .core import Stark
 from .util.config import Config
 
 log = logging.getLogger("launch")

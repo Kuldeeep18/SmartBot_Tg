@@ -8,9 +8,8 @@ authors = [
     "Adek Maulana <adekzmaulana@gmail.com>",
 ]
 readme = "README.md"
-homepage = "https://userbotindo.com/Stark"
-repository = "https://github.com/userbotindo/Stark"
-documentation = "https://userbotindo.com/Stark/docs/home"
+homepage = "https://github.com/Sandipxg/SmartBot_Tg"
+repository = "https://github.com/Sandipxg/SmartBot_Tg"
 keywords = ["chatbot", "bot", "python", "telegram-bot", "pyrogram"]
 classifiers = [
     "Environment :: Console",
@@ -27,7 +26,7 @@ classifiers = [
 ]
 
 [tool.poetry.scripts]
-Stark = "Stark.main:start"
+stark = "stark.main:start"
 
 [tool.poetry.dependencies]
 python = "~=3.9"
@@ -67,16 +66,10 @@ flake8 = ">=5.0.4,<8.0.0"
 pytest = ">=7.2.1,<9.0.0"
 pytest-asyncio = ">=0.20.2,<0.24.0"
 
-#
-# Black config
-#
 [tool.black]
 line-length = 100
 target-version = ["py38"]
 
-#
-# Isort Config
-#
 [tool.isort]
 profile = "black"
 known_third_party = [
@@ -91,11 +84,8 @@ known_third_party = [
     "yaml",
 ]
 
-#
-# Pylint Config
-#
 [tool.pylint]
-ignore = "Stark/util/db"
+ignore = "stark/util/db"
 
 [tool.pylint.messages_control]
 disable = [
@@ -118,9 +108,8 @@ max-line-length = 100
 [tool.pylint.design]
 max-args = 15
 
-# Semantic Release Config
 [tool.semantic_release]
-version_variable = "Stark/__init__.py:__version__"
+version_variable = "stark/__init__.py:__version__"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
