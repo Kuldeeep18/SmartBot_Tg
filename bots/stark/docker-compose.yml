@@ -1,7 +1,7 @@
 ﻿services:
-  Stark:
-    image: Stark
-    container_name: StarkBot
+  stark:
+    image: stark
+    container_name: stark-bot
     build:
       context: .
       dockerfile: Dockerfile
