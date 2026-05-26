@@ -1,4 +1,4 @@
-﻿""" Health Check plugin for @dstark_bot """
+""" Health Check plugin for @dstark_bot """
 
 # Copyright (C) 2020 - 2023  UserbotIndo Team, <https://github.com/userbotindo.git>
 #

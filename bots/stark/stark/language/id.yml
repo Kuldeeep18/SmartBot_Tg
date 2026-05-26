@@ -1,4 +1,4 @@
-﻿#region Main
+#region Main
 start-pm: |
   Hai!
   Salam kenal, nama saya adalah **{}**. Dihadirkan untuk membantu Anda dalam mengelola grup dengan mudah dan menyenangkan.

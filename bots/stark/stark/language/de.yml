@@ -1,4 +1,4 @@
-﻿#region Main
+#region Main
 start-pm: |
   Hallihallo! Ich heiße **{}**.
   Möchtest Du erfahren, wie man mich verwendet? Dann benutze /help

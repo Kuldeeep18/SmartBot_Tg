@@ -1,4 +1,4 @@
-﻿services:
+services:
   stark:
     image: stark
     container_name: stark-bot

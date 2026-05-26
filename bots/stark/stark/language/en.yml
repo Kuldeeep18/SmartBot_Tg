@@ -1,4 +1,4 @@
-﻿#region Main
+#region Main
 start-pm: |
   Hey there! my name is **{}**.
   Any questions on how to use me? use /help

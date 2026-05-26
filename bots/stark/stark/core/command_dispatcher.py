@@ -1,4 +1,4 @@
-﻿"""Stark command dispatcher"""
+"""Stark command dispatcher"""
 
 # Copyright (C) 2020 - 2023  UserbotIndo Team, <https://github.com/userbotindo.git>
 #
