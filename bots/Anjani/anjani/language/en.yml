@@ -1,11 +1,6 @@
 #region Main
 start-pm: |
-  Hey there! my name is **{}**.
-  Any questions on how to use me? use /help
-  Join Our [Group](https://t.me/userbotindo) If You wanna Report Issue 🙂
-  I'm here to make your group management fun and easy!
-  **Managed With ❤️ By :** [UserbotIndo Team](https://t.me/userbotindo)
-  Wanna Add me to your Group? Just click the button below!
+  Hey there! my name is Stark 🤖.
 help-pm: |
   Hello there! My name is **{}**.
   I'm a modular group management bot with a few fun extras! Have a look at the following for an idea of some of \
