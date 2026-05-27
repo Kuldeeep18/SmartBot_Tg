@@ -39,7 +39,7 @@ ROUTER_PROMPT = ChatPromptTemplate.from_messages([
 RESPONSE_PROMPT = ChatPromptTemplate.from_messages([
     (
         "system",
-        "You are a helpful assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.\n\n"
+        "You are a helpful assistant for question-answering tasks. Use the following pieces of retrieved context and conversation history to answer the question.\n\n"
         "RULES:\n"
         "1. Answer based on the provided context. If the context doesn't contain the answer, say so clearly.\n"
         "2. Keep answers concise but thorough.\n"
@@ -50,7 +50,7 @@ RESPONSE_PROMPT = ChatPromptTemplate.from_messages([
     ),
     (
         "human",
-        "Question:\n{question}\n\nContext:\n{context}"
+        "Conversation History:\n{chat_history}\n\nQuestion:\n{question}\n\nContext:\n{context}"
     ),
 ])
 
@@ -90,15 +90,7 @@ def get_active_providers(primary_provider: str) -> List[Dict[str, Any]]:
     """
     providers = []
 
-    # 1. Gemini
-    if config.google_api_keys or config.google_api_key:
-        providers.append({
-            "name": "gemini",
-            "model": config.llm_model if config.llm_provider == "gemini" else "gemini-2.5-flash",
-            "keys": config.google_api_keys,
-        })
-
-    # 2. Groq
+    # 1. Groq
     if config.groq_api_key:
         providers.append({
             "name": "groq",
@@ -106,7 +98,7 @@ def get_active_providers(primary_provider: str) -> List[Dict[str, Any]]:
             "keys": [config.groq_api_key],
         })
 
-    # 3. NVIDIA
+    # 2. NVIDIA
     if config.nvidia_api_key:
         providers.append({
             "name": "nvidia",
@@ -114,15 +106,15 @@ def get_active_providers(primary_provider: str) -> List[Dict[str, Any]]:
             "keys": [config.nvidia_api_key],
         })
 
-    # 4. G0I
+    # 3. G0I
     if config.g0i_api_key:
         providers.append({
             "name": "g0i",
-            "model": "gpt-4o-mini",
+            "model": config.llm_model if config.llm_provider == "g0i" else "gpt-5.5",
             "keys": [config.g0i_api_key],
         })
 
-    # 5. OpenRouter
+    # 4. OpenRouter
     if config.openrouter_api_key:
         providers.append({
             "name": "openrouter",
@@ -130,7 +122,7 @@ def get_active_providers(primary_provider: str) -> List[Dict[str, Any]]:
             "keys": [config.openrouter_api_key],
         })
 
-    # 6. OpenAI
+    # 5. OpenAI
     if config.openai_api_key and "YOUR_OPENAI" not in config.openai_api_key:
         providers.append({
             "name": "openai",
@@ -188,7 +180,7 @@ def create_model(provider_info: Dict[str, Any], api_key: str, temperature: float
             model=model_name,
             temperature=temperature,
             openai_api_key=api_key,
-            openai_api_base="https://api.g0i.ai/v1",
+            openai_api_base="https://g0i.ai/v1",
         )
     elif name == "openrouter":
         from langchain_openai import ChatOpenAI
@@ -439,6 +431,16 @@ async def answer_query(
     last_error = None
     fallback_answers = []
 
+    # Format the last 10 messages of chat history as a log string
+    history_str = "No previous history."
+    if chat_history:
+        recent_history = chat_history[-10:]
+        history_parts = []
+        for msg in recent_history:
+            role = "User" if msg["role"] == "user" else "Assistant"
+            history_parts.append(f"{role}: {msg['content']}")
+        history_str = "\n".join(history_parts)
+
     for p in providers:
         for idx, key in enumerate(p["keys"]):
             if not key:
@@ -454,6 +456,7 @@ async def answer_query(
                 answer = await chain.ainvoke({
                     "question": query,
                     "context": context,
+                    "chat_history": history_str,
                 })
                 
                 # Check consensus validation

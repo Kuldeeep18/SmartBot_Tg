@@ -14,7 +14,7 @@ from telegram.ext import (
 from telegram_bot.handlers import (
     start_handler,
     help_handler,
-    upload_handler,
+    save_handler,
     question_handler,
     reset_handler,
     mydocs_handler,
@@ -24,6 +24,7 @@ from telegram_bot.handlers import (
 )
 from telegram_bot.utils.config import config
 from telegram_bot.utils.logger import logger
+from telegram_bot.utils.decorators import enforce_group_tag
 
 
 def create_bot() -> Application:
@@ -53,21 +54,23 @@ def create_bot() -> Application:
     # ──────────────────────────────────────
     # Register Command Handlers
     # ──────────────────────────────────────
-    app.add_handler(CommandHandler("start", start_handler))
-    app.add_handler(CommandHandler("help", help_handler))
-    app.add_handler(CommandHandler("reset", reset_handler))
-    app.add_handler(CommandHandler("mydocs", mydocs_handler))
-    app.add_handler(CommandHandler("status", status_handler))
-    app.add_handler(CommandHandler("select", select_handler))
-    app.add_handler(CallbackQueryHandler(select_callback_handler))
-
-    # ──────────────────────────────────────
-    # Register Document Handler (PDF uploads)
-    # ──────────────────────────────────────
+    app.add_handler(CommandHandler("start", enforce_group_tag(start_handler)))
+    app.add_handler(CommandHandler("help", enforce_group_tag(help_handler)))
+    app.add_handler(CommandHandler("reset", enforce_group_tag(reset_handler)))
+    app.add_handler(CommandHandler("mydocs", enforce_group_tag(mydocs_handler)))
+    app.add_handler(CommandHandler("status", enforce_group_tag(status_handler)))
+    app.add_handler(CommandHandler("select", enforce_group_tag(select_handler)))
+    app.add_handler(CommandHandler("save", enforce_group_tag(save_handler)))
+    app.add_handler(CommandHandler("ask", enforce_group_tag(question_handler)))
+    app.add_handler(CommandHandler("chat", enforce_group_tag(question_handler)))
+    
+    # Also handle PDF uploads with /save in the caption
     app.add_handler(MessageHandler(
-        filters.Document.PDF,
-        upload_handler,
+        filters.Document.PDF & filters.CaptionRegex(r"^/save(?:\s|@|$)"),
+        enforce_group_tag(save_handler),
     ))
+    
+    app.add_handler(CallbackQueryHandler(select_callback_handler))
 
     # ──────────────────────────────────────
     # Register Text Handler (questions)
@@ -99,7 +102,7 @@ def run():
     # Start polling
     app.run_polling(
         drop_pending_updates=True,  # Ignore messages sent while bot was offline
-        allowed_updates=["message"],  # Only listen for messages
+        allowed_updates=["message", "callback_query"],  # Listen for both messages and inline button clicks
     )
 
 

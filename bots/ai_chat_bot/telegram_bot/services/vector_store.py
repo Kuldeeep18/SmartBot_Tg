@@ -102,7 +102,20 @@ async def similarity_search(
         List of matching Document objects.
     """
     store = get_vector_store()
-    num_results = k or config.retriever_k
+    # Detect global/aggregation queries to dynamically expand the retrieval window (k) to 100
+    import re
+    global_keywords = {
+        "all", "list", "below", "above", "average", "sum", "total", "count", 
+        "every", "whose", "students", "marksheet", "overall", "summary", 
+        "highest", "lowest", "max", "min", "top", "bottom"
+    }
+    is_global_query = any(re.search(rf"\b{re.escape(kw)}\b", query.lower()) for kw in global_keywords)
+    
+    if is_global_query:
+        num_results = 100
+        logger.info(f"Global/aggregation query detected. Expanding retrieval k to {num_results}.")
+    else:
+        num_results = k or config.retriever_k
 
     # Build filter for user/document isolation
     filter_kwargs: Dict[str, Any] = {}
@@ -117,17 +130,90 @@ async def similarity_search(
         f"doc_filter={document_id or 'none'}"
     )
 
+    vector_results = []
     try:
-        results = await store.asimilarity_search(
+        vector_results = await store.asimilarity_search(
             query,
             k=num_results,
             filter=filter_kwargs if filter_kwargs else None,
         )
-        logger.info(f"Found {len(results)} matching documents")
-        return results
+        logger.info(f"Found {len(vector_results)} vector-matching documents")
     except Exception as e:
         logger.error(f"Error during similarity search: {e}")
-        raise
+        # Continue to try keyword fallback even if vector search fails
+        vector_results = []
+
+    # Step 2: Extract query keywords for keyword matching (names, roll numbers, etc.)
+    import re
+    words = [w.strip("?,.!:;\"'()[]{}") for w in query.split()]
+    stop_words = {
+        "what", "is", "the", "of", "in", "and", "for", "to", "a", "an", "give", 
+        "total", "marks", "find", "get", "show", "tell", "who", "where", "how", 
+        "list", "check", "please", "me", "my", "our", "him", "her", "them", 
+        "student", "roll", "number", "marksheet", "pdf", "file", "document", "ask"
+    }
+    keywords = [w.lower() for w in words if w.lower() not in stop_words and len(w) >= 3]
+    
+    hybrid_results = list(vector_results)
+    
+    if keywords:
+        logger.info(f"Hybrid search: extracted search keywords: {keywords}")
+        try:
+            client = get_supabase_client()
+            db_query = client.table("documents").select("content, metadata")
+            
+            if user_id is not None:
+                db_query = db_query.eq("metadata->>telegram_user_id", str(user_id))
+            if document_id is not None:
+                db_query = db_query.eq("metadata->>document_id", document_id)
+                
+            response = db_query.execute()
+            
+            keyword_matches = []
+            seen_contents = {res.page_content.strip() for res in vector_results}
+            
+            for row in response.data or []:
+                content = row.get("content", "")
+                metadata = row.get("metadata", {})
+                
+                content_lower = content.lower()
+                matches_count = sum(1 for kw in keywords if kw in content_lower)
+                
+                if matches_count > 0:
+                    if content.strip() in seen_contents:
+                        continue
+                        
+                    # Calculate exact phrase match score (e.g. "goklani kuldeep" or "kuldeep goklani")
+                    phrase_score = 0
+                    if len(keywords) >= 2:
+                        phrase_1 = " ".join(keywords)
+                        phrase_2 = " ".join(reversed(keywords))
+                        if phrase_1 in content_lower or phrase_2 in content_lower:
+                            phrase_score = 10
+                            
+                    score = matches_count + phrase_score
+                    
+                    doc = Document(page_content=content, metadata=metadata)
+                    keyword_matches.append((score, doc))
+            
+            # Sort by match score descending
+            keyword_matches.sort(key=lambda x: x[0], reverse=True)
+            
+            # Prepend the top keyword-matched documents (up to 3) to the retrieved results
+            added_count = 0
+            for score, doc in keyword_matches:
+                hybrid_results.insert(added_count, doc)
+                added_count += 1
+                logger.info(f"Hybrid search: prepended high-priority keyword match (score={score}): '{doc.page_content[:60]}...'")
+                
+                if added_count >= 3:
+                    break
+                    
+            logger.info(f"Hybrid search completed: returned {len(hybrid_results)} documents (added {added_count} keyword matches)")
+        except Exception as e:
+            logger.error(f"Error during hybrid search: {e}", exc_info=True)
+            
+    return hybrid_results
 
 
 async def get_user_document_count(user_id: int) -> int:
