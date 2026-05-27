@@ -191,6 +191,7 @@ async def select_callback_handler(update: Update, context: ContextTypes.DEFAULT_
             session.active_document_id = None
             session.active_filename = None
             logger.info(f"User {user.id} ({user.first_name}) switched search mode to All Documents in chat {chat_id}")
+            await session_manager.save_session(chat_id)
             await query.edit_message_text(
                 "✅ **Search Mode Updated**\n\n"
                 "Now searching across **All Documents** saved in this chat.",
@@ -208,6 +209,7 @@ async def select_callback_handler(update: Update, context: ContextTypes.DEFAULT_
                 session.active_document_id = target_id
                 session.active_filename = filename
                 logger.info(f"User {user.id} ({user.first_name}) selected active document '{filename}' in chat {chat_id}")
+                await session_manager.save_session(chat_id)
                 await query.edit_message_text(
                     f"✅ **Search Mode Updated**\n\n"
                     f"Now querying only: `{filename}`",

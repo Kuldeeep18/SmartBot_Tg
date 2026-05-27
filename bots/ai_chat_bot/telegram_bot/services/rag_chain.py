@@ -57,9 +57,12 @@ RESPONSE_PROMPT = ChatPromptTemplate.from_messages([
 DIRECT_ANSWER_PROMPT = ChatPromptTemplate.from_messages([
     (
         "system",
-        "You are a helpful AI assistant. Answer the user's question directly and concisely.",
+        "You are a helpful AI assistant. Answer the user's question directly and concisely, utilizing the conversation history when relevant.",
     ),
-    ("human", "{query}"),
+    (
+        "human",
+        "Conversation History:\n{chat_history}\n\nQuestion:\n{query}"
+    ),
 ])
 
 # Prompt for answer verification (consensus checking)
@@ -387,12 +390,25 @@ async def answer_query(
     """
     Main entry point: answer a user's question using the RAG pipeline.
     """
+    # Format the last 10 messages of chat history as a log string
+    history_str = "No previous history."
+    if chat_history:
+        recent_history = chat_history[-10:]
+        history_parts = []
+        for msg in recent_history:
+            role = "User" if msg["role"] == "user" else "Assistant"
+            history_parts.append(f"{role}: {msg['content']}")
+        history_str = "\n".join(history_parts)
+
     # Step 1: Route the query
     route = await check_query_type(query)
 
     if route == "direct":
         try:
-            res = await invoke_chain_with_fallback(DIRECT_ANSWER_PROMPT, {"query": query})
+            res = await invoke_chain_with_fallback(
+                DIRECT_ANSWER_PROMPT,
+                {"query": query, "chat_history": history_str}
+            )
             return {
                 "answer": res["result"],
                 "sources": [],
@@ -430,16 +446,6 @@ async def answer_query(
 
     last_error = None
     fallback_answers = []
-
-    # Format the last 10 messages of chat history as a log string
-    history_str = "No previous history."
-    if chat_history:
-        recent_history = chat_history[-10:]
-        history_parts = []
-        for msg in recent_history:
-            role = "User" if msg["role"] == "user" else "Assistant"
-            history_parts.append(f"{role}: {msg['content']}")
-        history_str = "\n".join(history_parts)
 
     for p in providers:
         for idx, key in enumerate(p["keys"]):

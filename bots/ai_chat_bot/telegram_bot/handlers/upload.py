@@ -105,6 +105,7 @@ async def save_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if documents:
             doc_id = documents[0].metadata.get("document_id", "unknown")
             session.add_document(doc_id, file_name)
+            await session_manager.save_session(chat_id)
 
         # Step 8: Success message
         total_pages = documents[0].metadata.get("total_pages", "?") if documents else "?"

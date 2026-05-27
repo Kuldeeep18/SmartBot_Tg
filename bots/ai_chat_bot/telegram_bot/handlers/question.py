@@ -126,6 +126,7 @@ async def question_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Update chat history
         session.add_message("user", query)
         session.add_message("assistant", answer)
+        await session_manager.save_session(chat_id)
 
     except Exception as e:
         logger.error(f"Error answering question in chat {chat_id}: {e}", exc_info=True)
