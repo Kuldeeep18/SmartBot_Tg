@@ -4,6 +4,7 @@ Handles PDF parsing, chunking, and metadata attachment.
 Includes standard PyPDF parsing and Gemini-based OCR fallback for scanned PDFs.
 """
 
+import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -57,6 +58,7 @@ async def extract_text_via_gemini(file_path: Path, filename: str) -> List[str]:
                     uploaded_file,
                     "Extract all text from this PDF document page-by-page. "
                     "For each page, capture the text exactly as written. "
+                    "If there are tables or tabular data, format them as Markdown tables to preserve structure and column alignment. "
                     "Do not omit any text."
                 ],
                 config={
@@ -87,10 +89,40 @@ async def extract_text_via_gemini(file_path: Path, filename: str) -> List[str]:
     raise last_error or ValueError(f"Failed to extract text from {filename} using all available API keys.")
 
 
+def detects_tabular_data(text: str) -> bool:
+    """
+    Detect if the text contains tabular structure (tables).
+    Looks for lines with multiple columns separated by spacing gaps or tabs.
+    """
+    if not text:
+        return False
+        
+    lines = [line for line in text.split("\n") if line.strip()]
+    if not lines:
+        return False
+        
+    tabular_lines = 0
+    for line in lines:
+        # Check for tab characters or multiple space-separated columns
+        # Tabular lines usually have columns separated by 3 or more spaces.
+        if "\t" in line or re.search(r"\s{3,}", line):
+            # Check if there are multiple words/numbers separated by these gaps
+            parts = [p for p in re.split(r"\s{3,}|\t", line) if p.strip()]
+            if len(parts) >= 2:
+                tabular_lines += 1
+                
+    ratio = tabular_lines / len(lines)
+    logger.info(f"Tabular detection: {tabular_lines}/{len(lines)} lines ({ratio:.2%}) classified as tabular.")
+    
+    # If 10% or more of non-empty lines are tabular, classify the document as tabular
+    return ratio >= 0.10
+
+
 async def process_pdf(
     file_path: Path,
     telegram_user_id: int,
     filename: str,
+    force_ocr: bool = False,
 ) -> List[Document]:
     """
     Process a PDF file: parse, chunk, and attach metadata.
@@ -98,21 +130,31 @@ async def process_pdf(
     document_id = str(uuid.uuid4())
     upload_timestamp = datetime.now(timezone.utc).isoformat()
 
-    logger.info(f"Processing PDF: {filename} (doc_id: {document_id})")
+    logger.info(f"Processing PDF: {filename} (doc_id: {document_id}, force_ocr: {force_ocr})")
 
     # Step 1: Load PDF pages using PyPDFLoader
     raw_pages = []
-    try:
-        loader = PyPDFLoader(str(file_path))
-        raw_pages = loader.load()
-    except Exception as e:
-        logger.warning(f"PyPDFLoader failed to parse PDF '{filename}': {e}")
+    if not force_ocr:
+        try:
+            loader = PyPDFLoader(str(file_path))
+            raw_pages = loader.load()
+        except Exception as e:
+            logger.warning(f"PyPDFLoader failed to parse PDF '{filename}': {e}")
 
     # Check if we extracted meaningful text
     total_char_count = sum(len(p.page_content.strip()) for p in raw_pages)
     
-    if total_char_count < 100:
-        logger.info(f"PyPDFLoader extracted very little text ({total_char_count} chars). Attempting Gemini OCR fallback...")
+    # Run tabular detection on the extracted text
+    full_text = "\n".join(p.page_content for p in raw_pages)
+    is_tabular = detects_tabular_data(full_text)
+    
+    if force_ocr or total_char_count < 100 or is_tabular:
+        if force_ocr:
+            logger.info(f"Forcing Gemini OCR extraction for table parsing or user request: '{filename}'")
+        elif is_tabular:
+            logger.info(f"Tabular structure detected in '{filename}'. Rerouting to Gemini OCR for table formatting...")
+        else:
+            logger.info(f"PyPDFLoader extracted very little text ({total_char_count} chars). Attempting Gemini OCR fallback...")
         try:
             pages_text = await extract_text_via_gemini(file_path, filename)
             

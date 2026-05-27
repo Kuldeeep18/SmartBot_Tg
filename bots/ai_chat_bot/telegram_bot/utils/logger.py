@@ -5,6 +5,16 @@ Logging setup for the Telegram RAG PDF Chatbot.
 import logging
 import sys
 
+# Enforce UTF-8 encoding on standard streams to avoid UnicodeEncodeErrors on Windows
+try:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
+
 
 def setup_logger(name: str = "telegram_bot", level: int = logging.INFO) -> logging.Logger:
     """
