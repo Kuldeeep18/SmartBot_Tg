@@ -1,4 +1,4 @@
-# Anjani Bot
+# Stark Bot
 
 A feature-rich Telegram group management bot built with [Pyrogram](https://github.com/pyrogram/pyrogram) and MongoDB.
 
@@ -29,17 +29,3 @@ A feature-rich Telegram group management bot built with [Pyrogram](https://githu
 ## Available Commands
 
 <img src="infographics.png" alt="Anjani command reference" width="100%">
-
-## Supported Languages
-
-| Code | Language |
-|------|----------|
-| `en` | 🇺🇸 English |
-| `id` | 🇮🇩 Indonesian |
-| `de` | 🇩🇪 German |
-
----
-
-## License
-
-[GPL-3.0](LICENSE)
