@@ -83,6 +83,30 @@ def _setup_log() -> None:
     logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
+def run_health_check_server() -> None:
+    """Runs a simple HTTP health check server for Render Free Tier compatibility."""
+    import os
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    
+    class HealthCheckHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            self.wfile.write(b"Anjani Bot is alive!")
+
+        def log_message(self, format, *args):
+            return
+
+    port = int(os.environ.get("PORT", 8080))
+    try:
+        server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+        log.info("Starting health check server on port %s", port)
+        server.serve_forever()
+    except Exception as e:
+        log.error("Failed to start health check server: %s", e)
+
+
 def start() -> None:
     """Main entry point for the bot."""
     config_path = Path(DEFAULT_CONFIG_PATH)
@@ -90,6 +114,12 @@ def start() -> None:
         dotenv.load_dotenv(config_path)
 
     _setup_log()
+    
+    # Start web server in background thread for Render compatibility
+    import threading
+    web_thread = threading.Thread(target=run_health_check_server, daemon=True)
+    web_thread.start()
+
     log.info(
         "Running on Python %s.%s.%s",
         sys.version_info.major,
