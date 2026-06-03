@@ -189,14 +189,36 @@ async def process_pdf(
     )
 
     chunked_docs: List[Document] = []
+    global_chunk_idx = 0
+    prev_page_tail = ""  # last ~200 chars of previous page for cross-page context
 
     for page_doc in raw_pages:
         # Get the page number (PyPDFLoader uses 0-indexed 'page' key)
         page_number = page_doc.metadata.get("page", 0) + 1  # Convert to 1-indexed
 
-        # Skip empty pages
+        # Skip empty pages but log them
         if not page_doc.page_content.strip():
+            logger.warning(
+                f"Skipping empty page {page_number} in '{filename}'"
+            )
+            prev_page_tail = ""
             continue
+
+        # Cross-page context overlap: prepend tail of previous page
+        page_text = page_doc.page_content
+        if prev_page_tail:
+            page_text = (
+                f"[...continued from page {page_number - 1}] "
+                f"{prev_page_tail}\n\n{page_text}"
+            )
+            page_doc = Document(
+                page_content=page_text,
+                metadata=page_doc.metadata,
+            )
+
+        # Save tail for next page's overlap
+        raw_text = page_doc.page_content.strip() if not prev_page_tail else page_doc.page_content.split("\n\n", 1)[-1].strip()
+        prev_page_tail = raw_text[-200:] if len(raw_text) > 200 else raw_text
 
         # Split this page into chunks
         page_chunks = text_splitter.split_documents([page_doc])
@@ -212,6 +234,7 @@ async def process_pdf(
                 # Citation support
                 "page_number": page_number,
                 "chunk_index": i,
+                "global_chunk_index": global_chunk_idx,
                 "total_pages": total_pages,
                 # Timestamps
                 "upload_timestamp": upload_timestamp,
@@ -219,9 +242,15 @@ async def process_pdf(
                 "source": filename,
             }
             chunked_docs.append(chunk)
+            global_chunk_idx += 1
+
+    # Second pass: stamp total_chunks count on every chunk
+    total_chunks = len(chunked_docs)
+    for chunk in chunked_docs:
+        chunk.metadata["total_chunks"] = total_chunks
 
     logger.info(
-        f"Chunked '{filename}' into {len(chunked_docs)} chunks "
+        f"Chunked '{filename}' into {total_chunks} chunks "
         f"(from {total_pages} pages, chunk_size={config.chunk_size})"
     )
 

@@ -40,13 +40,20 @@ RESPONSE_PROMPT = ChatPromptTemplate.from_messages([
     (
         "system",
         "You are a helpful assistant for question-answering tasks. Use the following pieces of retrieved context and conversation history to answer the question.\n\n"
+        "IMPORTANT CONTEXT INFORMATION:\n"
+        "- The document has {total_pages} total pages.\n"
+        "- You currently have access to content from pages: {available_pages}.\n"
+        "- Each <document> tag has a page_number attribute telling you which page it came from.\n\n"
         "RULES:\n"
         "1. Answer based on the provided context. If the context doesn't contain the answer, say so clearly.\n"
         "2. Keep answers concise but thorough.\n"
         "3. ALWAYS cite your sources by mentioning the page number and filename when available.\n"
         "   Format citations like: 'According to page X of [filename]...'\n"
         "4. If multiple sources support your answer, reference all of them.\n"
-        "5. Do not make up information that isn't in the context."
+        "5. Do not make up information that isn't in the context.\n"
+        "6. If the user asks about a SPECIFIC PAGE NUMBER, focus your answer ONLY on the content from that page. "
+        "Look at the page_number attribute in each <document> tag to find the matching page.\n"
+        "7. When asked about content from a specific page, include ALL relevant information from that page — do not summarize too aggressively."
     ),
     (
         "human",
@@ -427,7 +434,7 @@ async def answer_query(
         query=query,
         user_id=telegram_user_id,
         document_id=document_id,
-        k=config.retriever_k,
+        k=max(config.retriever_k, 10),  # minimum 10 for better page coverage
     )
 
     if not documents:
@@ -442,6 +449,22 @@ async def answer_query(
 
     # Step 3: Generate response and verify
     context = _format_docs(documents)
+
+    # Extract page metadata for the prompt
+    all_pages = set()
+    doc_total_pages = 0
+    for doc in documents:
+        meta = doc.metadata or {}
+        p = meta.get("page_number")
+        if p is not None:
+            all_pages.add(int(p))
+        tp = meta.get("total_pages", 0)
+        if tp and int(tp) > doc_total_pages:
+            doc_total_pages = int(tp)
+
+    available_pages_str = ", ".join(str(p) for p in sorted(all_pages)) if all_pages else "unknown"
+    total_pages_str = str(doc_total_pages) if doc_total_pages else "unknown"
+
     providers = get_active_providers(config.llm_provider)
 
     last_error = None
@@ -463,6 +486,8 @@ async def answer_query(
                     "question": query,
                     "context": context,
                     "chat_history": history_str,
+                    "total_pages": total_pages_str,
+                    "available_pages": available_pages_str,
                 })
                 
                 # Check consensus validation

@@ -4,7 +4,8 @@ Connects to the same Supabase instance as the existing TypeScript backend.
 Uses the same 'documents' table and 'match_documents' function.
 """
 
-from typing import List, Optional, Dict, Any
+import re
+from typing import List, Optional, Dict, Any, Tuple
 from langchain_core.documents import Document
 from langchain_community.vectorstores import SupabaseVectorStore
 from supabase import create_client, Client as SupabaseClient
@@ -61,6 +62,110 @@ def get_vector_store() -> SupabaseVectorStore:
     return _vector_store
 
 
+def extract_page_request(query: str) -> List[int]:
+    """
+    Detect page number references in a user query.
+    Supports patterns like: 'page 18', 'pg 5', 'page number 3',
+    'pages 1-5', 'page 1, 2, 3', 'p. 10', 'p10', etc.
+
+    Returns:
+        List of detected page numbers (empty if none found).
+    """
+    pages: set[int] = set()
+
+    # Pattern 1: "page(s) 1-5" or "page 1 to 5" (ranges)
+    for m in re.finditer(
+        r"(?:pages?|pg\.?|p\.?)\s*#?\s*(\d+)\s*(?:-|to)\s*(\d+)",
+        query, re.IGNORECASE,
+    ):
+        start, end = int(m.group(1)), int(m.group(2))
+        if 1 <= start <= end <= 9999:
+            pages.update(range(start, end + 1))
+
+    # Pattern 2: "page 1, 2, 3" or "page 1 and 3" (comma / and separated)
+    for m in re.finditer(
+        r"(?:pages?|pg\.?|p\.?)\s*#?\s*(\d+(?:\s*[,&]\s*\d+|\s+and\s+\d+)*)",
+        query, re.IGNORECASE,
+    ):
+        nums = re.findall(r"\d+", m.group(1))
+        for n in nums:
+            val = int(n)
+            if 1 <= val <= 9999:
+                pages.add(val)
+
+    # Pattern 3: standalone "page 18", "pg5", "p. 10", "page number 3"
+    for m in re.finditer(
+        r"(?:page\s*(?:number|no\.?|num\.?)?|pg\.?|p\.?)\s*#?\s*(\d+)",
+        query, re.IGNORECASE,
+    ):
+        val = int(m.group(1))
+        if 1 <= val <= 9999:
+            pages.add(val)
+
+    return sorted(pages)
+
+
+async def get_page_chunks(
+    page_numbers: List[int],
+    user_id: Optional[int] = None,
+    document_id: Optional[str] = None,
+) -> List[Document]:
+    """
+    Fetch ALL chunks for specific page number(s) directly from Supabase.
+    Uses metadata filtering — no vector similarity needed.
+
+    Args:
+        page_numbers: List of 1-indexed page numbers to fetch.
+        user_id: Optional Telegram user ID filter.
+        document_id: Optional document ID filter.
+
+    Returns:
+        List of Document objects for the requested pages, ordered by page and chunk index.
+    """
+    if not page_numbers:
+        return []
+
+    try:
+        client = get_supabase_client()
+        all_docs: List[Document] = []
+
+        for page_num in page_numbers:
+            db_query = client.table("documents").select("content, metadata")
+
+            if user_id is not None:
+                db_query = db_query.eq("metadata->>telegram_user_id", str(user_id))
+            if document_id is not None:
+                db_query = db_query.eq("metadata->>document_id", document_id)
+
+            # Filter by exact page number
+            db_query = db_query.eq("metadata->>page_number", str(page_num))
+
+            response = db_query.execute()
+
+            for row in response.data or []:
+                content = row.get("content", "")
+                metadata = row.get("metadata", {})
+                all_docs.append(Document(page_content=content, metadata=metadata))
+
+        # Sort by page_number then chunk_index for logical reading order
+        all_docs.sort(
+            key=lambda d: (
+                d.metadata.get("page_number", 0),
+                d.metadata.get("chunk_index", 0),
+            )
+        )
+
+        logger.info(
+            f"Page-aware fetch: retrieved {len(all_docs)} chunks "
+            f"for page(s) {page_numbers}"
+        )
+        return all_docs
+
+    except Exception as e:
+        logger.error(f"Error fetching page chunks: {e}", exc_info=True)
+        return []
+
+
 async def add_documents(documents: List[Document]) -> List[str]:
     """
     Add documents to the vector store.
@@ -102,15 +207,29 @@ async def similarity_search(
         List of matching Document objects.
     """
     store = get_vector_store()
-    # Detect global/aggregation queries to dynamically expand the retrieval window (k) to 100
-    import re
+
+    # ── Page-aware retrieval ──────────────────────────────────
+    requested_pages = extract_page_request(query)
+    page_docs: List[Document] = []
+    if requested_pages:
+        logger.info(f"Page-specific query detected: pages {requested_pages}")
+        page_docs = await get_page_chunks(
+            page_numbers=requested_pages,
+            user_id=user_id,
+            document_id=document_id,
+        )
+
+    # ── Dynamic k expansion ───────────────────────────────────
     global_keywords = {
-        "all", "list", "below", "above", "average", "sum", "total", "count", 
-        "every", "whose", "students", "marksheet", "overall", "summary", 
-        "highest", "lowest", "max", "min", "top", "bottom"
+        "all", "list", "below", "above", "average", "sum", "total", "count",
+        "every", "whose", "students", "marksheet", "overall", "summary",
+        "highest", "lowest", "max", "min", "top", "bottom", "page",
     }
-    is_global_query = any(re.search(rf"\b{re.escape(kw)}\b", query.lower()) for kw in global_keywords)
-    
+    is_global_query = any(
+        re.search(rf"\b{re.escape(kw)}\b", query.lower())
+        for kw in global_keywords
+    )
+
     if is_global_query:
         num_results = 100
         logger.info(f"Global/aggregation query detected. Expanding retrieval k to {num_results}.")
@@ -144,7 +263,6 @@ async def similarity_search(
         vector_results = []
 
     # Step 2: Extract query keywords for keyword matching (names, roll numbers, etc.)
-    import re
     words = [w.strip("?,.!:;\"'()[]{}") for w in query.split()]
     stop_words = {
         "what", "is", "the", "of", "in", "and", "for", "to", "a", "an", "give", 
@@ -154,7 +272,14 @@ async def similarity_search(
     }
     keywords = [w.lower() for w in words if w.lower() not in stop_words and len(w) >= 3]
     
-    hybrid_results = list(vector_results)
+    # ── Merge page-aware results at the front ─────────────────
+    # Page docs go first so the LLM always has the requested page content
+    seen_page_contents = {doc.page_content.strip() for doc in page_docs}
+    deduped_vector = [
+        doc for doc in vector_results
+        if doc.page_content.strip() not in seen_page_contents
+    ]
+    hybrid_results = list(page_docs) + deduped_vector
     
     if keywords:
         logger.info(f"Hybrid search: extracted search keywords: {keywords}")
