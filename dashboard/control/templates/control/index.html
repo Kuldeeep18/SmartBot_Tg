@@ -81,7 +81,7 @@
     <!-- Grid Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       
-      <!-- Left Side: Customizer Form -->
+      <!-- Left Side: Config Panel -->
       <div class="lg:col-span-8 space-y-8">
         
         <!-- Alerts Area -->
@@ -90,179 +90,296 @@
           <span id="alert-text" class="text-sm font-medium"></span>
         </div>
 
+        <!-- Bot Type Tab Navigation -->
+        <div class="flex border-b border-slate-800/60 gap-6">
+          <button id="tab-anjani" class="pb-4 px-1 text-sm font-bold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2 transition-all">
+            <i data-lucide="message-square" class="w-4 h-4"></i>
+            Group Manager (Anjani)
+          </button>
+          <button id="tab-rag" class="pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition-all">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+            AI PDF Chatbot (RAG)
+          </button>
+        </div>
+
+        <!-- CONFIGURATION FORM -->
         <form id="launch-form" class="glass-panel rounded-3xl p-6 md:p-8 space-y-8">
-          <div>
-            <h2 class="text-xl font-bold flex items-center gap-2 text-slate-100">
-              <i data-lucide="sparkles" class="w-5 h-5 text-indigo-400"></i>
-              Customize Features
-            </h2>
-            <p class="text-slate-400 text-sm mt-1">Select the specific plugins to load onto your bot container.</p>
-          </div>
-
-          <!-- Feature Cards Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            <!-- Muting Card -->
-            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden active" data-feature="muting">
-              <div class="feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400">
-                <i data-lucide="volume-x" class="w-6 h-6"></i>
-              </div>
-              <div class="space-y-1">
-                <h3 class="font-semibold text-sm text-slate-100">Mute Management</h3>
-                <p class="text-slate-400 text-xs leading-relaxed">Mute/unmute members, manage temporary silence periods, and track mute logs.</p>
-              </div>
-              <div class="dot-indicator absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
-            </div>
-
-            <!-- Filters Card -->
-            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden active" data-feature="filters">
-              <div class="feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400">
-                <i data-lucide="message-square" class="w-6 h-6"></i>
-              </div>
-              <div class="space-y-1">
-                <h3 class="font-semibold text-sm text-slate-100">Smart Filters</h3>
-                <p class="text-slate-400 text-xs leading-relaxed">Set keyword triggers to auto-respond, delete spam, or warn users.</p>
-              </div>
-              <div class="dot-indicator absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
-            </div>
-
-            <!-- Welcome Card -->
-            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden active" data-feature="welcome">
-              <div class="feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400">
-                <i data-lucide="user-check" class="w-6 h-6"></i>
-              </div>
-              <div class="space-y-1">
-                <h3 class="font-semibold text-sm text-slate-100">Custom Greetings</h3>
-                <p class="text-slate-400 text-xs leading-relaxed">Greet new members with customized media, text, and interactive buttons.</p>
-              </div>
-              <div class="dot-indicator absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
-            </div>
-
-            <!-- Federation Card -->
-            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="federation">
-              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
-                <i data-lucide="radio" class="w-6 h-6"></i>
-              </div>
-              <div class="space-y-1">
-                <h3 class="font-semibold text-sm text-slate-300">Federation Bans</h3>
-                <p class="text-slate-400 text-xs leading-relaxed">Share ban lists across multiple chats to keep toxic users out globally.</p>
-              </div>
-              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
-            </div>
-
-            <!-- Spam Shield Card -->
-            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="spam_shield">
-              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
-                <i data-lucide="shield" class="w-6 h-6"></i>
-              </div>
-              <div class="space-y-1">
-                <h3 class="font-semibold text-sm text-slate-300">Spam Shield</h3>
-                <p class="text-slate-400 text-xs leading-relaxed">Combat automated raid attacks, flood messages, and malicious userbots.</p>
-              </div>
-              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
-            </div>
-
-            <!-- Rules Card -->
-            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="rules">
-              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
-                <i data-lucide="book-open" class="w-6 h-6"></i>
-              </div>
-              <div class="space-y-1">
-                <h3 class="font-semibold text-sm text-slate-300">Chat Rules</h3>
-                <p class="text-slate-400 text-xs leading-relaxed">Define rules for your chat and allow users to view them via commands.</p>
-              </div>
-              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
-            </div>
-
-            <!-- Purge Card -->
-            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="purge">
-              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
-                <i data-lucide="trash-2" class="w-6 h-6"></i>
-              </div>
-              <div class="space-y-1">
-                <h3 class="font-semibold text-sm text-slate-300">Quick Purges</h3>
-                <p class="text-slate-400 text-xs leading-relaxed">Instantly bulk delete messages by user or message count with one command.</p>
-              </div>
-              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
-            </div>
-
-            <!-- Lockings Card -->
-            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="lockings">
-              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
-                <i data-lucide="lock" class="w-6 h-6"></i>
-              </div>
-              <div class="space-y-1">
-                <h3 class="font-semibold text-sm text-slate-300">Media Locking</h3>
-                <p class="text-slate-400 text-xs leading-relaxed">Block stickers, links, voice messages, documents, or games dynamically.</p>
-              </div>
-              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
-            </div>
-
-            <!-- Admins Card -->
-            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="admins">
-              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
-                <i data-lucide="users" class="w-6 h-6"></i>
-              </div>
-              <div class="space-y-1">
-                <h3 class="font-semibold text-sm text-slate-300">Admin Tools</h3>
-                <p class="text-slate-400 text-xs leading-relaxed">Quickly promote, demote, or check admin permissions and statistics.</p>
-              </div>
-              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
-            </div>
-
-            <!-- Notes Card -->
-            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="notes">
-              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
-                <i data-lucide="file-text" class="w-6 h-6"></i>
-              </div>
-              <div class="space-y-1">
-                <h3 class="font-semibold text-sm text-slate-300">Notes & Triggers</h3>
-                <p class="text-slate-400 text-xs leading-relaxed">Save custom text snippets or links for easy callout with hashtags.</p>
-              </div>
-              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
-            </div>
-
-          </div>
-
-          <!-- Configuration Credentials -->
-          <div class="border-t border-slate-800/60 pt-8 space-y-6">
+          
+          <!-- ANJANI CONFIGURATION SECTION -->
+          <div id="section-anjani" class="space-y-6">
             <div>
-              <h3 class="text-lg font-semibold text-slate-100">Configuration Credentials</h3>
-              <p class="text-slate-400 text-sm mt-0.5">We need the Telegram credentials to host your instance.</p>
+              <h2 class="text-xl font-bold flex items-center gap-2 text-slate-100">
+                <i data-lucide="sparkles" class="w-5 h-5 text-indigo-400"></i>
+                Customize Features
+              </h2>
+              <p class="text-slate-400 text-sm mt-1">Select the specific plugins to load onto your bot container.</p>
+            </div>
+
+            <!-- Feature Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Muting Card -->
+              <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden active" data-feature="muting">
+                <div class="feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400">
+                  <i data-lucide="volume-x" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-semibold text-sm text-slate-100">Mute Management</h3>
+                  <p class="text-slate-400 text-xs leading-relaxed">Mute/unmute members, manage temporary silence periods, and track mute logs.</p>
+                </div>
+                <div class="dot-indicator absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+              </div>
+
+              <!-- Filters Card -->
+              <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden active" data-feature="filters">
+                <div class="feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400">
+                  <i data-lucide="message-square" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-semibold text-sm text-slate-100">Smart Filters</h3>
+                  <p class="text-slate-400 text-xs leading-relaxed">Set keyword triggers to auto-respond, delete spam, or warn users.</p>
+                </div>
+                <div class="dot-indicator absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+              </div>
+
+              <!-- Welcome Card -->
+              <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden active" data-feature="welcome">
+                <div class="feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400">
+                  <i data-lucide="user-check" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-semibold text-sm text-slate-100">Custom Greetings</h3>
+                  <p class="text-slate-400 text-xs leading-relaxed">Greet new members with customized media, text, and interactive buttons.</p>
+                </div>
+                <div class="dot-indicator absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+              </div>
+
+              <!-- Federation Card -->
+              <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="federation">
+                <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                  <i data-lucide="radio" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-semibold text-sm text-slate-300">Federation Bans</h3>
+                  <p class="text-slate-400 text-xs leading-relaxed">Share ban lists across multiple chats to keep toxic users out globally.</p>
+                </div>
+                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+              </div>
+
+              <!-- Spam Shield Card -->
+              <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="spam_shield">
+                <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                  <i data-lucide="shield" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-semibold text-sm text-slate-300">Spam Shield</h3>
+                  <p class="text-slate-400 text-xs leading-relaxed">Combat automated raid attacks, flood messages, and malicious userbots.</p>
+                </div>
+                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+              </div>
+
+              <!-- Rules Card -->
+              <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="rules">
+                <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                  <i data-lucide="book-open" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-semibold text-sm text-slate-300">Chat Rules</h3>
+                  <p class="text-slate-400 text-xs leading-relaxed">Define rules for your chat and allow users to view them via commands.</p>
+                </div>
+                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+              </div>
+
+              <!-- Purge Card -->
+              <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="purge">
+                <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                  <i data-lucide="trash-2" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-semibold text-sm text-slate-300">Quick Purges</h3>
+                  <p class="text-slate-400 text-xs leading-relaxed">Instantly bulk delete messages by user or message count with one command.</p>
+                </div>
+                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+              </div>
+
+              <!-- Lockings Card -->
+              <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="lockings">
+                <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                  <i data-lucide="lock" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-semibold text-sm text-slate-300">Media Locking</h3>
+                  <p class="text-slate-400 text-xs leading-relaxed">Block stickers, links, voice messages, documents, or games dynamically.</p>
+                </div>
+                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+              </div>
+            </div>
+
+            <!-- Owner ID Input for Anjani -->
+            <div class="space-y-2 max-w-md pt-4">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Owner User ID</label>
+              <input 
+                id="owner-id"
+                type="text"
+                placeholder="e.g. 1919814914"
+                class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+              />
+            </div>
+          </div>
+
+          <!-- RAG / AI PDF CHATBOT CONFIGURATION SECTION -->
+          <div id="section-rag" class="hidden space-y-8">
+            <div>
+              <h2 class="text-xl font-bold flex items-center gap-2 text-slate-100">
+                <i data-lucide="database" class="w-5 h-5 text-indigo-400"></i>
+                Supabase & Vector Store
+              </h2>
+              <p class="text-slate-400 text-sm mt-1">Configure your Supabase vector store settings for PDF indexing.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Token Input -->
               <div class="space-y-2">
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">BotFather Token</label>
-                <div class="relative">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Supabase URL</label>
+                <input 
+                  id="supabase-url"
+                  type="text"
+                  placeholder="https://your-project.supabase.co"
+                  class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                />
+              </div>
+
+              <div class="space-y-2">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Supabase Service Role Key</label>
+                <input 
+                  id="supabase-key"
+                  type="password"
+                  placeholder="eyJhbGciOi..."
+                  class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                />
+              </div>
+            </div>
+
+            <div class="border-t border-slate-800/60 pt-8 space-y-6">
+              <div>
+                <h2 class="text-xl font-bold flex items-center gap-2 text-slate-100">
+                  <i data-lucide="cpu" class="w-5 h-5 text-indigo-400"></i>
+                  LLM Provider Setup
+                </h2>
+                <p class="text-slate-400 text-sm mt-1">Configure the AI brains behind the chatbot.</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-2">
+                  <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">LLM Provider</label>
+                  <select 
+                    id="llm-provider"
+                    class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
+                  >
+                    <option value="openai">OpenAI</option>
+                    <option value="gemini">Google Gemini</option>
+                    <option value="groq">Groq</option>
+                    <option value="openrouter">OpenRouter</option>
+                  </select>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">LLM Model</label>
                   <input 
-                    id="bot-token"
-                    type="password"
-                    placeholder="e.g. 123456:ABC-DEF1234..."
-                    required
+                    id="llm-model"
+                    type="text"
+                    value="gpt-4o-mini"
                     class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-mono"
                   />
-                  <button
-                    type="button"
-                    id="toggle-token-visibility"
-                    class="absolute right-3 top-3.5 text-slate-500 hover:text-slate-300 transition-colors"
-                  >
-                    <i data-lucide="eye" class="w-4 h-4" id="eye-icon"></i>
-                  </button>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Embedding Model</label>
+                  <input 
+                    id="embedding-model"
+                    type="text"
+                    value="text-embedding-3-small"
+                    class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                  />
                 </div>
               </div>
 
-              <!-- Owner User ID -->
-              <div class="space-y-2">
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Owner User ID</label>
+              <div class="space-y-2 max-w-xl">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">LLM Provider API Key</label>
                 <input 
-                  id="owner-id"
-                  type="text"
-                  placeholder="e.g. 1919814914"
+                  id="llm-api-key"
+                  type="password"
+                  placeholder="Paste LLM API Key here..."
+                  class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                />
+              </div>
+            </div>
+
+            <div class="border-t border-slate-800/60 pt-8 space-y-6">
+              <div>
+                <h2 class="text-xl font-bold flex items-center gap-2 text-slate-100">
+                  <i data-lucide="sliders" class="w-5 h-5 text-indigo-400"></i>
+                  RAG Settings
+                </h2>
+                <p class="text-slate-400 text-sm mt-1">Chunk and retriever overrides.</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-2">
+                  <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Chunk Size</label>
+                  <input 
+                    id="chunk-size"
+                    type="number"
+                    value="1000"
+                    class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                  />
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Chunk Overlap</label>
+                  <input 
+                    id="chunk-overlap"
+                    type="number"
+                    value="200"
+                    class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                  />
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Retriever K (Matches)</label>
+                  <input 
+                    id="retriever-k"
+                    type="number"
+                    value="10"
+                    class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- COMMON CREDENTIALS -->
+          <div class="border-t border-slate-800/60 pt-8 space-y-6">
+            <div>
+              <h3 class="text-lg font-semibold text-slate-100 font-bold">Telegram Connection</h3>
+              <p class="text-slate-400 text-sm mt-0.5">Define the Telegram BotFather token to assign to this custom service.</p>
+            </div>
+
+            <div class="space-y-2 max-w-xl">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Bot Token</label>
+              <div class="relative">
+                <input 
+                  id="bot-token"
+                  type="password"
+                  placeholder="e.g. 123456:ABC-DEF1234..."
                   required
                   class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-mono"
                 />
+                <button
+                  type="button"
+                  id="toggle-token-visibility"
+                  class="absolute right-3 top-3.5 text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  <i data-lucide="eye" class="w-4 h-4" id="eye-icon"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -309,18 +426,35 @@
     // Initialize icons
     lucide.createIcons();
 
-    // Features data state
+    // Active configuration state
+    let activeTab = 'anjani'; // 'anjani' or 'ai_pdf_chat'
     const selectedFeatures = new Set(['muting', 'filters', 'welcome']);
 
     // UI elements selectors
+    const tabAnjaniBtn = document.getElementById('tab-anjani');
+    const tabRagBtn = document.getElementById('tab-rag');
+    const sectionAnjani = document.getElementById('section-anjani');
+    const sectionRag = document.getElementById('section-rag');
+
     const cards = document.querySelectorAll('.glass-card');
     const tokenInput = document.getElementById('bot-token');
     const toggleTokenBtn = document.getElementById('toggle-token-visibility');
     const eyeIcon = document.getElementById('eye-icon');
     const ownerInput = document.getElementById('owner-id');
+    
+    // RAG Selectors
+    const supabaseUrlInput = document.getElementById('supabase-url');
+    const supabaseKeyInput = document.getElementById('supabase-key');
+    const llmProviderSelect = document.getElementById('llm-provider');
+    const llmModelInput = document.getElementById('llm-model');
+    const embeddingModelInput = document.getElementById('embedding-model');
+    const llmApiKeyInput = document.getElementById('llm-api-key');
+    const chunkSizeInput = document.getElementById('chunk-size');
+    const chunkOverlapInput = document.getElementById('chunk-overlap');
+    const retrieverKInput = document.getElementById('retriever-k');
+
     const launchForm = document.getElementById('launch-form');
     const submitBtn = document.getElementById('submit-btn');
-    const submitIcon = document.getElementById('submit-icon');
     const refreshBtn = document.getElementById('refresh-btn');
     const refreshIcon = document.getElementById('refresh-icon');
     const alertBanner = document.getElementById('alert-banner');
@@ -328,7 +462,24 @@
     const alertIconContainer = document.getElementById('alert-icon-container');
     const instancesList = document.getElementById('instances-list');
 
-    // Toggle card selection
+    // Switch Tabs
+    tabAnjaniBtn.addEventListener('click', () => {
+      activeTab = 'anjani';
+      tabAnjaniBtn.className = "pb-4 px-1 text-sm font-bold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2 transition-all";
+      tabRagBtn.className = "pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition-all";
+      sectionAnjani.classList.remove('hidden');
+      sectionRag.classList.add('hidden');
+    });
+
+    tabRagBtn.addEventListener('click', () => {
+      activeTab = 'ai_pdf_chat';
+      tabRagBtn.className = "pb-4 px-1 text-sm font-bold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2 transition-all";
+      tabAnjaniBtn.className = "pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition-all";
+      sectionRag.classList.remove('hidden');
+      sectionAnjani.classList.add('hidden');
+    });
+
+    // Toggle plugin card selection
     cards.forEach(card => {
       card.addEventListener('click', () => {
         const featureId = card.getAttribute('data-feature');
@@ -398,21 +549,34 @@
         }
 
         instancesList.innerHTML = data.bots.map(bot => {
-          const badgeHtml = bot.enabledPlugins.map(p => `
-            <span class="px-2 py-0.5 bg-slate-900 border border-slate-800/80 rounded-md text-[9px] text-indigo-300 font-medium">
-              ${p}
-            </span>
-          `).join('');
+          const typeBadgeColor = bot.type === 'anjani' ? 'bg-indigo-950/30 border-indigo-500/20 text-indigo-400' : 'bg-emerald-950/30 border-emerald-500/20 text-emerald-400';
+          const typeLabel = bot.type === 'anjani' ? 'Anjani' : 'AI PDF';
+          
+          let featuresHtml = '';
+          if (bot.type === 'anjani' && bot.enabledPlugins) {
+            featuresHtml = bot.enabledPlugins.map(p => `
+              <span class="px-2 py-0.5 bg-slate-900 border border-slate-800/80 rounded-md text-[9px] text-indigo-300 font-medium">
+                ${p}
+              </span>
+            `).join('');
+          } else if (bot.type === 'ai_pdf_chat') {
+            featuresHtml = `
+              <span class="px-2 py-0.5 bg-slate-900 border border-slate-800/80 rounded-md text-[9px] text-emerald-300 font-medium">
+                LLM: ${bot.llmProvider} (${bot.llmModel})
+              </span>
+            `;
+          }
 
           return `
             <div class="p-4 rounded-2xl bg-slate-950/40 border border-slate-900 flex flex-col gap-3">
               <div class="flex justify-between items-start">
                 <div>
-                  <div class="font-mono text-xs font-semibold text-slate-300">
-                    ID: ${bot.hash}
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-xs font-semibold text-slate-300">ID: ${bot.hash}</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold rounded border ${typeBadgeColor}">${typeLabel}</span>
                   </div>
-                  <div class="text-[10px] text-slate-500 mt-0.5">
-                    Owner: ${bot.ownerId}
+                  <div class="text-[10px] text-slate-500 mt-1">
+                    ${bot.type === 'anjani' ? `Owner: ${bot.ownerId}` : `Supabase: ${bot.supabaseUrl}`}
                   </div>
                 </div>
                 <div class="flex items-center gap-1.5">
@@ -422,12 +586,12 @@
               </div>
 
               <div class="flex flex-wrap gap-1">
-                ${badgeHtml}
+                ${featuresHtml}
               </div>
 
               <div class="flex justify-between items-center border-t border-slate-900/60 pt-3 mt-1">
                 <button
-                  onclick="editBot('${bot.ownerId}', ${JSON.stringify(bot.enabledPlugins).replace(/"/g, '&quot;')}, '${bot.hash}')"
+                  onclick='editBot(${JSON.stringify(bot).replace(/'/g, "&#39;")})'
                   class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
                 >
                   Modify Config
@@ -457,34 +621,46 @@
     }
 
     // Populate form with existing configuration to edit
-    window.editBot = function(ownerId, plugins, hash) {
-      ownerInput.value = ownerId;
-      
-      // Update selected features
-      selectedFeatures.clear();
-      plugins.forEach(p => selectedFeatures.add(p));
-      
-      // Update cards UI classes
-      cards.forEach(card => {
-        const featureId = card.getAttribute('data-feature');
-        const iconBox = card.querySelector('.feature-icon-box');
-        const title = card.querySelector('h3');
-        const dot = card.querySelector('.dot-indicator');
+    window.editBot = function(bot) {
+      if (bot.type === 'anjani') {
+        tabAnjaniBtn.click();
+        ownerInput.value = bot.ownerId;
         
-        if (selectedFeatures.has(featureId)) {
-          card.classList.add('active');
-          iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400";
-          title.className = "font-semibold text-sm text-slate-100";
-          dot.classList.remove('hidden');
-        } else {
-          card.classList.remove('active');
-          iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400";
-          title.className = "font-semibold text-sm text-slate-300";
-          dot.classList.add('hidden');
-        }
-      });
+        selectedFeatures.clear();
+        bot.enabledPlugins.forEach(p => selectedFeatures.add(p));
+        
+        cards.forEach(card => {
+          const featureId = card.getAttribute('data-feature');
+          const iconBox = card.querySelector('.feature-icon-box');
+          const title = card.querySelector('h3');
+          const dot = card.querySelector('.dot-indicator');
+          
+          if (selectedFeatures.has(featureId)) {
+            card.classList.add('active');
+            iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400";
+            title.className = "font-semibold text-sm text-slate-100";
+            dot.classList.remove('hidden');
+          } else {
+            card.classList.remove('active');
+            iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400";
+            title.className = "font-semibold text-sm text-slate-300";
+            dot.classList.add('hidden');
+          }
+        });
+      } else {
+        tabRagBtn.click();
+        supabaseUrlInput.value = bot.supabaseUrl;
+        supabaseKeyInput.value = bot.supabaseKey;
+        llmProviderSelect.value = bot.llmProvider;
+        llmModelInput.value = bot.llmModel;
+        embeddingModelInput.value = bot.embeddingModel;
+        llmApiKeyInput.value = bot.llmApiKey;
+        chunkSizeInput.value = bot.chunkSize;
+        chunkOverlapInput.value = bot.chunkOverlap;
+        retrieverKInput.value = bot.retrieverK;
+      }
 
-      showAlert('success', `Loaded configuration for bot ${hash}. Re-enter the Bot Token to deploy modifications.`);
+      showAlert('success', `Loaded configurations for bot ${bot.hash}. Re-enter the Bot Token to deploy updates.`);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -513,16 +689,47 @@
       e.preventDefault();
       
       const token = tokenInput.value.trim();
-      const ownerId = ownerInput.value.trim();
-      
-      if (!token || !ownerId) {
-        showAlert('error', 'Token and Owner ID fields are required.');
+      if (!token) {
+        showAlert('error', 'Telegram Bot Token is required.');
         return;
       }
-      
-      if (selectedFeatures.size === 0) {
-        showAlert('error', 'Please select at least one feature to deploy.');
-        return;
+
+      let payload = {
+        token: token,
+        type: activeTab
+      };
+
+      if (activeTab === 'anjani') {
+        const ownerId = ownerInput.value.trim();
+        if (!ownerId) {
+          showAlert('error', 'Owner User ID is required for Group Manager.');
+          return;
+        }
+        if (selectedFeatures.size === 0) {
+          showAlert('error', 'Select at least one feature plugin to load.');
+          return;
+        }
+        payload.ownerId = ownerId;
+        payload.enabledPlugins = Array.from(selectedFeatures);
+      } else {
+        const supabaseUrl = supabaseUrlInput.value.trim();
+        const supabaseKey = supabaseKeyInput.value.trim();
+        const llmApiKey = llmApiKeyInput.value.trim();
+        
+        if (!supabaseUrl || !supabaseKey || !llmApiKey) {
+          showAlert('error', 'Supabase URL, Key, and LLM API Key are required.');
+          return;
+        }
+
+        payload.supabaseUrl = supabaseUrl;
+        payload.supabaseKey = supabaseKey;
+        payload.llmProvider = llmProviderSelect.value;
+        payload.llmModel = llmModelInput.value.trim();
+        payload.embeddingModel = embeddingModelInput.value.trim();
+        payload.llmApiKey = llmApiKey;
+        payload.chunkSize = parseInt(chunkSizeInput.value) || 1000;
+        payload.chunkOverlap = parseInt(chunkOverlapInput.value) || 200;
+        payload.retrieverK = parseInt(retrieverKInput.value) || 10;
       }
 
       // Show loading UI
@@ -537,19 +744,22 @@
         const res = await fetch('/api/bot/launch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            token,
-            ownerId,
-            enabledPlugins: Array.from(selectedFeatures)
-          })
+          body: JSON.stringify(payload)
         });
 
         const data = await res.json();
         
         if (data.success) {
-          showAlert('success', `Bot container started successfully! Hash ID: ${data.hash}`);
+          showAlert('success', `Bot container launched successfully! Hash ID: ${data.hash}`);
           tokenInput.value = '';
-          ownerInput.value = '';
+          
+          if (activeTab === 'anjani') {
+            ownerInput.value = '';
+          } else {
+            supabaseUrlInput.value = '';
+            supabaseKeyInput.value = '';
+            llmApiKeyInput.value = '';
+          }
           loadBots();
         } else {
           showAlert('error', data.error || 'Failed to launch custom bot instance.');
