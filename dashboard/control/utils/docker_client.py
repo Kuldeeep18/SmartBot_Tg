@@ -16,11 +16,18 @@ def get_bot_hash(token: str) -> str:
 
 def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
     hash_id = get_bot_hash(token)
-    prefix = "anjani-bot" if bot_type == "anjani" else "pdf-bot"
+    
+    if bot_type == "anjani":
+        prefix = "anjani-bot"
+    elif bot_type == "ai_pdf_chat":
+        prefix = "pdf-bot"
+    else:
+        prefix = "gh-pr-bot"
+        
     container_name = f"{prefix}-{hash_id}"
     
-    # Try stopping any existing container for this token under either prefix
-    for pref in ["anjani-bot", "pdf-bot"]:
+    # Try stopping any existing container for this token under all three prefixes
+    for pref in ["anjani-bot", "pdf-bot", "gh-pr-bot"]:
         try:
             existing = client.containers.get(f"{pref}-{hash_id}")
             if existing.status == 'running' and pref == prefix:
@@ -50,8 +57,7 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
             "DB_URI": bot_db_uri,
             "ENABLED_PLUGINS": ";".join(config.get('enabledPlugins', []))
         }
-    else:
-        # AI PDF Chatbot (RAG)
+    elif bot_type == "ai_pdf_chat":
         image_name = "ai_chatbot_pdf"
         provider = config.get('llmProvider', 'openai')
         api_key = config.get('llmApiKey', '')
@@ -64,7 +70,6 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
             "LLM_MODEL": config.get('llmModel', 'gpt-4o-mini'),
             "EMBEDDING_MODEL": config.get('embeddingModel', 'text-embedding-3-small'),
             
-            # Conditionally map key based on provider
             "OPENAI_API_KEY": api_key if provider == 'openai' else '',
             "GOOGLE_API_KEY": api_key if provider == 'gemini' else '',
             "GROQ_API_KEY": api_key if provider == 'groq' else '',
@@ -73,6 +78,19 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
             "CHUNK_SIZE": str(config.get('chunkSize', 1000)),
             "CHUNK_OVERLAP": str(config.get('chunkOverlap', 200)),
             "RETRIEVER_K": str(config.get('retrieverK', 10))
+        }
+    else:
+        # GitHub PR Bot
+        image_name = "github_pr_bot"
+        environment = {
+            "TELEGRAM_BOT_TOKEN": token,
+            "GEMINI_API_KEY": config.get('geminiApiKey', ''),
+            "GITHUB_TOKEN": config.get('githubToken', ''),
+            "MAX_REPO_SIZE_MB": str(config.get('maxRepoSize', 100)),
+            "GITHUB_CLIENT_ID": config.get('githubClientId', ''),
+            "GITHUB_CLIENT_SECRET": config.get('githubClientSecret', ''),
+            "OAUTH_REDIRECT_URL": config.get('oauthRedirectUrl', ''),
+            "PORT": "3000"
         }
 
     container = client.containers.run(
@@ -92,7 +110,7 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
 
 def stop_bot_container(token: str) -> dict:
     hash_id = get_bot_hash(token)
-    for prefix in ["anjani-bot", "pdf-bot"]:
+    for prefix in ["anjani-bot", "pdf-bot", "gh-pr-bot"]:
         container_name = f"{prefix}-{hash_id}"
         try:
             container = client.containers.get(container_name)
@@ -105,7 +123,7 @@ def stop_bot_container(token: str) -> dict:
 
 def get_bot_container_status(token: str) -> dict:
     hash_id = get_bot_hash(token)
-    for prefix in ["anjani-bot", "pdf-bot"]:
+    for prefix in ["anjani-bot", "pdf-bot", "gh-pr-bot"]:
         container_name = f"{prefix}-{hash_id}"
         try:
             container = client.containers.get(container_name)

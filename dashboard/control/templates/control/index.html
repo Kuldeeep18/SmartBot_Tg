@@ -91,7 +91,7 @@
         </div>
 
         <!-- Bot Type Tab Navigation -->
-        <div class="flex border-b border-slate-800/60 gap-6">
+        <div class="flex border-b border-slate-800/60 gap-6 overflow-x-auto whitespace-nowrap pb-1">
           <button id="tab-anjani" class="pb-4 px-1 text-sm font-bold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2 transition-all">
             <i data-lucide="message-square" class="w-4 h-4"></i>
             Group Manager (Anjani)
@@ -99,6 +99,10 @@
           <button id="tab-rag" class="pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition-all">
             <i data-lucide="file-text" class="w-4 h-4"></i>
             AI PDF Chatbot (RAG)
+          </button>
+          <button id="tab-github" class="pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition-all">
+            <i data-lucide="git-pull-request" class="w-4 h-4"></i>
+            GitHub PR Bot
           </button>
         </div>
 
@@ -356,6 +360,52 @@
             </div>
           </div>
 
+          <!-- GITHUB PR BOT CONFIGURATION SECTION -->
+          <div id="section-github" class="hidden space-y-8">
+            <div>
+              <h2 class="text-xl font-bold flex items-center gap-2 text-slate-100">
+                <i data-lucide="git-pull-request" class="w-5 h-5 text-indigo-400"></i>
+                GitHub Bot Configurations
+              </h2>
+              <p class="text-slate-400 text-sm mt-1">Configure your Gemini and GitHub access keys.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Gemini API Key -->
+              <div class="space-y-2 md:col-span-2">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Gemini API Key</label>
+                <input 
+                  id="gemini-api-key"
+                  type="password"
+                  placeholder="AIzaSy..."
+                  class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                />
+              </div>
+
+              <!-- GitHub Token -->
+              <div class="space-y-2">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">GitHub PAT (Token)</label>
+                <input 
+                  id="github-token"
+                  type="password"
+                  placeholder="ghp_..."
+                  class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                />
+              </div>
+
+              <!-- Max Repo Size -->
+              <div class="space-y-2">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Max Repo Size (MB)</label>
+                <input 
+                  id="max-repo-size"
+                  type="number"
+                  value="100"
+                  class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
           <!-- COMMON CREDENTIALS -->
           <div class="border-t border-slate-800/60 pt-8 space-y-6">
             <div>
@@ -427,14 +477,16 @@
     lucide.createIcons();
 
     // Active configuration state
-    let activeTab = 'anjani'; // 'anjani' or 'ai_pdf_chat'
+    let activeTab = 'anjani'; // 'anjani', 'ai_pdf_chat', or 'github_pr_bot'
     const selectedFeatures = new Set(['muting', 'filters', 'welcome']);
 
     // UI elements selectors
     const tabAnjaniBtn = document.getElementById('tab-anjani');
     const tabRagBtn = document.getElementById('tab-rag');
+    const tabGithubBtn = document.getElementById('tab-github');
     const sectionAnjani = document.getElementById('section-anjani');
     const sectionRag = document.getElementById('section-rag');
+    const sectionGithub = document.getElementById('section-github');
 
     const cards = document.querySelectorAll('.glass-card');
     const tokenInput = document.getElementById('bot-token');
@@ -453,6 +505,11 @@
     const chunkOverlapInput = document.getElementById('chunk-overlap');
     const retrieverKInput = document.getElementById('retriever-k');
 
+    // GitHub Selectors
+    const geminiApiKeyInput = document.getElementById('gemini-api-key');
+    const githubTokenInput = document.getElementById('github-token');
+    const maxRepoSizeInput = document.getElementById('max-repo-size');
+
     const launchForm = document.getElementById('launch-form');
     const submitBtn = document.getElementById('submit-btn');
     const refreshBtn = document.getElementById('refresh-btn');
@@ -462,22 +519,35 @@
     const alertIconContainer = document.getElementById('alert-icon-container');
     const instancesList = document.getElementById('instances-list');
 
-    // Switch Tabs
-    tabAnjaniBtn.addEventListener('click', () => {
-      activeTab = 'anjani';
-      tabAnjaniBtn.className = "pb-4 px-1 text-sm font-bold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2 transition-all";
-      tabRagBtn.className = "pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition-all";
-      sectionAnjani.classList.remove('hidden');
-      sectionRag.classList.add('hidden');
-    });
-
-    tabRagBtn.addEventListener('click', () => {
-      activeTab = 'ai_pdf_chat';
-      tabRagBtn.className = "pb-4 px-1 text-sm font-bold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2 transition-all";
+    // Switch Tabs Helper
+    function switchTab(target) {
+      activeTab = target;
+      
+      // Reset borders
       tabAnjaniBtn.className = "pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition-all";
-      sectionRag.classList.remove('hidden');
+      tabRagBtn.className = "pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition-all";
+      tabGithubBtn.className = "pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition-all";
+      
+      // Hide sections
       sectionAnjani.classList.add('hidden');
-    });
+      sectionRag.classList.add('hidden');
+      sectionGithub.classList.add('hidden');
+
+      if (target === 'anjani') {
+        tabAnjaniBtn.className = "pb-4 px-1 text-sm font-bold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2 transition-all";
+        sectionAnjani.classList.remove('hidden');
+      } else if (target === 'ai_pdf_chat') {
+        tabRagBtn.className = "pb-4 px-1 text-sm font-bold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2 transition-all";
+        sectionRag.classList.remove('hidden');
+      } else {
+        tabGithubBtn.className = "pb-4 px-1 text-sm font-bold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2 transition-all";
+        sectionGithub.classList.remove('hidden');
+      }
+    }
+
+    tabAnjaniBtn.addEventListener('click', () => switchTab('anjani'));
+    tabRagBtn.addEventListener('click', () => switchTab('ai_pdf_chat'));
+    tabGithubBtn.addEventListener('click', () => switchTab('github_pr_bot'));
 
     // Toggle plugin card selection
     cards.forEach(card => {
@@ -549,8 +619,16 @@
         }
 
         instancesList.innerHTML = data.bots.map(bot => {
-          const typeBadgeColor = bot.type === 'anjani' ? 'bg-indigo-950/30 border-indigo-500/20 text-indigo-400' : 'bg-emerald-950/30 border-emerald-500/20 text-emerald-400';
-          const typeLabel = bot.type === 'anjani' ? 'Anjani' : 'AI PDF';
+          let typeBadgeColor = 'bg-indigo-950/30 border-indigo-500/20 text-indigo-400';
+          let typeLabel = 'Anjani';
+          
+          if (bot.type === 'ai_pdf_chat') {
+            typeBadgeColor = 'bg-emerald-950/30 border-emerald-500/20 text-emerald-400';
+            typeLabel = 'AI PDF';
+          } else if (bot.type === 'github_pr_bot') {
+            typeBadgeColor = 'bg-amber-950/30 border-amber-500/20 text-amber-400';
+            typeLabel = 'GitHub PR';
+          }
           
           let featuresHtml = '';
           if (bot.type === 'anjani' && bot.enabledPlugins) {
@@ -565,6 +643,12 @@
                 LLM: ${bot.llmProvider} (${bot.llmModel})
               </span>
             `;
+          } else if (bot.type === 'github_pr_bot') {
+            featuresHtml = `
+              <span class="px-2 py-0.5 bg-slate-900 border border-slate-800/80 rounded-md text-[9px] text-amber-300 font-medium">
+                Repo Size Limit: ${bot.maxRepoSize}MB
+              </span>
+            `;
           }
 
           return `
@@ -576,7 +660,7 @@
                     <span class="px-2 py-0.5 text-[9px] font-bold rounded border ${typeBadgeColor}">${typeLabel}</span>
                   </div>
                   <div class="text-[10px] text-slate-500 mt-1">
-                    ${bot.type === 'anjani' ? `Owner: ${bot.ownerId}` : `Supabase: ${bot.supabaseUrl}`}
+                    ${bot.type === 'anjani' ? `Owner: ${bot.ownerId}` : bot.type === 'ai_pdf_chat' ? `Supabase: ${bot.supabaseUrl}` : `Max Size: ${bot.maxRepoSize}MB`}
                   </div>
                 </div>
                 <div class="flex items-center gap-1.5">
@@ -623,7 +707,7 @@
     // Populate form with existing configuration to edit
     window.editBot = function(bot) {
       if (bot.type === 'anjani') {
-        tabAnjaniBtn.click();
+        switchTab('anjani');
         ownerInput.value = bot.ownerId;
         
         selectedFeatures.clear();
@@ -647,8 +731,8 @@
             dot.classList.add('hidden');
           }
         });
-      } else {
-        tabRagBtn.click();
+      } else if (bot.type === 'ai_pdf_chat') {
+        switchTab('ai_pdf_chat');
         supabaseUrlInput.value = bot.supabaseUrl;
         supabaseKeyInput.value = bot.supabaseKey;
         llmProviderSelect.value = bot.llmProvider;
@@ -658,6 +742,11 @@
         chunkSizeInput.value = bot.chunkSize;
         chunkOverlapInput.value = bot.chunkOverlap;
         retrieverKInput.value = bot.retrieverK;
+      } else {
+        switchTab('github_pr_bot');
+        geminiApiKeyInput.value = bot.geminiApiKey;
+        githubTokenInput.value = bot.githubToken;
+        maxRepoSizeInput.value = bot.maxRepoSize;
       }
 
       showAlert('success', `Loaded configurations for bot ${bot.hash}. Re-enter the Bot Token to deploy updates.`);
@@ -711,7 +800,7 @@
         }
         payload.ownerId = ownerId;
         payload.enabledPlugins = Array.from(selectedFeatures);
-      } else {
+      } else if (activeTab === 'ai_pdf_chat') {
         const supabaseUrl = supabaseUrlInput.value.trim();
         const supabaseKey = supabaseKeyInput.value.trim();
         const llmApiKey = llmApiKeyInput.value.trim();
@@ -730,6 +819,16 @@
         payload.chunkSize = parseInt(chunkSizeInput.value) || 1000;
         payload.chunkOverlap = parseInt(chunkOverlapInput.value) || 200;
         payload.retrieverK = parseInt(retrieverKInput.value) || 10;
+      } else {
+        const geminiApiKey = geminiApiKeyInput.value.trim();
+        if (!geminiApiKey) {
+          showAlert('error', 'Gemini API Key is required.');
+          return;
+        }
+        
+        payload.geminiApiKey = geminiApiKey;
+        payload.githubToken = githubTokenInput.value.trim();
+        payload.maxRepoSize = parseInt(maxRepoSizeInput.value) || 100;
       }
 
       // Show loading UI
@@ -755,10 +854,13 @@
           
           if (activeTab === 'anjani') {
             ownerInput.value = '';
-          } else {
+          } else if (activeTab === 'ai_pdf_chat') {
             supabaseUrlInput.value = '';
             supabaseKeyInput.value = '';
             llmApiKeyInput.value = '';
+          } else {
+            geminiApiKeyInput.value = '';
+            githubTokenInput.value = '';
           }
           loadBots();
         } else {
