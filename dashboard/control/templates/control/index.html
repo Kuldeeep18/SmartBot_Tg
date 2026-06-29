@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Anjani Control Hub</title>
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      fetch('/api/log_error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, source, lineno, colno, error: error ? error.stack : '' })
+      }).catch(err => {});
+    };
+  </script>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -472,6 +481,93 @@
     </div>
   </div>
 
+  <!-- Feature Modal -->
+  <div id="feature-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity duration-300" id="feature-modal-backdrop"></div>
+    <div class="relative w-full max-w-5xl bg-slate-900 border border-slate-700/50 rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl transition-all duration-300 scale-95 opacity-0 m-4" id="feature-modal-content" style="max-height: 90vh;">
+      <!-- Left Content -->
+      <div class="w-full md:w-1/2 p-8 md:p-10 flex flex-col overflow-y-auto bg-slate-900 custom-scrollbar">
+        <h2 id="modal-title" class="text-3xl font-extrabold text-slate-100 mb-4 tracking-tight">Feature Title</h2>
+        <p id="modal-desc" class="text-slate-400 text-sm mb-8 leading-relaxed">Description goes here.</p>
+        
+        <h3 class="text-lg font-bold text-slate-200 mb-2">Business value</h3>
+        <p id="modal-value" class="text-slate-400 text-sm mb-8 leading-relaxed">Value goes here.</p>
+        
+        <h3 class="text-lg font-bold text-slate-200 mb-4">How does it work?</h3>
+        <div id="modal-steps" class="space-y-4 mb-10">
+          <!-- Steps injected via JS -->
+        </div>
+        
+        <div class="mt-auto flex items-center justify-between pt-6 border-t border-slate-800/60 sticky bottom-0 bg-slate-900">
+          <button id="modal-close" type="button" class="text-sm font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-2 transition-colors">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            Back To List
+          </button>
+          <button id="modal-toggle-btn" type="button" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-600/20 transition-all">
+            Set Up Feature
+          </button>
+        </div>
+      </div>
+      
+      <!-- Right Mockup -->
+      <div class="w-full md:w-1/2 bg-slate-950 p-8 flex items-center justify-center relative overflow-hidden hidden md:flex border-l border-slate-800">
+        <!-- Background decoration -->
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:2rem_2rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)] opacity-20"></div>
+        
+        <!-- Phone Mockup -->
+        <div class="w-[300px] h-[600px] bg-slate-900 rounded-[3rem] border-[10px] border-slate-800 shadow-2xl relative flex flex-col overflow-hidden z-10">
+          <!-- Notch -->
+          <div class="absolute top-0 inset-x-0 h-6 flex justify-center z-20">
+            <div class="w-32 h-6 bg-slate-800 rounded-b-2xl"></div>
+          </div>
+          
+          <!-- Header -->
+          <div class="bg-slate-800/90 pt-10 pb-3 px-4 flex items-center gap-3 border-b border-slate-700/50 backdrop-blur-md relative z-10">
+            <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 overflow-hidden relative">
+              <i data-lucide="users" class="w-5 h-5 relative z-10"></i>
+              <div class="absolute inset-0 bg-indigo-500/10 backdrop-blur-sm"></div>
+            </div>
+            <div>
+              <div class="text-sm font-bold text-slate-100">Group Chat</div>
+              <div class="text-[10px] text-slate-400">1,204 members</div>
+            </div>
+          </div>
+          
+          <!-- Chat Area -->
+          <div id="modal-chat" class="flex-1 p-4 bg-slate-900 overflow-y-auto space-y-4 flex flex-col justify-end custom-scrollbar relative z-0 pb-4">
+            <!-- Chat messages injected via JS -->
+          </div>
+          
+          <!-- Input Area -->
+          <div class="p-3 bg-slate-800/95 flex items-center gap-2 border-t border-slate-700/50 relative z-10">
+            <div class="w-6 h-6 rounded-full text-slate-500 flex items-center justify-center">
+              <i data-lucide="paperclip" class="w-4 h-4"></i>
+            </div>
+            <div class="flex-1 h-9 rounded-full bg-slate-950 border border-slate-700 px-3 flex items-center text-xs text-slate-500">
+              Message...
+            </div>
+            <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center">
+              <i data-lucide="mic" class="w-4 h-4"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: rgba(71, 85, 105, 0.5);
+      border-radius: 20px;
+    }
+  </style>
+
   <script>
     // Initialize icons
     lucide.createIcons();
@@ -479,6 +575,128 @@
     // Active configuration state
     let activeTab = 'anjani'; // 'anjani', 'ai_pdf_chat', or 'github_pr_bot'
     const selectedFeatures = new Set(['muting', 'filters', 'welcome']);
+
+    const featureData = {
+      muting: {
+        title: "Mute Management",
+        desc: "Mute/unmute members, manage temporary silence periods, and track mute logs.",
+        value: "Maintain order and handle disruptive members swiftly without permanent bans.",
+        steps: [
+          "Reply to a user's message with <code>/mute 1h</code>.",
+          "Bot restricts the user's send permissions.",
+          "User is automatically unmuted after the time expires."
+        ],
+        chat: [
+          { type: 'user', name: 'Spammer', text: 'Buy cheap crypto now!!! 🚀' },
+          { type: 'admin', name: 'Admin', text: '/mute 1h', reply: true },
+          { type: 'bot', text: '🔇 <b>Spammer</b> has been muted for 1 hour by Admin.' }
+        ]
+      },
+      filters: {
+        title: "Smart Filters",
+        desc: "Set keyword triggers to auto-respond, delete spam, or warn users.",
+        value: "Automate FAQs and prevent specific unwanted words automatically.",
+        steps: [
+          "Admin uses <code>/filter [keyword] [reply]</code>.",
+          "User sends a message containing the keyword.",
+          "Bot automatically replies with the preset text."
+        ],
+        chat: [
+          { type: 'admin', name: 'Admin', text: '/filter rules Please read the pinned message.' },
+          { type: 'bot', text: '✅ Filter added for <b>rules</b>.' },
+          { type: 'user', name: 'Newbie', text: 'What are the rules here?' },
+          { type: 'bot', text: 'Please read the pinned message.', reply: true }
+        ]
+      },
+      welcome: {
+        title: "Custom Greetings",
+        desc: "Greet new members with customized media, text, and interactive buttons.",
+        value: "Create a warm, professional first impression for new community members.",
+        steps: [
+          "Configure a welcome message using <code>/setwelcome</code>.",
+          "A new user joins the group.",
+          "Bot sends the personalized greeting and auto-deletes the old one."
+        ],
+        chat: [
+          { type: 'system', text: 'NewUser joined the group' },
+          { type: 'bot', text: '👋 Welcome <b>NewUser</b> to the official group! Please read our guidelines.', buttons: ['Read Rules'] }
+        ]
+      },
+      federation: {
+        title: "Federation Bans",
+        desc: "Share ban lists across multiple chats to keep toxic users out globally.",
+        value: "Protect your network of groups from known scammers and spammers proactively.",
+        steps: [
+          "Create a fed with <code>/newfed</code>.",
+          "Link your other groups to the fed.",
+          "Ban a user in one group, and they are banned everywhere."
+        ],
+        chat: [
+          { type: 'admin', name: 'Admin', text: '/fban @scammer' },
+          { type: 'bot', text: '🔨 <b>scammer</b> has been fed-banned.\nReason: Not specified.\nAffects 5 chats.' }
+        ]
+      },
+      spam_shield: {
+        title: "Spam Shield",
+        desc: "Combat automated raid attacks, flood messages, and malicious userbots.",
+        value: "Prevent your group from being destroyed by sudden bot raids or spam waves.",
+        steps: [
+          "Enable anti-flood and raid protection.",
+          "Bot detects rapid messages or mass joins.",
+          "Bot automatically mutes/bans the offenders."
+        ],
+        chat: [
+          { type: 'system', text: 'Bot1 joined' },
+          { type: 'system', text: 'Bot2 joined' },
+          { type: 'bot', text: '🛡️ <b>Raid detected.</b> Anti-raid mode activated. New members will be temporarily muted.' }
+        ]
+      },
+      rules: {
+        title: "Chat Rules",
+        desc: "Define rules for your chat and allow users to view them via commands.",
+        value: "Keep your community guidelines accessible without cluttering the chat.",
+        steps: [
+          "Admin sets rules using <code>/setrules</code>.",
+          "Users can type <code>/rules</code> to read them."
+        ],
+        chat: [
+          { type: 'user', name: 'Member', text: '/rules' },
+          { type: 'bot', text: '1. No spamming\n2. Be respectful\n3. No NSFW content\nClick below to read full rules.', buttons: ['Full Rules'] }
+        ]
+      },
+      purge: {
+        title: "Quick Purges",
+        desc: "Instantly bulk delete messages by user or message count with one command.",
+        value: "Clean up messy conversations or spam attacks in seconds.",
+        steps: [
+          "Reply to the first message to delete.",
+          "Type <code>/purge</code>.",
+          "All messages from that point to the latest are deleted."
+        ],
+        chat: [
+          { type: 'user', name: 'Spammer', text: 'Spam 1' },
+          { type: 'user', name: 'Spammer', text: 'Spam 2' },
+          { type: 'admin', name: 'Admin', text: '/purge', reply: true },
+          { type: 'bot', text: '🧹 Purged 3 messages.' }
+        ]
+      },
+      lockings: {
+        title: "Media Locking",
+        desc: "Block stickers, links, voice messages, documents, or games dynamically.",
+        value: "Control what type of content is allowed in your chat to maintain focus.",
+        steps: [
+          "Admin types <code>/lock links</code>.",
+          "User sends a link.",
+          "Bot deletes the link and warns the user."
+        ],
+        chat: [
+          { type: 'admin', name: 'Admin', text: '/lock links' },
+          { type: 'bot', text: '🔒 Links are now locked in this chat.' },
+          { type: 'user', name: 'User', text: 'Check out my site! http://example.com' },
+          { type: 'bot', text: '⚠️ <b>User</b>, links are not allowed here.' }
+        ]
+      }
+    };
 
     // UI elements selectors
     const tabAnjaniBtn = document.getElementById('tab-anjani');
@@ -519,6 +737,20 @@
     const alertIconContainer = document.getElementById('alert-icon-container');
     const instancesList = document.getElementById('instances-list');
 
+    // Modal Selectors
+    const featureModal = document.getElementById('feature-modal');
+    const modalContent = document.getElementById('feature-modal-content');
+    const modalBackdrop = document.getElementById('feature-modal-backdrop');
+    const modalClose = document.getElementById('modal-close');
+    const modalToggleBtn = document.getElementById('modal-toggle-btn');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDesc = document.getElementById('modal-desc');
+    const modalValue = document.getElementById('modal-value');
+    const modalSteps = document.getElementById('modal-steps');
+    const modalChat = document.getElementById('modal-chat');
+
+    let currentModalFeature = null;
+
     // Switch Tabs Helper
     function switchTab(target) {
       activeTab = target;
@@ -549,27 +781,133 @@
     tabRagBtn.addEventListener('click', () => switchTab('ai_pdf_chat'));
     tabGithubBtn.addEventListener('click', () => switchTab('github_pr_bot'));
 
-    // Toggle plugin card selection
+    function openModal(featureId) {
+      currentModalFeature = featureId;
+      const data = featureData[featureId];
+      if(!data) return;
+
+      modalTitle.textContent = data.title;
+      modalDesc.textContent = data.desc;
+      modalValue.textContent = data.value;
+      
+      modalSteps.innerHTML = data.steps.map((step, idx) => `
+        <div class="flex items-start gap-3">
+          <div class="w-6 h-6 rounded-full bg-indigo-600/20 text-indigo-400 flex items-center justify-center flex-shrink-0 text-xs font-bold border border-indigo-500/30">
+            ${idx + 1}
+          </div>
+          <p class="text-slate-300 text-sm mt-0.5">${step}</p>
+        </div>
+      `).join('');
+
+      modalChat.innerHTML = data.chat.map(msg => {
+        if (msg.type === 'system') {
+          return `<div class="text-center text-[10px] text-slate-500 my-2">${msg.text}</div>`;
+        }
+        
+        const isBot = msg.type === 'bot';
+        const isAdmin = msg.type === 'admin';
+        const isReply = msg.reply;
+        
+        let buttonsHtml = '';
+        if (msg.buttons) {
+          buttonsHtml = msg.buttons.map(btn => `
+            <div class="mt-2 text-center text-xs text-indigo-300 border border-indigo-500/30 bg-indigo-900/30 hover:bg-indigo-900/50 transition-colors rounded py-1.5 cursor-pointer font-medium shadow-sm">
+              ${btn}
+            </div>
+          `).join('');
+        }
+
+        return `
+          <div class="flex gap-2 ${isBot ? 'items-start' : 'items-end flex-row-reverse'} animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold shadow-sm ${
+              isBot ? 'bg-indigo-500 text-white' : isAdmin ? 'bg-emerald-500 text-white' : 'bg-slate-600 text-white'
+            }">
+              ${isBot ? '<i data-lucide="bot" class="w-3.5 h-3.5"></i>' : (isAdmin ? 'A' : 'U')}
+            </div>
+            <div class="max-w-[85%] rounded-2xl p-2.5 text-xs shadow-md ${
+              isBot ? 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700/50' : 'bg-indigo-600 text-white rounded-tr-sm'
+            }">
+              ${!isBot ? `<div class="font-bold text-[10px] opacity-70 mb-0.5">${msg.name}</div>` : ''}
+              ${isReply ? `<div class="border-l-2 border-indigo-400 pl-2 mb-1 text-[10px] opacity-80 bg-black/10 p-1 rounded">Replying to message...</div>` : ''}
+              <div class="leading-relaxed whitespace-pre-wrap">${msg.text}</div>
+              ${buttonsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      updateModalToggleButton();
+
+      featureModal.classList.remove('hidden');
+      featureModal.classList.add('flex');
+      
+      // Delay for transition
+      setTimeout(() => {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+      }, 10);
+      
+      lucide.createIcons();
+      
+      // Scroll to bottom of chat
+      setTimeout(() => {
+        modalChat.scrollTop = modalChat.scrollHeight;
+      }, 50);
+    }
+
+    function closeModal() {
+      modalContent.classList.remove('scale-100', 'opacity-100');
+      modalContent.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => {
+        featureModal.classList.remove('flex');
+        featureModal.classList.add('hidden');
+        currentModalFeature = null;
+      }, 300);
+    }
+
+    function updateModalToggleButton() {
+      if (selectedFeatures.has(currentModalFeature)) {
+        modalToggleBtn.textContent = 'Remove Feature';
+        modalToggleBtn.className = 'px-6 py-3 bg-rose-600/20 text-rose-400 border border-rose-500/30 hover:bg-rose-600/30 text-sm font-semibold rounded-xl transition-all';
+      } else {
+        modalToggleBtn.textContent = 'Set Up Feature';
+        modalToggleBtn.className = 'px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-600/20 transition-all';
+      }
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', closeModal);
+
+    modalToggleBtn.addEventListener('click', () => {
+      if (!currentModalFeature) return;
+      
+      const card = document.querySelector(`.glass-card[data-feature="${currentModalFeature}"]`);
+      const iconBox = card.querySelector('.feature-icon-box');
+      const title = card.querySelector('h3');
+      const dot = card.querySelector('.dot-indicator');
+      
+      if (selectedFeatures.has(currentModalFeature)) {
+        selectedFeatures.delete(currentModalFeature);
+        card.classList.remove('active');
+        iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400";
+        title.className = "font-semibold text-sm text-slate-300";
+        dot.classList.add('hidden');
+      } else {
+        selectedFeatures.add(currentModalFeature);
+        card.classList.add('active');
+        iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400";
+        title.className = "font-semibold text-sm text-slate-100";
+        dot.classList.remove('hidden');
+      }
+      
+      updateModalToggleButton();
+    });
+
+    // Open Modal on card click
     cards.forEach(card => {
       card.addEventListener('click', () => {
         const featureId = card.getAttribute('data-feature');
-        const iconBox = card.querySelector('.feature-icon-box');
-        const title = card.querySelector('h3');
-        const dot = card.querySelector('.dot-indicator');
-        
-        if (selectedFeatures.has(featureId)) {
-          selectedFeatures.delete(featureId);
-          card.classList.remove('active');
-          iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400";
-          title.className = "font-semibold text-sm text-slate-300";
-          dot.classList.add('hidden');
-        } else {
-          selectedFeatures.add(featureId);
-          card.classList.add('active');
-          iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400";
-          title.className = "font-semibold text-sm text-slate-100";
-          dot.classList.remove('hidden');
-        }
+        openModal(featureId);
       });
     });
 
