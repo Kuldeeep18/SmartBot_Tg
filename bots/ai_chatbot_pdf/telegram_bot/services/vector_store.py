@@ -477,3 +477,38 @@ async def get_user_documents_info(user_id: int) -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error getting documents info for user {user_id}: {e}")
         return []
+
+
+async def delete_document(user_id: int, document_id: str) -> bool:
+    """
+    Delete all chunks of a document for a specific user from Supabase.
+    """
+    try:
+        client = get_supabase_client()
+        logger.info(f"Deleting document {document_id} for user {user_id} from Supabase")
+        client.table("documents").delete().eq("metadata->>telegram_user_id", str(user_id)).eq("metadata->>document_id", document_id).execute()
+        return True
+    except Exception as e:
+        logger.error(f"Error deleting document {document_id} from Supabase: {e}", exc_info=True)
+        return False
+
+
+async def get_document_filename(user_id: int, document_id: str) -> Optional[str]:
+    """
+    Get the filename of a document by its ID and user ID.
+    """
+    try:
+        client = get_supabase_client()
+        result = (
+            client.table("documents")
+            .select("metadata")
+            .eq("metadata->>telegram_user_id", str(user_id))
+            .eq("metadata->>document_id", document_id)
+            .limit(1)
+            .execute()
+        )
+        if result.data:
+            return result.data[0].get("metadata", {}).get("filename")
+    except Exception as e:
+        logger.error(f"Error getting document filename for ID {document_id}: {e}", exc_info=True)
+    return None
