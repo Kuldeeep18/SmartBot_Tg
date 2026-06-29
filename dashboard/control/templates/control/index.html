@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anjani Control Hub</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --background: #020617;
+      --foreground: #f8fafc;
+    }
+    body {
+      color: var(--foreground);
+      background: var(--background);
+      background-image: 
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,0.1) 0, transparent 50%);
+      background-attachment: fixed;
+      min-height: 100vh;
+    }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.4);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(30, 41, 59, 0.55);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+      transform: translateY(-2px);
+    }
+    .glass-card.active {
+      border-color: rgba(99, 102, 241, 0.6);
+      background: rgba(99, 102, 241, 0.1);
+    }
+  </style>
+</head>
+<body class="pb-16 px-4 md:px-8">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Header -->
+    <header class="py-12 flex flex-col md:flex-row justify-between items-center border-b border-slate-800/60 mb-12">
+      <div class="flex items-center gap-4 mb-6 md:mb-0">
+        <div class="p-3 bg-indigo-600/20 border border-indigo-500/30 rounded-2xl shadow-indigo-500/10 shadow-lg">
+          <i data-lucide="layers" class="w-8 h-8 text-indigo-400"></i>
+        </div>
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-200 via-slate-100 to-indigo-100 bg-clip-text text-transparent">
+            Anjani Control Hub
+          </h1>
+          <p class="text-slate-400 text-sm mt-1">Multi-tenant custom feature manager for Telegram groups</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button 
+          id="refresh-btn"
+          class="p-2.5 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/50 rounded-xl transition-all"
+          title="Refresh bot list"
+        >
+          <i data-lucide="refresh-cw" class="w-5 h-5 text-slate-300" id="refresh-icon"></i>
+        </button>
+        <span class="px-3.5 py-1.5 bg-slate-900/60 border border-slate-800 text-xs font-semibold text-indigo-400 rounded-full flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+          System Online
+        </span>
+      </div>
+    </header>
+
+    <!-- Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- Left Side: Customizer Form -->
+      <div class="lg:col-span-8 space-y-8">
+        
+        <!-- Alerts Area -->
+        <div id="alert-banner" class="hidden p-4 rounded-xl flex items-start gap-3 border">
+          <div id="alert-icon-container"></div>
+          <span id="alert-text" class="text-sm font-medium"></span>
+        </div>
+
+        <form id="launch-form" class="glass-panel rounded-3xl p-6 md:p-8 space-y-8">
+          <div>
+            <h2 class="text-xl font-bold flex items-center gap-2 text-slate-100">
+              <i data-lucide="sparkles" class="w-5 h-5 text-indigo-400"></i>
+              Customize Features
+            </h2>
+            <p class="text-slate-400 text-sm mt-1">Select the specific plugins to load onto your bot container.</p>
+          </div>
+
+          <!-- Feature Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Muting Card -->
+            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden active" data-feature="muting">
+              <div class="feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400">
+                <i data-lucide="volume-x" class="w-6 h-6"></i>
+              </div>
+              <div class="space-y-1">
+                <h3 class="font-semibold text-sm text-slate-100">Mute Management</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">Mute/unmute members, manage temporary silence periods, and track mute logs.</p>
+              </div>
+              <div class="dot-indicator absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+            </div>
+
+            <!-- Filters Card -->
+            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden active" data-feature="filters">
+              <div class="feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400">
+                <i data-lucide="message-square" class="w-6 h-6"></i>
+              </div>
+              <div class="space-y-1">
+                <h3 class="font-semibold text-sm text-slate-100">Smart Filters</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">Set keyword triggers to auto-respond, delete spam, or warn users.</p>
+              </div>
+              <div class="dot-indicator absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+            </div>
+
+            <!-- Welcome Card -->
+            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden active" data-feature="welcome">
+              <div class="feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400">
+                <i data-lucide="user-check" class="w-6 h-6"></i>
+              </div>
+              <div class="space-y-1">
+                <h3 class="font-semibold text-sm text-slate-100">Custom Greetings</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">Greet new members with customized media, text, and interactive buttons.</p>
+              </div>
+              <div class="dot-indicator absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+            </div>
+
+            <!-- Federation Card -->
+            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="federation">
+              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                <i data-lucide="radio" class="w-6 h-6"></i>
+              </div>
+              <div class="space-y-1">
+                <h3 class="font-semibold text-sm text-slate-300">Federation Bans</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">Share ban lists across multiple chats to keep toxic users out globally.</p>
+              </div>
+              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+            </div>
+
+            <!-- Spam Shield Card -->
+            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="spam_shield">
+              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                <i data-lucide="shield" class="w-6 h-6"></i>
+              </div>
+              <div class="space-y-1">
+                <h3 class="font-semibold text-sm text-slate-300">Spam Shield</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">Combat automated raid attacks, flood messages, and malicious userbots.</p>
+              </div>
+              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+            </div>
+
+            <!-- Rules Card -->
+            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="rules">
+              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                <i data-lucide="book-open" class="w-6 h-6"></i>
+              </div>
+              <div class="space-y-1">
+                <h3 class="font-semibold text-sm text-slate-300">Chat Rules</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">Define rules for your chat and allow users to view them via commands.</p>
+              </div>
+              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+            </div>
+
+            <!-- Purge Card -->
+            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="purge">
+              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                <i data-lucide="trash-2" class="w-6 h-6"></i>
+              </div>
+              <div class="space-y-1">
+                <h3 class="font-semibold text-sm text-slate-300">Quick Purges</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">Instantly bulk delete messages by user or message count with one command.</p>
+              </div>
+              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+            </div>
+
+            <!-- Lockings Card -->
+            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="lockings">
+              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                <i data-lucide="lock" class="w-6 h-6"></i>
+              </div>
+              <div class="space-y-1">
+                <h3 class="font-semibold text-sm text-slate-300">Media Locking</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">Block stickers, links, voice messages, documents, or games dynamically.</p>
+              </div>
+              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+            </div>
+
+            <!-- Admins Card -->
+            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="admins">
+              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                <i data-lucide="users" class="w-6 h-6"></i>
+              </div>
+              <div class="space-y-1">
+                <h3 class="font-semibold text-sm text-slate-300">Admin Tools</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">Quickly promote, demote, or check admin permissions and statistics.</p>
+              </div>
+              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+            </div>
+
+            <!-- Notes Card -->
+            <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="notes">
+              <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                <i data-lucide="file-text" class="w-6 h-6"></i>
+              </div>
+              <div class="space-y-1">
+                <h3 class="font-semibold text-sm text-slate-300">Notes & Triggers</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">Save custom text snippets or links for easy callout with hashtags.</p>
+              </div>
+              <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+            </div>
+
+          </div>
+
+          <!-- Configuration Credentials -->
+          <div class="border-t border-slate-800/60 pt-8 space-y-6">
+            <div>
+              <h3 class="text-lg font-semibold text-slate-100">Configuration Credentials</h3>
+              <p class="text-slate-400 text-sm mt-0.5">We need the Telegram credentials to host your instance.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Token Input -->
+              <div class="space-y-2">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">BotFather Token</label>
+                <div class="relative">
+                  <input 
+                    id="bot-token"
+                    type="password"
+                    placeholder="e.g. 123456:ABC-DEF1234..."
+                    required
+                    class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                  />
+                  <button
+                    type="button"
+                    id="toggle-token-visibility"
+                    class="absolute right-3 top-3.5 text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    <i data-lucide="eye" class="w-4 h-4" id="eye-icon"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Owner User ID -->
+              <div class="space-y-2">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Owner User ID</label>
+                <input 
+                  id="owner-id"
+                  type="text"
+                  placeholder="e.g. 1919814914"
+                  required
+                  class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Deploy Button -->
+          <div class="border-t border-slate-800/60 pt-6 flex justify-end">
+            <button
+              type="submit"
+              id="submit-btn"
+              class="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold rounded-xl transition-all shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 flex items-center gap-2 group"
+            >
+              <span>Launch Custom Instance</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" id="submit-icon"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Right Side: Active Instances Panel -->
+      <div class="lg:col-span-4 space-y-6">
+        <div class="glass-panel rounded-3xl p-6 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <i data-lucide="play" class="w-4 h-4 text-emerald-400 fill-emerald-400"></i>
+              Active Instances
+            </h2>
+            <p class="text-slate-400 text-xs mt-0.5">Manage your running bot containers.</p>
+          </div>
+
+          <div id="instances-list" class="space-y-4 max-h-[600px] overflow-y-auto pr-1">
+            <!-- Populated via JS -->
+            <div class="text-center py-8 text-slate-500 text-sm">
+              <i data-lucide="refresh-cw" class="w-6 h-6 animate-spin mx-auto mb-2 text-slate-600"></i>
+              Querying containers...
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Initialize icons
+    lucide.createIcons();
+
+    // Features data state
+    const selectedFeatures = new Set(['muting', 'filters', 'welcome']);
+
+    // UI elements selectors
+    const cards = document.querySelectorAll('.glass-card');
+    const tokenInput = document.getElementById('bot-token');
+    const toggleTokenBtn = document.getElementById('toggle-token-visibility');
+    const eyeIcon = document.getElementById('eye-icon');
+    const ownerInput = document.getElementById('owner-id');
+    const launchForm = document.getElementById('launch-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const submitIcon = document.getElementById('submit-icon');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const refreshIcon = document.getElementById('refresh-icon');
+    const alertBanner = document.getElementById('alert-banner');
+    const alertText = document.getElementById('alert-text');
+    const alertIconContainer = document.getElementById('alert-icon-container');
+    const instancesList = document.getElementById('instances-list');
+
+    // Toggle card selection
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        const featureId = card.getAttribute('data-feature');
+        const iconBox = card.querySelector('.feature-icon-box');
+        const title = card.querySelector('h3');
+        const dot = card.querySelector('.dot-indicator');
+        
+        if (selectedFeatures.has(featureId)) {
+          selectedFeatures.delete(featureId);
+          card.classList.remove('active');
+          iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400";
+          title.className = "font-semibold text-sm text-slate-300";
+          dot.classList.add('hidden');
+        } else {
+          selectedFeatures.add(featureId);
+          card.classList.add('active');
+          iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400";
+          title.className = "font-semibold text-sm text-slate-100";
+          dot.classList.remove('hidden');
+        }
+      });
+    });
+
+    // Toggle token visibility
+    toggleTokenBtn.addEventListener('click', () => {
+      const type = tokenInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      tokenInput.setAttribute('type', type);
+      if (type === 'password') {
+        eyeIcon.setAttribute('data-lucide', 'eye');
+      } else {
+        eyeIcon.setAttribute('data-lucide', 'eye-off');
+      }
+      lucide.createIcons();
+    });
+
+    // Show Alert Banner
+    function showAlert(type, message) {
+      alertBanner.className = `p-4 rounded-xl flex items-start gap-3 border ${
+        type === 'success' 
+          ? 'bg-emerald-950/30 border-emerald-500/20 text-emerald-300' 
+          : 'bg-rose-950/30 border-rose-500/20 text-rose-300'
+      }`;
+      alertText.textContent = message;
+      
+      const iconName = type === 'success' ? 'check-circle-2' : 'alert-triangle';
+      const iconColor = type === 'success' ? 'text-emerald-400' : 'text-rose-400';
+      alertIconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-5 h-5 flex-shrink-0 ${iconColor}"></i>`;
+      
+      alertBanner.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    // Fetch and list bot containers
+    async function loadBots() {
+      refreshIcon.classList.add('animate-spin');
+      try {
+        const res = await fetch('/api/bot/status');
+        const data = await res.json();
+        
+        if (!data.bots || data.bots.length === 0) {
+          instancesList.innerHTML = `
+            <div class="text-center py-10 border border-dashed border-slate-800 rounded-2xl text-slate-500 text-sm px-4">
+              No active bot containers found. Configure your bot on the left to start hosting.
+            </div>
+          `;
+          return;
+        }
+
+        instancesList.innerHTML = data.bots.map(bot => {
+          const badgeHtml = bot.enabledPlugins.map(p => `
+            <span class="px-2 py-0.5 bg-slate-900 border border-slate-800/80 rounded-md text-[9px] text-indigo-300 font-medium">
+              ${p}
+            </span>
+          `).join('');
+
+          return `
+            <div class="p-4 rounded-2xl bg-slate-950/40 border border-slate-900 flex flex-col gap-3">
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="font-mono text-xs font-semibold text-slate-300">
+                    ID: ${bot.hash}
+                  </div>
+                  <div class="text-[10px] text-slate-500 mt-0.5">
+                    Owner: ${bot.ownerId}
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full ${bot.status === 'running' ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}"></span>
+                  <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">${bot.status}</span>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-1">
+                ${badgeHtml}
+              </div>
+
+              <div class="flex justify-between items-center border-t border-slate-900/60 pt-3 mt-1">
+                <button
+                  onclick="editBot('${bot.ownerId}', ${JSON.stringify(bot.enabledPlugins).replace(/"/g, '&quot;')}, '${bot.hash}')"
+                  class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+                >
+                  Modify Config
+                </button>
+                <button
+                  onclick="stopBot('${bot.hash}')"
+                  class="p-1.5 bg-rose-950/20 hover:bg-rose-900/30 border border-rose-500/10 hover:border-rose-500/20 rounded-lg text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1.5 text-xs font-medium"
+                >
+                  <i data-lucide="square" class="w-3.5 h-3.5 fill-rose-400"></i>
+                  Stop
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+        lucide.createIcons();
+      } catch (err) {
+        console.error(err);
+        instancesList.innerHTML = `
+          <div class="text-center py-10 border border-dashed border-rose-950/30 rounded-2xl text-rose-400 text-sm px-4 bg-rose-950/5">
+            Failed to query container status. Check database connection.
+          </div>
+        `;
+      } finally {
+        setTimeout(() => refreshIcon.classList.remove('animate-spin'), 600);
+      }
+    }
+
+    // Populate form with existing configuration to edit
+    window.editBot = function(ownerId, plugins, hash) {
+      ownerInput.value = ownerId;
+      
+      // Update selected features
+      selectedFeatures.clear();
+      plugins.forEach(p => selectedFeatures.add(p));
+      
+      // Update cards UI classes
+      cards.forEach(card => {
+        const featureId = card.getAttribute('data-feature');
+        const iconBox = card.querySelector('.feature-icon-box');
+        const title = card.querySelector('h3');
+        const dot = card.querySelector('.dot-indicator');
+        
+        if (selectedFeatures.has(featureId)) {
+          card.classList.add('active');
+          iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-indigo-600/20 border border-indigo-400/30 text-indigo-400";
+          title.className = "font-semibold text-sm text-slate-100";
+          dot.classList.remove('hidden');
+        } else {
+          card.classList.remove('active');
+          iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400";
+          title.className = "font-semibold text-sm text-slate-300";
+          dot.classList.add('hidden');
+        }
+      });
+
+      showAlert('success', `Loaded configuration for bot ${hash}. Re-enter the Bot Token to deploy modifications.`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Stop container trigger
+    window.stopBot = async function(hash) {
+      if (!confirm('Are you sure you want to stop and delete this bot container?')) return;
+      try {
+        const res = await fetch('/api/bot/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hash, action: 'stop' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadBots();
+        } else {
+          alert(data.error || 'Failed to stop container');
+        }
+      } catch (err) {
+        alert(err.message || 'Error occurred while stopping bot');
+      }
+    }
+
+    // Handle Form Submit (Launch)
+    launchForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const token = tokenInput.value.trim();
+      const ownerId = ownerInput.value.trim();
+      
+      if (!token || !ownerId) {
+        showAlert('error', 'Token and Owner ID fields are required.');
+        return;
+      }
+      
+      if (selectedFeatures.size === 0) {
+        showAlert('error', 'Please select at least one feature to deploy.');
+        return;
+      }
+
+      // Show loading UI
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `
+        <i data-lucide="refresh-cw" class="w-4 h-4 animate-spin"></i>
+        <span>Deploying container...</span>
+      `;
+      lucide.createIcons();
+
+      try {
+        const res = await fetch('/api/bot/launch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token,
+            ownerId,
+            enabledPlugins: Array.from(selectedFeatures)
+          })
+        });
+
+        const data = await res.json();
+        
+        if (data.success) {
+          showAlert('success', `Bot container started successfully! Hash ID: ${data.hash}`);
+          tokenInput.value = '';
+          ownerInput.value = '';
+          loadBots();
+        } else {
+          showAlert('error', data.error || 'Failed to launch custom bot instance.');
+        }
+      } catch (err) {
+        showAlert('error', err.message || 'Network error occurred.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `
+          <span>Launch Custom Instance</span>
+          <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-0.5 transition-transform"></i>
+        `;
+        lucide.createIcons();
+      }
+    });
+
+    // Refresh btn trigger
+    refreshBtn.addEventListener('click', loadBots);
+
+    // Initial load
+    loadBots();
+  </script>
+</body>
+</html>
