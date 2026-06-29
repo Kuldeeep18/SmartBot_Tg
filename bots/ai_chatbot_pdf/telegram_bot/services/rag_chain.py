@@ -434,7 +434,7 @@ async def answer_query(
         query=query,
         user_id=telegram_user_id,
         document_id=document_id,
-        k=max(config.retriever_k, 10),  # minimum 10 for better page coverage
+        k=max(config.retriever_k, 20),  # minimum 20 for broad page coverage
     )
 
     if not documents:
@@ -479,7 +479,7 @@ async def answer_query(
                     f"Attempting response generation with provider='{p['name']}', "
                     f"model='{p['model']}', key index {idx}"
                 )
-                model = create_model(p, key, temperature=0.2)
+                model = create_model(p, key, temperature=0.1)  # low temp for precision
                 chain = RESPONSE_PROMPT | model | StrOutputParser()
                 
                 answer = await chain.ainvoke({

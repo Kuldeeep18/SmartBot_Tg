@@ -166,6 +166,72 @@ async def get_page_chunks(
         return []
 
 
+async def expand_page_context(
+    docs: List[Document],
+    user_id: Optional[int] = None,
+    document_id: Optional[str] = None,
+    max_total: int = 50,
+) -> List[Document]:
+    """
+    Page-context expansion: for every page that appears in retrieved results,
+    fetch ALL chunks from that page so the LLM gets complete page-level context
+    instead of isolated fragments.
+
+    This dramatically improves accuracy because if chunk 2 of page 5 matched,
+    chunks 1 and 3 of page 5 are almost certainly relevant too.
+
+    Args:
+        docs: Initial retrieved documents.
+        user_id: Optional Telegram user ID filter.
+        document_id: Optional document ID filter.
+        max_total: Maximum total chunks to return (prevents context overflow).
+
+    Returns:
+        Expanded list of documents with full page context, ordered by page.
+    """
+    if not docs:
+        return docs
+
+    # Collect unique page numbers from retrieved results
+    page_numbers: set[int] = set()
+    for doc in docs:
+        p = doc.metadata.get("page_number")
+        if p is not None:
+            page_numbers.add(int(p))
+
+    if not page_numbers:
+        return docs
+
+    # Fetch all chunks from those pages
+    full_page_docs = await get_page_chunks(
+        page_numbers=sorted(page_numbers),
+        user_id=user_id,
+        document_id=document_id,
+    )
+
+    if not full_page_docs:
+        return docs
+
+    # Merge: full page docs + any remaining docs not from those pages
+    seen_contents: set[str] = {d.page_content.strip() for d in full_page_docs}
+    extra_docs = [
+        d for d in docs
+        if d.page_content.strip() not in seen_contents
+    ]
+
+    merged = full_page_docs + extra_docs
+
+    # Cap at max_total to prevent LLM context overflow
+    if len(merged) > max_total:
+        merged = merged[:max_total]
+
+    logger.info(
+        f"Page-context expansion: {len(docs)} initial → {len(merged)} expanded "
+        f"(pages: {sorted(page_numbers)})"
+    )
+    return merged
+
+
 async def add_documents(documents: List[Document]) -> List[str]:
     """
     Add documents to the vector store.
@@ -331,13 +397,23 @@ async def similarity_search(
                 added_count += 1
                 logger.info(f"Hybrid search: prepended high-priority keyword match (score={score}): '{doc.page_content[:60]}...'")
                 
-                if added_count >= 3:
+                if added_count >= 5:
                     break
                     
             logger.info(f"Hybrid search completed: returned {len(hybrid_results)} documents (added {added_count} keyword matches)")
         except Exception as e:
             logger.error(f"Error during hybrid search: {e}", exc_info=True)
-            
+
+    # ── Page-context expansion ────────────────────────────────
+    # For every page that appears in results, fetch ALL chunks from that page
+    # so the LLM gets complete context, not fragments
+    hybrid_results = await expand_page_context(
+        docs=hybrid_results,
+        user_id=user_id,
+        document_id=document_id,
+        max_total=50,
+    )
+
     return hybrid_results
 
 
