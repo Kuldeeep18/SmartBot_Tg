@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartBot Tg — Sign In</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            neumorphic: {
+              bg: '#E0E5EC',
+              fg: '#3D4852',
+              muted: '#6B7280',
+              accent: '#6C63FF',
+              accentLight: '#8B84FF',
+              accentSecondary: '#38B2AC',
+            }
+          },
+          fontFamily: {
+            display: ['"Plus Jakarta Sans"', 'sans-serif'],
+            body: ['"DM Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #E0E5EC;
+      color: #3D4852;
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden;
+    }
+    
+    .font-display {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Neumorphic Shadows System (RGBA for premium smooth blending) */
+    .neo-extruded {
+      box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.6);
+    }
+    .neo-lifted {
+      box-shadow: 12px 12px 20px rgba(163, 177, 198, 0.7), -12px -12px 20px rgba(255, 255, 255, 0.7);
+    }
+    .neo-extruded-sm {
+      box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5);
+    }
+    .neo-inset {
+      box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.6), inset -6px -6px 10px rgba(255, 255, 255, 0.5);
+    }
+    .neo-inset-deep {
+      box-shadow: inset 10px 10px 20px rgba(163, 177, 198, 0.7), inset -10px -10px 20px rgba(255, 255, 255, 0.6);
+    }
+    .neo-inset-sm {
+      box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Primary Violet CTA Shadows */
+    .neo-btn-primary {
+      background-color: #6C63FF;
+      color: #FFFFFF;
+      box-shadow: 4px 4px 10px rgba(74, 58, 206, 0.5), -4px -4px 10px rgba(255, 255, 255, 0.35);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .neo-btn-primary:hover {
+      background-color: #7A72FF;
+      box-shadow: 6px 6px 14px rgba(74, 58, 206, 0.6), -6px -6px 14px rgba(255, 255, 255, 0.4);
+      transform: translateY(-1px);
+    }
+    .neo-btn-primary:active {
+      box-shadow: inset 4px 4px 8px rgba(48, 35, 163, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.2);
+      transform: translateY(0.5px);
+    }
+
+    /* Custom Checkbox Shadow Play */
+    .neo-checkbox {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      box-shadow: 3px 3px 6px rgba(163, 177, 198, 0.6), -3px -3px 6px rgba(255, 255, 255, 0.5);
+      transition: all 0.2s ease;
+    }
+    .neo-checkbox.checked {
+      box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+      color: #6C63FF;
+    }
+
+    /* Ambient Floating Animations */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(4deg); }
+    }
+    .animate-float {
+      animation: float 7s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center relative p-6">
+
+  <!-- Ambient concentric circle decoration -->
+  <div class="absolute w-96 h-96 rounded-full neo-inset opacity-40 animate-float -top-20 -left-20 pointer-events-none"></div>
+  <div class="absolute w-80 h-80 rounded-full neo-extruded opacity-25 -bottom-20 -right-20 pointer-events-none"></div>
+
+  <!-- Main Card -->
+  <div class="w-full max-w-md rounded-[32px] p-8 md:p-10 neo-extruded bg-[#E0E5EC] space-y-8 z-10 relative">
+    
+    <!-- Logo -->
+    <div class="text-center space-y-3">
+      <div class="w-14 h-14 bg-[#E0E5EC] rounded-2xl flex items-center justify-center neo-inset-deep mx-auto text-neumorphic-accent">
+        <i data-lucide="layers" class="w-7 h-7"></i>
+      </div>
+      <h1 class="text-2xl md:text-3xl font-display font-extrabold text-neumorphic-fg tracking-tight">SmartBot Suite</h1>
+      <p class="text-xs text-neumorphic-muted font-body">Enter credentials to unlock the Control Hub.</p>
+    </div>
+
+    <!-- Alert Area (Redirect Warning or Errors) -->
+    <div id="auth-alert" class="hidden p-4 rounded-xl text-xs font-semibold text-[#3D4852] bg-[#E0E5EC] neo-inset flex items-start gap-2.5">
+      <i data-lucide="alert-circle" class="w-4 h-4 text-neumorphic-accent flex-shrink-0"></i>
+      <span id="auth-alert-text"></span>
+    </div>
+
+    <!-- Form -->
+    <form id="login-form" class="space-y-6">
+      <!-- Email Input -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Email Address</label>
+        <div class="relative">
+          <span class="absolute left-4 top-3.5 text-neumorphic-muted">
+            <i data-lucide="mail" class="w-4 h-4"></i>
+          </span>
+          <input 
+            id="email-input"
+            type="email"
+            placeholder="admin@smartbot.tg"
+            required
+            class="w-full bg-[#E0E5EC] neo-inset rounded-2xl pl-11 pr-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-body"
+          />
+        </div>
+      </div>
+
+      <!-- Password Input -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Password</label>
+        <div class="relative">
+          <span class="absolute left-4 top-3.5 text-neumorphic-muted">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+          </span>
+          <input 
+            id="password-input"
+            type="password"
+            placeholder="••••••••"
+            required
+            class="w-full bg-[#E0E5EC] neo-inset rounded-2xl pl-11 pr-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-body"
+          />
+        </div>
+      </div>
+
+      <!-- Remember & Forgot -->
+      <div class="flex items-center justify-between text-xs pt-1 select-none">
+        <label class="flex items-center gap-2 cursor-pointer group">
+          <div id="check-box" class="neo-checkbox flex items-center justify-center bg-[#E0E5EC]">
+            <i data-lucide="check" class="w-3.5 h-3.5 hidden" id="check-icon"></i>
+          </div>
+          <span class="text-neumorphic-muted font-medium group-hover:text-neumorphic-fg transition-colors">Remember Me</span>
+        </label>
+        <a href="#" class="font-bold text-neumorphic-accent hover:text-neumorphic-accentLight transition-colors">Forgot Password?</a>
+      </div>
+
+      <!-- Sign In Button -->
+      <div class="pt-4">
+        <button
+          type="submit"
+          id="signin-btn"
+          class="w-full py-3.5 rounded-2xl text-sm font-semibold neo-btn-primary flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2"
+        >
+          <span>Sign In</span>
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </form>
+
+    <!-- Footer link to home -->
+    <div class="text-center pt-2">
+      <a href="/" class="text-xs font-bold text-neumorphic-muted hover:text-neumorphic-accent transition-colors flex items-center justify-center gap-1.5 focus:outline-none">
+        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+        Back to Homepage
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    const alertBanner = document.getElementById('auth-alert');
+    const alertText = document.getElementById('auth-alert-text');
+    const form = document.getElementById('login-form');
+    const emailInput = document.getElementById('email-input');
+    const passwordInput = document.getElementById('password-input');
+    const signinBtn = document.getElementById('signin-btn');
+    const checkbox = document.getElementById('check-box');
+    const checkIcon = document.getElementById('check-icon');
+
+    // Parse URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectReason = urlParams.get('msg');
+    if (redirectReason) {
+      alertText.textContent = redirectReason;
+      alertBanner.classList.remove('hidden');
+    }
+
+    // Custom check-box logic
+    let isChecked = false;
+    checkbox.addEventListener('click', () => {
+      isChecked = !isChecked;
+      if (isChecked) {
+        checkbox.classList.add('checked');
+        checkIcon.classList.remove('hidden');
+      } else {
+        checkbox.classList.remove('checked');
+        checkIcon.classList.add('hidden');
+      }
+    });
+
+    // Form submit check
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      // Spinner display
+      signinBtn.disabled = true;
+      signinBtn.innerHTML = `
+        <i data-lucide="refresh-cw" class="w-4 h-4 animate-spin"></i>
+        <span>Authenticating...</span>
+      `;
+      lucide.createIcons();
+
+      // Mock delay (1 second)
+      setTimeout(() => {
+        localStorage.setItem('isLoggedIn', 'true');
+        window.location.href = '/dashboard/';
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

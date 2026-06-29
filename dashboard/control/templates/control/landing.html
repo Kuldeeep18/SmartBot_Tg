@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartBot Tg — Next-Gen Bot Ecosystem</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            neumorphic: {
+              bg: '#E0E5EC',
+              fg: '#3D4852',
+              muted: '#6B7280',
+              accent: '#6C63FF',
+              accentLight: '#8B84FF',
+              accentSecondary: '#38B2AC',
+            }
+          },
+          fontFamily: {
+            display: ['"Plus Jakarta Sans"', 'sans-serif'],
+            body: ['"DM Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #E0E5EC;
+      color: #3D4852;
+      font-family: 'DM Sans', sans-serif;
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+    
+    .font-display {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Neumorphic Shadows System (RGBA for premium smooth blending) */
+    .neo-extruded {
+      box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.6);
+    }
+    .neo-lifted {
+      box-shadow: 12px 12px 20px rgba(163, 177, 198, 0.7), -12px -12px 20px rgba(255, 255, 255, 0.7);
+    }
+    .neo-extruded-sm {
+      box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5);
+    }
+    .neo-inset {
+      box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.6), inset -6px -6px 10px rgba(255, 255, 255, 0.5);
+    }
+    .neo-inset-deep {
+      box-shadow: inset 10px 10px 20px rgba(163, 177, 198, 0.7), inset -10px -10px 20px rgba(255, 255, 255, 0.6);
+    }
+    .neo-inset-sm {
+      box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Primary Violet CTA Shadows */
+    .neo-btn-primary {
+      background-color: #6C63FF;
+      color: #FFFFFF;
+      box-shadow: 4px 4px 10px rgba(74, 58, 206, 0.5), -4px -4px 10px rgba(255, 255, 255, 0.35);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .neo-btn-primary:hover {
+      background-color: #7A72FF;
+      box-shadow: 6px 6px 14px rgba(74, 58, 206, 0.6), -6px -6px 14px rgba(255, 255, 255, 0.4);
+      transform: translateY(-1px);
+    }
+    .neo-btn-primary:active {
+      box-shadow: inset 4px 4px 8px rgba(48, 35, 163, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.2);
+      transform: translateY(0.5px);
+    }
+
+    /* Interactive Soft Shadows Transitions */
+    .neo-interactive {
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .neo-interactive:hover {
+      transform: translateY(-2px);
+      box-shadow: 12px 12px 20px rgba(163, 177, 198, 0.7), -12px -12px 20px rgba(255, 255, 255, 0.7);
+    }
+    .neo-interactive:active {
+      transform: translateY(0.5px);
+      box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.6), inset -6px -6px 10px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Mobile Menu Transition */
+    .mobile-menu-open {
+      max-height: 400px;
+      opacity: 1;
+      margin-top: 1rem;
+      padding: 1.5rem;
+    }
+
+    /* Ambient Floating Animations */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(3deg); }
+    }
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float-reverse {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(10px) rotate(-3deg); }
+    }
+    .animate-float-reverse {
+      animation: float-reverse 8s ease-in-out infinite;
+    }
+
+    /* Custom Scrollbar for Simulated Views */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: rgba(163, 177, 198, 0.8);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-height-screen pb-12">
+
+  <!-- Header / Navigation -->
+  <header class="sticky top-0 z-40 w-full bg-[#E0E5EC]/85 backdrop-blur-md transition-all">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-3 group focus:outline-none">
+        <div class="w-10 h-10 bg-[#E0E5EC] rounded-xl flex items-center justify-center neo-extruded-sm group-hover:shadow-[inset_3px_3px_6px_rgba(163,177,198,0.6),inset_-3px_-3px_6px_rgba(255,255,255,0.5)] transition-all duration-300">
+          <i data-lucide="layers" class="w-5 h-5 text-neumorphic-accent"></i>
+        </div>
+        <span class="font-display font-extrabold text-xl tracking-tight text-neumorphic-fg">SmartBot Suite</span>
+      </a>
+
+      <!-- Desktop Links -->
+      <nav class="hidden md:flex items-center gap-8">
+        <a href="#features" class="font-medium text-sm text-neumorphic-muted hover:text-neumorphic-fg transition-colors focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 rounded px-2 py-1">Features</a>
+        <a href="#architecture" class="font-medium text-sm text-neumorphic-muted hover:text-neumorphic-fg transition-colors focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 rounded px-2 py-1">Architecture</a>
+        <a href="#workflow" class="font-medium text-sm text-neumorphic-muted hover:text-neumorphic-fg transition-colors focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 rounded px-2 py-1">How it Works</a>
+      </nav>
+
+      <!-- Action Button -->
+      <div class="hidden md:block">
+        <a href="/login/" class="px-5 py-2.5 rounded-2xl text-sm font-semibold neo-btn-primary focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 flex items-center gap-2">
+          <span>Launch Dashboard</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+      </div>
+
+      <!-- Hamburger Menu Button -->
+      <button id="mobile-menu-btn" class="md:hidden w-10 h-10 rounded-xl bg-[#E0E5EC] flex items-center justify-center neo-extruded-sm active:shadow-neo-inset-sm transition-all focus:outline-none focus:ring-2 focus:ring-neumorphic-accent">
+        <i data-lucide="menu" class="w-5 h-5 text-neumorphic-fg" id="menu-icon"></i>
+      </button>
+    </div>
+
+    <!-- Mobile Dropdown Menu -->
+    <div id="mobile-menu" class="md:hidden max-h-0 overflow-hidden opacity-0 bg-[#E0E5EC] transition-all duration-300 ease-in-out px-6">
+      <div class="flex flex-col gap-4 pb-6">
+        <a href="#features" class="mobile-nav-link font-medium text-sm text-neumorphic-fg py-2 border-b border-gray-300/40">Features</a>
+        <a href="#architecture" class="mobile-nav-link font-medium text-sm text-neumorphic-fg py-2 border-b border-gray-300/40">Architecture</a>
+        <a href="#workflow" class="mobile-nav-link font-medium text-sm text-neumorphic-fg py-2 border-b border-gray-300/40">How it Works</a>
+        <a href="/login/" class="w-full text-center px-5 py-3 mt-2 rounded-2xl text-sm font-semibold neo-btn-primary flex items-center justify-center gap-2">
+          <span>Launch Dashboard</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="max-w-7xl mx-auto px-6 py-20 lg:py-28 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+    <!-- Hero Left -->
+    <div class="lg:col-span-7 space-y-8 text-left">
+      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full neo-inset text-xs font-semibold text-neumorphic-accent">
+        <span class="w-2.5 h-2.5 rounded-full bg-neumorphic-accent animate-pulse"></span>
+        Multi-Tenant Containerized Bot System
+      </div>
+      
+      <h1 class="text-4xl md:text-6xl font-display font-extrabold tracking-tight text-neumorphic-fg leading-tight">
+        Deploy Custom AI & Moderation Bots <span class="text-neumorphic-accent">in Seconds</span>
+      </h1>
+      
+      <p class="text-neumorphic-muted text-base md:text-lg leading-relaxed max-w-2xl font-body">
+        A unified containerized bot manager. Spin up automated Telegram moderators, PDF Vector chat systems, or code assistants. Fully isolated, persistent, and configurable through a central dashboard.
+      </p>
+
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-5 pt-4">
+        <a href="/login/" class="px-8 py-4 rounded-2xl font-bold neo-btn-primary flex items-center justify-center gap-2 text-base">
+          <span>Get Started Now</span>
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </a>
+        <a href="#features" class="px-8 py-4 rounded-2xl font-bold text-neumorphic-fg bg-[#E0E5EC] neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset transition-all flex items-center justify-center gap-2 text-base">
+          <span>Explore Bots</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Hero Right (Interactive Visual Demonstration) -->
+    <div class="lg:col-span-5 flex items-center justify-center relative py-8">
+      <!-- Decorative Concentric Circles -->
+      <div class="absolute w-80 h-80 rounded-full neo-inset opacity-40 animate-float-reverse"></div>
+      <div class="absolute w-60 h-60 rounded-full neo-extruded opacity-30 animate-float"></div>
+      
+      <!-- Interactive Status Card -->
+      <div class="w-full max-w-sm rounded-[32px] p-8 neo-extruded bg-[#E0E5EC] relative z-10 space-y-6">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Interactive Demo</span>
+          <div class="flex items-center gap-2 px-2.5 py-1 rounded-full neo-inset text-[10px] font-bold text-neumorphic-accent">
+            <span class="w-2 h-2 rounded-full bg-neumorphic-accent animate-ping"></span>
+            ACTIVE CONSOLE
+          </div>
+        </div>
+
+        <!-- Center Inset Circular Button -->
+        <div id="demo-dial" class="w-32 h-32 rounded-full mx-auto flex items-center justify-center neo-inset-deep relative cursor-pointer group active:scale-95 transition-all">
+          <div class="w-24 h-24 rounded-full bg-[#E0E5EC] neo-extruded group-hover:shadow-neo-lifted transition-all flex items-center justify-center text-neumorphic-accent">
+            <i data-lucide="power" class="w-8 h-8 transition-transform group-hover:rotate-12" id="demo-power-icon"></i>
+          </div>
+        </div>
+
+        <div class="text-center space-y-2">
+          <h3 class="font-display font-bold text-lg text-neumorphic-fg" id="demo-status-title">Click power button to boot</h3>
+          <p class="text-xs text-neumorphic-muted font-body leading-relaxed px-4" id="demo-status-desc">
+            Orchestrates a mock Telegram manager container deployment sequence.
+          </p>
+        </div>
+
+        <!-- Status Log Viewport -->
+        <div class="neo-inset-deep rounded-2xl p-4 h-24 font-mono text-[10px] text-[#6B7280] overflow-y-auto space-y-1 select-none custom-scrollbar" id="demo-console">
+          <div class="text-neumorphic-accent font-semibold">> System initialized. Waiting for prompt...</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bento Grid Features Section -->
+  <section id="features" class="max-w-7xl mx-auto px-6 py-24 border-t border-gray-300/30">
+    <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+      <h2 class="text-3xl md:text-5xl font-display font-extrabold text-neumorphic-fg">
+        The Complete Bot Ecosystem
+      </h2>
+      <p class="text-neumorphic-muted text-base">
+        Select a specialized solution below and explore its full operational features interactively.
+      </p>
+    </div>
+
+    <!-- Bento Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
+      
+      <!-- Card 1: Anjani Group Manager (Large Bento Item) -->
+      <div class="lg:col-span-8 rounded-[32px] p-8 neo-extruded bg-[#E0E5EC] flex flex-col justify-between gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          <!-- Text Details -->
+          <div class="md:col-span-5 space-y-6">
+            <div class="w-12 h-12 rounded-2xl bg-[#E0E5EC] neo-inset-deep flex items-center justify-center text-neumorphic-accent">
+              <i data-lucide="message-square" class="w-6 h-6"></i>
+            </div>
+            
+            <div class="space-y-2">
+              <h3 class="font-display font-bold text-2xl text-neumorphic-fg">Anjani Group Moderator</h3>
+              <p class="text-sm text-neumorphic-muted leading-relaxed font-body">
+                A multi-tenant Telegram group manager with modular plug-and-play triggers, anti-spam shields, and federation logs.
+              </p>
+            </div>
+
+            <!-- Plugin select grid -->
+            <div class="space-y-3">
+              <span class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Select Feature Preview:</span>
+              <div class="grid grid-cols-3 gap-2" id="plugin-grid">
+                <!-- Buttons dynamically loaded -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Simulated Phone Preview -->
+          <div class="md:col-span-7 flex justify-center">
+            <!-- Simulated Mobile Device -->
+            <div class="w-full max-w-[270px] h-[480px] bg-[#E0E5EC] rounded-[2.5rem] p-3 neo-inset-deep flex flex-col select-none">
+              <!-- Speaker & Camera notch -->
+              <div class="w-full flex justify-center mb-1">
+                <div class="w-24 h-4 bg-[#E0E5EC] neo-inset-sm rounded-full flex justify-center items-center">
+                  <div class="w-1.5 h-1.5 rounded-full bg-[#A3B1C6] mr-2"></div>
+                  <div class="w-10 h-1 bg-[#A3B1C6] rounded-full"></div>
+                </div>
+              </div>
+
+              <!-- Screen Viewport -->
+              <div class="flex-1 bg-[#E0E5EC] rounded-[1.8rem] neo-inset overflow-hidden flex flex-col relative font-body">
+                <!-- Telegram-like Header -->
+                <div class="px-3 py-2 bg-[#E0E5EC] border-b border-gray-300/40 flex items-center gap-2 shadow-[0_2px_4px_rgba(163,177,198,0.15)]">
+                  <div class="w-7 h-7 rounded-full bg-[#E0E5EC] neo-extruded-sm flex items-center justify-center text-neumorphic-accent">
+                    <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+                  </div>
+                  <div>
+                    <div class="text-[10px] font-bold text-neumorphic-fg">Anjani Group Manager</div>
+                    <div class="text-[8px] text-neumorphic-accent font-medium flex items-center gap-1">
+                      <span class="w-1 h-1 rounded-full bg-neumorphic-accent animate-ping"></span>
+                      online
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Message Box Container -->
+                <div class="flex-1 p-3 space-y-3 overflow-y-auto custom-scrollbar flex flex-col justify-end text-[9px]" id="sim-phone-chat">
+                  <!-- Dynamic chat elements loaded here -->
+                </div>
+                
+                <!-- Bottom input field -->
+                <div class="p-2 border-t border-gray-300/30 flex items-center gap-1.5 bg-[#E0E5EC]">
+                  <div class="flex-1 h-6 rounded-full neo-inset px-2.5 flex items-center text-[8px] text-neumorphic-muted">
+                    Write command...
+                  </div>
+                  <div class="w-6 h-6 rounded-full bg-neumorphic-accent flex items-center justify-center text-white shadow-md">
+                    <i data-lucide="send" class="w-3 h-3"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: AI PDF Chatbot (RAG) -->
+      <div class="lg:col-span-4 rounded-[32px] p-8 neo-extruded bg-[#E0E5EC] flex flex-col justify-between gap-8">
+        <div class="space-y-6">
+          <div class="w-12 h-12 rounded-2xl bg-[#E0E5EC] neo-inset-deep flex items-center justify-center text-neumorphic-accent">
+            <i data-lucide="database" class="w-6 h-6"></i>
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="font-display font-bold text-2xl text-neumorphic-fg">AI PDF Chatbot (RAG)</h3>
+            <p class="text-sm text-neumorphic-muted leading-relaxed font-body">
+              Upload documents to Supabase Vector Store and converse with GPT-4, Gemini, or Groq using customized index parameters.
+            </p>
+          </div>
+        </div>
+
+        <!-- Interactive AI Chat Widget -->
+        <div class="neo-inset-deep rounded-2xl p-4 space-y-4">
+          <div class="flex items-center justify-between border-b border-gray-300/30 pb-2">
+            <span class="text-[10px] font-bold text-neumorphic-muted flex items-center gap-1">
+              <i data-lucide="file" class="w-3 h-3 text-neumorphic-accent"></i>
+              financial_report.pdf
+            </span>
+            <span class="text-[9px] px-2 py-0.5 rounded-full neo-inset text-neumorphic-accent font-semibold">Supabase Vector</span>
+          </div>
+
+          <!-- Chat dialog -->
+          <div class="h-32 overflow-y-auto space-y-3 text-[10px] pr-1 flex flex-col justify-end custom-scrollbar" id="sim-rag-chat">
+            <div class="text-right">
+              <span class="inline-block bg-neumorphic-accent text-white px-3 py-1.5 rounded-2xl rounded-tr-none max-w-[85%]">
+                What is our Q2 growth?
+              </span>
+            </div>
+            <div class="text-left flex items-start gap-1">
+              <div class="w-5 h-5 rounded-full bg-[#E0E5EC] neo-extruded-sm flex items-center justify-center text-neumorphic-accent flex-shrink-0">
+                <i data-lucide="cpu" class="w-2.5 h-2.5"></i>
+              </div>
+              <span class="inline-block bg-[#E0E5EC] text-neumorphic-fg border border-gray-200/20 px-3 py-1.5 rounded-2xl rounded-tl-none neo-extruded max-w-[85%]">
+                Querying embeddings... Q2 growth stands at 14.2% YoY.
+              </span>
+            </div>
+          </div>
+
+          <!-- Interactive options -->
+          <div class="grid grid-cols-2 gap-2 text-[9px] font-bold">
+            <button onclick="triggerRagSim(1)" class="py-2 rounded-xl bg-[#E0E5EC] neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset text-neumorphic-fg transition-all text-center">
+              "Check Q2 Profit"
+            </button>
+            <button onclick="triggerRagSim(2)" class="py-2 rounded-xl bg-[#E0E5EC] neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset text-neumorphic-fg transition-all text-center">
+              "Who is the CEO?"
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: GitHub PR Review Bot (Full Width Bento Item) -->
+      <div class="lg:col-span-12 rounded-[32px] p-8 neo-extruded bg-[#E0E5EC] grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div class="space-y-6">
+          <div class="w-12 h-12 rounded-2xl bg-[#E0E5EC] neo-inset-deep flex items-center justify-center text-neumorphic-accent">
+            <i data-lucide="git-pull-request" class="w-6 h-6"></i>
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="font-display font-bold text-2xl text-neumorphic-fg">GitHub Pull Request Reviewer</h3>
+            <p class="text-sm text-neumorphic-muted leading-relaxed font-body">
+              Automated linting, optimization summaries, and design reviews directly in your PR timelines using Google Gemini API.
+            </p>
+          </div>
+
+          <ul class="space-y-3 font-body text-sm text-neumorphic-fg">
+            <li class="flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full neo-inset flex items-center justify-center text-neumorphic-accent">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              </span>
+              Automatic syntax and performance warnings.
+            </li>
+            <li class="flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full neo-inset flex items-center justify-center text-neumorphic-accent">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              </span>
+              Calculates repository token constraints before ingestion.
+            </li>
+          </ul>
+        </div>
+
+        <!-- PR review preview mockup -->
+        <div class="rounded-2xl p-6 bg-[#E0E5EC] border border-gray-300/30 neo-inset-deep flex flex-col gap-4 font-mono text-[10px] text-neumorphic-fg">
+          <div class="flex items-center justify-between border-b border-gray-300/30 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+              <span class="font-semibold text-xs text-neumorphic-fg">Pull Request #42</span>
+            </div>
+            <span class="text-[9px] text-neumorphic-muted">Modified: utils.py</span>
+          </div>
+
+          <!-- Code Diff & Bot response -->
+          <div class="space-y-3">
+            <div class="bg-red-500/10 p-2 rounded border border-red-500/20 text-red-600">
+              - def parse_log(data): return eval(data)
+            </div>
+            <div class="bg-emerald-500/10 p-2 rounded border border-emerald-500/20 text-emerald-600">
+              + def parse_log(data): return json.loads(data)
+            </div>
+
+            <!-- Bot review badge -->
+            <div class="p-3 bg-[#E0E5EC] border border-gray-300/40 rounded-xl neo-extruded flex gap-3 text-left">
+              <div class="w-7 h-7 rounded-full neo-inset-deep flex items-center justify-center text-neumorphic-accent flex-shrink-0">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <span class="font-bold text-xs text-neumorphic-accent block">PR Review Bot</span>
+                <span class="text-neumorphic-muted text-[9px] mt-0.5 leading-relaxed block">
+                  ⚠️ Security warning: Replacing `eval` with `json.loads` prevents remote code execution vulnerability. Good fix.
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </section>
+
+  <!-- Containerized Architecture Section -->
+  <section id="architecture" class="max-w-7xl mx-auto px-6 py-24">
+    <div class="text-center max-w-3xl mx-auto mb-20 space-y-4">
+      <h2 class="text-3xl md:text-5xl font-display font-extrabold text-neumorphic-fg">
+        Multi-Tenant Architecture
+      </h2>
+      <p class="text-neumorphic-muted text-base">
+        A look under the hood. Isolated, containerized bot runtimes managed by a unified control panel.
+      </p>
+    </div>
+
+    <!-- Interactive Diagram Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center" id="architecture-flow">
+      <!-- Card A -->
+      <div class="lg:col-span-3 rounded-[32px] p-6 neo-extruded bg-[#E0E5EC] text-center space-y-4 relative group hover:-translate-y-1 transition-all duration-300">
+        <div class="w-12 h-12 mx-auto rounded-full bg-[#E0E5EC] neo-inset-deep flex items-center justify-center text-neumorphic-accent">
+          <i data-lucide="sliders" class="w-5 h-5"></i>
+        </div>
+        <h4 class="font-display font-bold text-lg text-neumorphic-fg">1. Control Panel</h4>
+        <p class="text-xs text-neumorphic-muted leading-relaxed font-body">
+          Define token connection details, select custom plugins, and trigger container build processes.
+        </p>
+      </div>
+
+      <!-- Connector 1 -->
+      <div class="lg:col-span-1 flex justify-center">
+        <div class="w-8 h-8 rounded-full bg-[#E0E5EC] neo-inset flex items-center justify-center text-neumorphic-muted transform rotate-90 lg:rotate-0">
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </div>
+      </div>
+
+      <!-- Card B -->
+      <div class="lg:col-span-4 rounded-[32px] p-8 neo-extruded bg-[#E0E5EC] text-center space-y-4 hover:-translate-y-1 transition-all duration-300">
+        <div class="w-16 h-16 mx-auto rounded-full bg-[#E0E5EC] neo-inset-deep flex items-center justify-center text-neumorphic-accent relative">
+          <i data-lucide="package" class="w-8 h-8"></i>
+          <!-- Pulse Dot -->
+          <span class="absolute top-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#E0E5EC] animate-pulse"></span>
+        </div>
+        <h4 class="font-display font-bold text-xl text-neumorphic-fg">2. Docker Daemon</h4>
+        <p class="text-xs text-neumorphic-muted leading-relaxed font-body">
+          Spins up a lightweight, sandboxed container specific to your bot type. Mounts persistent SQLite/MongoDB storage adapters on deployment.
+        </p>
+      </div>
+
+      <!-- Connector 2 -->
+      <div class="lg:col-span-1 flex justify-center">
+        <div class="w-8 h-8 rounded-full bg-[#E0E5EC] neo-inset flex items-center justify-center text-neumorphic-muted transform rotate-90 lg:rotate-0">
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </div>
+      </div>
+
+      <!-- Card C -->
+      <div class="lg:col-span-3 rounded-[32px] p-6 neo-extruded bg-[#E0E5EC] text-center space-y-4 hover:-translate-y-1 transition-all duration-300">
+        <div class="w-12 h-12 mx-auto rounded-full bg-[#E0E5EC] neo-inset-deep flex items-center justify-center text-neumorphic-accent">
+          <i data-lucide="send" class="w-5 h-5"></i>
+        </div>
+        <h4 class="font-display font-bold text-lg text-neumorphic-fg">3. Bot Instances</h4>
+        <p class="text-xs text-neumorphic-muted leading-relaxed font-body">
+          Establishes secure, long-poll API connections directly with Telegram or GitHub. Ready to process events instantly.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="max-w-7xl mx-auto px-6 py-20">
+    <div class="rounded-[40px] p-12 md:p-20 text-center bg-[#E0E5EC] neo-extruded relative overflow-hidden">
+      <!-- Background Concentric Rings Decor -->
+      <div class="absolute -top-24 -left-24 w-64 h-64 rounded-full neo-inset opacity-25"></div>
+      <div class="absolute -bottom-24 -right-24 w-64 h-64 rounded-full neo-inset opacity-25"></div>
+      
+      <div class="relative z-10 space-y-8 max-w-2xl mx-auto">
+        <h2 class="text-3xl md:text-5xl font-display font-extrabold text-neumorphic-fg leading-tight">
+          Ready to Deploy Your Own Instances?
+        </h2>
+        <p class="text-neumorphic-muted text-base md:text-lg leading-relaxed font-body">
+          Enter the Control Hub dashboard, paste your bot token, select your configuration parameters, and launch your sandboxed daemon.
+        </p>
+        
+        <div class="pt-4">
+          <a href="/login/" class="inline-flex px-10 py-5 rounded-2xl font-bold text-lg neo-btn-primary items-center gap-3">
+            <span>Enter Control Hub</span>
+            <i data-lucide="play" class="w-5 h-5 fill-white"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="max-w-7xl mx-auto px-6 pt-16 border-t border-gray-300/30">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-[#E0E5EC] rounded-lg flex items-center justify-center neo-extruded-sm">
+          <i data-lucide="layers" class="w-4 h-4 text-neumorphic-accent"></i>
+        </div>
+        <span class="font-display font-extrabold text-sm text-neumorphic-fg tracking-tight">SmartBot Suite</span>
+      </div>
+      <p class="text-xs text-neumorphic-muted font-body">
+        &copy; 2026 SmartBot Tg. Molded with Neumorphism Soft UI.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    // Initialize icons
+    lucide.createIcons();
+
+    // Mobile Navbar Menu toggle
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuIcon = document.getElementById('menu-icon');
+
+    menuBtn.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.contains('mobile-menu-open');
+      if (isOpen) {
+        mobileMenu.classList.remove('mobile-menu-open');
+        mobileMenu.style.maxHeight = '0px';
+        mobileMenu.style.opacity = '0';
+        menuIcon.setAttribute('data-lucide', 'menu');
+      } else {
+        mobileMenu.classList.add('mobile-menu-open');
+        mobileMenu.style.maxHeight = mobileMenu.scrollHeight + 'px';
+        mobileMenu.style.opacity = '1';
+        menuIcon.setAttribute('data-lucide', 'x');
+      }
+      lucide.createIcons();
+    });
+
+    // Close mobile menu on link click
+    document.querySelectorAll('.mobile-nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.remove('mobile-menu-open');
+        mobileMenu.style.maxHeight = '0px';
+        mobileMenu.style.opacity = '0';
+        menuIcon.setAttribute('data-lucide', 'menu');
+        lucide.createIcons();
+      });
+    });
+
+    // --- INTERACTIVE DIAL (HERO RIGHT) STATE ENGINE ---
+    const dial = document.getElementById('demo-dial');
+    const dialIcon = document.getElementById('demo-power-icon');
+    const statusTitle = document.getElementById('demo-status-title');
+    const statusDesc = document.getElementById('demo-status-desc');
+    const terminal = document.getElementById('demo-console');
+
+    let deployState = 'idle'; // 'idle', 'building', 'ready'
+    
+    function logToConsole(text, level = 'info') {
+      const el = document.createElement('div');
+      if (level === 'success') {
+        el.className = 'text-neumorphic-accent font-semibold';
+      } else if (level === 'warn') {
+        el.className = 'text-amber-500';
+      } else {
+        el.className = 'text-[#6B7280]';
+      }
+      el.textContent = `> ${text}`;
+      terminal.appendChild(el);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    dial.addEventListener('click', () => {
+      if (deployState === 'idle') {
+        deployState = 'building';
+        dialIcon.className = 'w-8 h-8 text-amber-500 animate-spin';
+        statusTitle.textContent = 'Orchestrating container...';
+        statusDesc.textContent = 'Preparing virtual volume partitions and environment hooks.';
+        
+        logToConsole('Requesting daemon token validation...', 'info');
+        
+        setTimeout(() => {
+          logToConsole('Retrieving image template: anjani-manager:latest', 'info');
+          logToConsole('Mapping port allocation: 8080:8000', 'info');
+        }, 1200);
+
+        setTimeout(() => {
+          logToConsole('Spawning sandboxed system thread daemon...', 'info');
+          logToConsole('Connecting SQLite storage adapters...', 'info');
+        }, 2600);
+
+        setTimeout(() => {
+          deployState = 'ready';
+          dialIcon.className = 'w-8 h-8 text-emerald-500';
+          statusTitle.textContent = 'Container deployed successfully';
+          statusDesc.textContent = 'Service container online. Establishes live API sync loops.';
+          logToConsole('Connection handshake with BotFather OK.', 'success');
+          logToConsole('Bot ID: 5938592:AnjaniBot is ONLINE.', 'success');
+        }, 4000);
+
+      } else if (deployState === 'ready') {
+        deployState = 'idle';
+        dialIcon.className = 'w-8 h-8 text-neumorphic-accent';
+        statusTitle.textContent = 'Click power button to boot';
+        statusDesc.textContent = 'Orchestrates a mock Telegram manager container deployment sequence.';
+        logToConsole('Shutting down container daemon...', 'warn');
+        logToConsole('Storage snapshot updated. Volumes unmounted.', 'info');
+        logToConsole('System status: IDLE.', 'info');
+      }
+    });
+
+    // --- PHONE CHAT & FEATURES SIMULATOR ---
+    const chatContainer = document.getElementById('sim-phone-chat');
+    const pluginGrid = document.getElementById('plugin-grid');
+
+    const plugins = [
+      { id: 'welcome', label: 'Welcome', icon: 'user-check' },
+      { id: 'muting', label: 'Muting', icon: 'volume-x' },
+      { id: 'spam', label: 'Spam Shield', icon: 'shield' },
+      { id: 'lock', label: 'Lockings', icon: 'lock' },
+      { id: 'rules', label: 'Rules', icon: 'book-open' },
+      { id: 'purge', label: 'Purge', icon: 'trash-2' }
+    ];
+
+    const chatStories = {
+      welcome: [
+        { sender: 'system', text: 'NewUser joined the group' },
+        { sender: 'bot', text: '👋 Welcome <b>NewUser</b> to the official group!\n\nPlease read our guidelines in pinned messages.' }
+      ],
+      muting: [
+        { sender: 'user', name: 'Spammer', text: 'Earn $1000 daily fast! Link: crypto.io 🚀' },
+        { sender: 'admin', name: 'ModAdmin', text: '/mute 24h', reply: true },
+        { sender: 'bot', text: '🔇 <b>Spammer</b> has been restricted for 24 hours.' }
+      ],
+      spam: [
+        { sender: 'system', text: 'ScammerBot1 joined' },
+        { sender: 'system', text: 'ScammerBot2 joined' },
+        { sender: 'bot', text: '🛡️ <b>Raid detected.</b> Spam Shield enabled. Restricting join logs.' }
+      ],
+      lock: [
+        { sender: 'admin', name: 'ModAdmin', text: '/lock stickers' },
+        { sender: 'bot', text: '🔒 Stickers are now locked in this group.' },
+        { sender: 'user', name: 'User', text: '[Sends Pepe Sticker]' },
+        { sender: 'bot', text: '⚠️ <b>User</b>, stickers are not allowed here. Removed.' }
+      ],
+      rules: [
+        { sender: 'user', name: 'HelpfulUser', text: '/rules' },
+        { sender: 'bot', text: '<b>Group Guidelines:</b>\n1. Keep talks relevant.\n2. Strictly no spam/ads.\n3. Respect administrators.' }
+      ],
+      purge: [
+        { sender: 'user', name: 'Spammer', text: 'Viagra 1' },
+        { sender: 'user', name: 'Spammer', text: 'Viagra 2' },
+        { sender: 'admin', name: 'ModAdmin', text: '/purge', reply: true },
+        { sender: 'bot', text: '🧹 Purged 3 messages from chat stream.' }
+      ]
+    };
+
+    let selectedPlugin = 'welcome';
+
+    function renderPluginGrid() {
+      pluginGrid.innerHTML = plugins.map(p => {
+        const isActive = p.id === selectedPlugin;
+        const shadowClass = isActive ? 'neo-inset-sm font-bold text-neumorphic-accent' : 'neo-extruded-sm hover:shadow-neo-lifted active:shadow-neo-inset text-neumorphic-fg';
+        return `
+          <button onclick="selectPlugin('${p.id}')" class="py-2.5 px-1 rounded-xl text-[10px] text-center border-0 bg-[#E0E5EC] flex flex-col items-center gap-1.5 transition-all ${shadowClass}">
+            <i data-lucide="${p.icon}" class="w-4 h-4"></i>
+            <span>${p.label}</span>
+          </button>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function selectPlugin(id) {
+      selectedPlugin = id;
+      renderPluginGrid();
+      loadSimChat(id);
+    }
+
+    function loadSimChat(id) {
+      const messages = chatStories[id] || [];
+      chatContainer.innerHTML = messages.map(msg => {
+        if (msg.sender === 'system') {
+          return `<div class="text-center text-[7px] text-neumorphic-muted my-1.5 uppercase font-bold tracking-wider">${msg.text}</div>`;
+        }
+        const isBot = msg.sender === 'bot';
+        const isAdmin = msg.sender === 'admin';
+        return `
+          <div class="flex gap-1.5 ${isBot ? 'items-start' : 'items-end flex-row-reverse'} animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div class="w-4.5 h-4.5 rounded-full flex-shrink-0 flex items-center justify-center text-[7px] font-bold shadow-sm ${
+              isBot ? 'bg-neumorphic-accent text-white' : isAdmin ? 'bg-emerald-500 text-white' : 'bg-neumorphic-fg text-[#E0E5EC]'
+            }">
+              ${isBot ? 'B' : (isAdmin ? 'A' : 'U')}
+            </div>
+            <div class="max-w-[80%] rounded-xl p-2 text-[8px] leading-relaxed shadow-sm ${
+              isBot ? 'bg-[#E0E5EC] text-neumorphic-fg border border-gray-300/30' : 'bg-neumorphic-accent text-white'
+            }">
+              ${msg.reply ? `<div class="border-l border-gray-400/50 pl-1.5 mb-1 text-[7px] opacity-75 bg-black/5 rounded">Replying to message...</div>` : ''}
+              <div>${msg.text}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Initialize Anjani preview
+    selectPlugin('welcome');
+
+    // --- RAG SIMULATOR ---
+    const ragChat = document.getElementById('sim-rag-chat');
+    
+    function triggerRagSim(index) {
+      const prompt = index === 1 ? 'Check Q2 Profit' : 'Who is the CEO?';
+      const response = index === 1 
+        ? 'Querying PDF partitions... Index #12 matches. Net profit for Q2 reported at $1.2M (up 8.5% YoY).' 
+        : 'Querying doc metadata... CEO is registered as Dr. Sarah Jenkins.';
+      
+      ragChat.innerHTML = `
+        <div class="text-right">
+          <span class="inline-block bg-neumorphic-accent text-white px-3 py-1.5 rounded-2xl rounded-tr-none max-w-[85%]">
+            ${prompt}
+          </span>
+        </div>
+        <div class="text-left flex items-start gap-1">
+          <div class="w-5 h-5 rounded-full bg-[#E0E5EC] neo-extruded-sm flex items-center justify-center text-neumorphic-accent flex-shrink-0">
+            <i data-lucide="cpu" class="w-2.5 h-2.5"></i>
+          </div>
+          <span class="inline-block bg-[#E0E5EC] text-neumorphic-fg border border-gray-200/20 px-3 py-1.5 rounded-2xl rounded-tl-none neo-extruded max-w-[85%]">
+            ${response}
+          </span>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>
