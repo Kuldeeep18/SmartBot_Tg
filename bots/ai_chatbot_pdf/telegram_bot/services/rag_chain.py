@@ -340,13 +340,14 @@ def _format_docs(docs: List[Document]) -> str:
 
 def _format_citations(docs: List[Document]) -> str:
     """
-    Build a citations section from retrieved documents.
+    Build a citations section and document context visibility stats from retrieved documents.
     """
     if not docs:
         return ""
 
     citations = []
     seen = set()
+    visibility_info = {}
 
     for doc in docs:
         meta = doc.metadata or {}
@@ -359,9 +360,35 @@ def _format_citations(docs: List[Document]) -> str:
             snippet = doc.page_content[:100].replace("\n", " ").strip()
             citations.append(f"📄 {filename}, page {page}: \"{snippet}...\"")
 
+        doc_id = meta.get("document_id")
+        chunk_idx = meta.get("global_chunk_index")
+        total_chunks = meta.get("total_chunks")
+
+        if doc_id and total_chunks is not None and chunk_idx is not None:
+            if doc_id not in visibility_info:
+                visibility_info[doc_id] = {
+                    "filename": filename,
+                    "total_chunks": int(total_chunks),
+                    "retrieved_chunks": set(),
+                }
+            visibility_info[doc_id]["retrieved_chunks"].add(int(chunk_idx))
+
+    res_str = ""
     if citations:
-        return "\n\n📚 **Sources:**\n" + "\n".join(citations)
-    return ""
+        res_str += "\n\n📚 **Sources:**\n" + "\n".join(citations)
+
+    if visibility_info:
+        visibility_lines = []
+        for doc_id, info in visibility_info.items():
+            retrieved_count = len(info["retrieved_chunks"])
+            total = info["total_chunks"]
+            pct = (retrieved_count / total) * 100 if total > 0 else 0.0
+            visibility_lines.append(f"• `{info['filename']}`: **{pct:.1f}%** ({retrieved_count}/{total} chunks)")
+        
+        if visibility_lines:
+            res_str += "\n\n🔍 **Context Visibility to LLM:**\n" + "\n".join(visibility_lines)
+
+    return res_str
 
 
 # ──────────────────────────────────────────────────────────────
