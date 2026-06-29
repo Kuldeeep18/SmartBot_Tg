@@ -225,6 +225,54 @@
                 </div>
                 <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
               </div>
+
+              <!-- Notes Card -->
+              <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="notes">
+                <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                  <i data-lucide="file-text" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-semibold text-sm text-slate-300">Notes & Triggers</h3>
+                  <p class="text-slate-400 text-xs leading-relaxed">Save custom text snippets or links for easy callout with hashtags.</p>
+                </div>
+                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+              </div>
+
+              <!-- Admins Card -->
+              <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="admins">
+                <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                  <i data-lucide="users" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-semibold text-sm text-slate-300">Admin Tools</h3>
+                  <p class="text-slate-400 text-xs leading-relaxed">Quickly promote, demote, pin messages or demote members.</p>
+                </div>
+                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+              </div>
+
+              <!-- Backups Card -->
+              <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="backups">
+                <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                  <i data-lucide="download" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-semibold text-sm text-slate-300">Backup & Restore</h3>
+                  <p class="text-slate-400 text-xs leading-relaxed">Export group configuration files and restore them in other chats.</p>
+                </div>
+                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+              </div>
+
+              <!-- Reporting Card -->
+              <div class="glass-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="reporting">
+                <div class="feature-icon-box p-3 rounded-xl self-start bg-slate-800/50 border border-slate-700/50 text-slate-400">
+                  <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-semibold text-sm text-slate-300">User Reporting</h3>
+                  <p class="text-slate-400 text-xs leading-relaxed">Allow members to report chat violations to all group admins instantly.</p>
+                </div>
+                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_#6366f1]"></div>
+              </div>
             </div>
 
             <!-- Owner ID Input for Anjani -->
@@ -498,6 +546,14 @@
           <!-- Steps injected via JS -->
         </div>
         
+        <!-- Commands & Usage Section -->
+        <div id="section-commands-container" class="mb-10">
+          <h3 class="text-lg font-bold text-slate-200 mb-4">Commands & Usage</h3>
+          <div id="modal-commands" class="space-y-2">
+            <!-- Commands injected via JS -->
+          </div>
+        </div>
+        
         <div class="mt-auto flex items-center justify-between pt-6 border-t border-slate-800/60 sticky bottom-0 bg-slate-900">
           <button id="modal-close" type="button" class="text-sm font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-2 transition-colors">
             <i data-lucide="chevron-left" class="w-4 h-4"></i>
@@ -586,6 +642,12 @@
           "Bot restricts the user's send permissions.",
           "User is automatically unmuted after the time expires."
         ],
+        commands: [
+          { cmd: "/mute &lt;user&gt;", desc: "Mute a user permanently" },
+          { cmd: "/mute 24h", desc: "Mute user for 24 hours" },
+          { cmd: "/mute 1m", desc: "Mute user for 1 minute" },
+          { cmd: "/unmute &lt;user&gt;", desc: "Unmute a restricted user" }
+        ],
         chat: [
           { type: 'user', name: 'Spammer', text: 'Buy cheap crypto now!!! 🚀' },
           { type: 'admin', name: 'Admin', text: '/mute 1h', reply: true },
@@ -600,6 +662,11 @@
           "Admin uses <code>/filter [keyword] [reply]</code>.",
           "User sends a message containing the keyword.",
           "Bot automatically replies with the preset text."
+        ],
+        commands: [
+          { cmd: "/filter &lt;trigger&gt; &lt;reply&gt;", desc: "Add keyword filter" },
+          { cmd: "/filters", desc: "List active keyword filters" },
+          { cmd: "/stop &lt;trigger&gt;", desc: "Delete a filter" }
         ],
         chat: [
           { type: 'admin', name: 'Admin', text: '/filter rules Please read the pinned message.' },
@@ -617,6 +684,11 @@
           "A new user joins the group.",
           "Bot sends the personalized greeting and auto-deletes the old one."
         ],
+        commands: [
+          { cmd: "/welcome on/off", desc: "Toggle greetings" },
+          { cmd: "/setwelcome &lt;msg&gt;", desc: "Set welcome message" },
+          { cmd: "/welcome", desc: "Preview current greeting" }
+        ],
         chat: [
           { type: 'system', text: 'NewUser joined the group' },
           { type: 'bot', text: '👋 Welcome <b>NewUser</b> to the official group! Please read our guidelines.', buttons: ['Read Rules'] }
@@ -630,6 +702,13 @@
           "Create a fed with <code>/newfed</code>.",
           "Link your other groups to the fed.",
           "Ban a user in one group, and they are banned everywhere."
+        ],
+        commands: [
+          { cmd: "/newfed &lt;name&gt;", desc: "Create new federation" },
+          { cmd: "/joinfed &lt;fed_id&gt;", desc: "Join a federation" },
+          { cmd: "/fban &lt;user&gt;", desc: "Ban user from federation" },
+          { cmd: "/unfban &lt;user&gt;", desc: "Unban from federation" },
+          { cmd: "/myfeds", desc: "List federations you own" }
         ],
         chat: [
           { type: 'admin', name: 'Admin', text: '/fban @scammer' },
@@ -645,6 +724,11 @@
           "Bot detects rapid messages or mass joins.",
           "Bot automatically mutes/bans the offenders."
         ],
+        commands: [
+          { cmd: "/antispam on/off", desc: "Toggle spam shield" },
+          { cmd: "/flood &lt;limit&gt;", desc: "Limit consecutive messages" },
+          { cmd: "/captcha on/off", desc: "Require captcha for new members" }
+        ],
         chat: [
           { type: 'system', text: 'Bot1 joined' },
           { type: 'system', text: 'Bot2 joined' },
@@ -659,6 +743,11 @@
           "Admin sets rules using <code>/setrules</code>.",
           "Users can type <code>/rules</code> to read them."
         ],
+        commands: [
+          { cmd: "/rules", desc: "Display group rules" },
+          { cmd: "/setrules &lt;rules&gt;", desc: "Set rules text" },
+          { cmd: "/clearrules", desc: "Clear current rules" }
+        ],
         chat: [
           { type: 'user', name: 'Member', text: '/rules' },
           { type: 'bot', text: '1. No spamming\n2. Be respectful\n3. No NSFW content\nClick below to read full rules.', buttons: ['Full Rules'] }
@@ -672,6 +761,11 @@
           "Reply to the first message to delete.",
           "Type <code>/purge</code>.",
           "All messages from that point to the latest are deleted."
+        ],
+        commands: [
+          { cmd: "/purge", desc: "Delete messages from reply target forward" },
+          { cmd: "/del", desc: "Delete the replied-to message" },
+          { cmd: "/purge &lt;count&gt;", desc: "Bulk delete past N messages" }
         ],
         chat: [
           { type: 'user', name: 'Spammer', text: 'Spam 1' },
@@ -689,11 +783,93 @@
           "User sends a link.",
           "Bot deletes the link and warns the user."
         ],
+        commands: [
+          { cmd: "/lock &lt;type&gt;", desc: "Lock content type" },
+          { cmd: "/unlock &lt;type&gt;", desc: "Unlock content type" },
+          { cmd: "/locks", desc: "List currently locked types" }
+        ],
         chat: [
           { type: 'admin', name: 'Admin', text: '/lock links' },
           { type: 'bot', text: '🔒 Links are now locked in this chat.' },
           { type: 'user', name: 'User', text: 'Check out my site! http://example.com' },
           { type: 'bot', text: '⚠️ <b>User</b>, links are not allowed here.' }
+        ]
+      },
+      notes: {
+        title: "Notes & Triggers",
+        desc: "Save custom text snippets or links for easy callout with hashtags.",
+        value: "Store information like guides, guidelines, or announcements for fast retrieval.",
+        steps: [
+          "Admin saves a note trigger using <code>/save rules guidelines...</code>.",
+          "Users call the note anytime using <code>#rules</code>."
+        ],
+        commands: [
+          { cmd: "/save &lt;name&gt; &lt;text&gt;", desc: "Save a new note trigger" },
+          { cmd: "/notes", desc: "List all notes saved in the chat" },
+          { cmd: "/delnote &lt;name&gt;", desc: "Delete a saved note trigger" },
+          { cmd: "#&lt;name&gt;", desc: "Fetch and view the saved note" }
+        ],
+        chat: [
+          { type: 'admin', name: 'Admin', text: '/save website Official site: http://website.com' },
+          { type: 'bot', text: '✅ Saved note <b>website</b>.' },
+          { type: 'user', name: 'User', text: '#website' },
+          { type: 'bot', text: 'Official site: http://website.com', reply: true }
+        ]
+      },
+      admins: {
+        title: "Admin Tools",
+        desc: "Quickly promote, demote, pin messages or demote members.",
+        value: "Provide administrators with standard tools to clean up, moderate, and pin messages.",
+        steps: [
+          "Admin can type <code>/pin</code> on a reply to pin a message.",
+          "Type <code>/promote @username</code> to give a member admin permissions."
+        ],
+        commands: [
+          { cmd: "/pin [loud]", desc: "Pin a replied message" },
+          { cmd: "/unpin [all]", desc: "Unpin current or all messages" },
+          { cmd: "/promote &lt;user&gt;", desc: "Promote member to administrator" },
+          { cmd: "/demote &lt;user&gt;", desc: "Demote administrator" },
+          { cmd: "/adminlist", desc: "View chat administrator details" }
+        ],
+        chat: [
+          { type: 'admin', name: 'Owner', text: '/promote @ActiveUser' },
+          { type: 'bot', text: '✅ <b>ActiveUser</b> has been promoted to administrator!' }
+        ]
+      },
+      backups: {
+        title: "Backup & Restore",
+        desc: "Export group configuration files and restore them in other chats.",
+        value: "Transfer all filters, custom triggers, and chat settings to another group instantly.",
+        steps: [
+          "Admin types <code>/backup</code> to download settings file.",
+          "Reply to settings file with <code>/restore</code> to import config."
+        ],
+        commands: [
+          { cmd: "/backup", desc: "Export chat settings backup file" },
+          { cmd: "/restore", desc: "Import settings from backup file" }
+        ],
+        chat: [
+          { type: 'admin', name: 'Admin', text: '/backup' },
+          { type: 'bot', text: '📦 <b>Backup Completed</b>. Here is your configuration backup file.', buttons: ['Download File'] }
+        ]
+      },
+      reporting: {
+        title: "User Reporting",
+        desc: "Allow members to report chat violations to all group admins instantly.",
+        value: "Keep the group safe by enabling crowdsourced spam moderation warnings.",
+        steps: [
+          "Member replies to a spam message with <code>/report</code> or <code>@admin</code>.",
+          "All registered group admins receive a tag notification alert."
+        ],
+        commands: [
+          { cmd: "/report", desc: "Alert group administrators" },
+          { cmd: "@admin / @admins", desc: "Tag alert group administrators" },
+          { cmd: "/reports on/off", desc: "Enable or disable report notifications" }
+        ],
+        chat: [
+          { type: 'user', name: 'Member', text: 'Spam links here!', reply: true },
+          { type: 'user', name: 'Member', text: '/report', reply: true },
+          { type: 'bot', text: '⚠️ <b>Report Sent</b> to all administrators.' }
         ]
       }
     };
@@ -798,6 +974,20 @@
           <p class="text-slate-300 text-sm mt-0.5">${step}</p>
         </div>
       `).join('');
+
+      const modalCommands = document.getElementById('modal-commands');
+      const commandsContainer = document.getElementById('section-commands-container');
+      if (data.commands && data.commands.length > 0) {
+        modalCommands.innerHTML = data.commands.map(item => `
+          <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3 flex flex-col gap-1">
+            <div class="font-mono text-xs font-semibold text-indigo-400">${item.cmd}</div>
+            <div class="text-slate-400 text-xs">${item.desc}</div>
+          </div>
+        `).join('');
+        commandsContainer.classList.remove('hidden');
+      } else {
+        commandsContainer.classList.add('hidden');
+      }
 
       modalChat.innerHTML = data.chat.map(msg => {
         if (msg.type === 'system') {

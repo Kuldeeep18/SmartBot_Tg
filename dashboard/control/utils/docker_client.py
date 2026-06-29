@@ -3,13 +3,29 @@ import sys
 import hashlib
 import docker
 
-try:
-    client = docker.from_env()
-except Exception:
-    if sys.platform == 'win32':
-        client = docker.DockerClient(base_url='npipe:////./pipe/docker_engine')
-    else:
-        client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+_client = None
+
+def get_client():
+    global _client
+    if _client is not None:
+        return _client
+        
+    try:
+        _client = docker.from_env()
+        return _client
+    except Exception:
+        pass
+        
+    try:
+        if sys.platform == 'win32':
+            _client = docker.DockerClient(base_url='npipe:////./pipe/docker_engine')
+        else:
+            _client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+        return _client
+    except Exception as e:
+        raise docker.errors.DockerException(
+            f"Failed to connect to Docker daemon. Make sure Docker is running. Error: {e}"
+        )
 
 def get_bot_hash(token: str) -> str:
     return hashlib.sha256(token.encode('utf-8')).hexdigest()[:12]
@@ -29,7 +45,7 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
     # Try stopping any existing container for this token under all three prefixes
     for pref in ["anjani-bot", "pdf-bot", "gh-pr-bot"]:
         try:
-            existing = client.containers.get(f"{pref}-{hash_id}")
+            existing = get_client().containers.get(f"{pref}-{hash_id}")
             if existing.status == 'running' and pref == prefix:
                 return {
                     "success": True, 
@@ -93,7 +109,7 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
             "PORT": "3000"
         }
 
-    container = client.containers.run(
+    container = get_client().containers.run(
         image=image_name,
         name=container_name,
         environment=environment,
@@ -113,7 +129,7 @@ def stop_bot_container(token: str) -> dict:
     for prefix in ["anjani-bot", "pdf-bot", "gh-pr-bot"]:
         container_name = f"{prefix}-{hash_id}"
         try:
-            container = client.containers.get(container_name)
+            container = get_client().containers.get(container_name)
             container.stop()
             container.remove(force=True)
             return {"success": True, "message": "Bot container stopped and removed"}
@@ -126,7 +142,7 @@ def get_bot_container_status(token: str) -> dict:
     for prefix in ["anjani-bot", "pdf-bot", "gh-pr-bot"]:
         container_name = f"{prefix}-{hash_id}"
         try:
-            container = client.containers.get(container_name)
+            container = get_client().containers.get(container_name)
             return {
                 "status": "running" if container.status == "running" else "stopped",
                 "container_id": container.id,
