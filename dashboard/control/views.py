@@ -12,6 +12,12 @@ from .utils.docker_client import (
     get_bot_hash
 )
 
+def landing(request):
+    return render(request, 'control/landing.html')
+
+def login_view(request):
+    return render(request, 'control/login.html')
+
 def home(request):
     return render(request, 'control/index.html')
 
