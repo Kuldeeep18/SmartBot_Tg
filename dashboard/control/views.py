@@ -63,7 +63,7 @@ def launch_bot_api(request):
                 upsert=True
             )
             
-        else:
+        elif bot_type == 'ai_pdf_chat':
             # AI PDF Chatbot (RAG)
             supabase_url = data.get('supabaseUrl', '').strip()
             supabase_key = data.get('supabaseKey', '').strip()
@@ -109,6 +109,49 @@ def launch_bot_api(request):
                         'chunkSize': chunk_size,
                         'chunkOverlap': chunk_overlap,
                         'retrieverK': retriever_k,
+                        'status': 'running',
+                        'updatedAt': datetime.utcnow()
+                    }
+                },
+                upsert=True
+            )
+        else:
+            # GitHub PR Bot
+            gemini_api_key = data.get('geminiApiKey', '').strip()
+            github_token = data.get('githubToken', '').strip()
+            max_repo_size = int(data.get('maxRepoSize', 100))
+            github_client_id = data.get('githubClientId', '').strip()
+            github_client_secret = data.get('githubClientSecret', '').strip()
+            oauth_redirect_url = data.get('oauthRedirectUrl', '').strip()
+
+            if not gemini_api_key:
+                return JsonResponse({'error': 'Missing Gemini API Key'}, status=400)
+
+            config = {
+                'geminiApiKey': gemini_api_key,
+                'githubToken': github_token,
+                'maxRepoSize': max_repo_size,
+                'githubClientId': github_client_id,
+                'githubClientSecret': github_client_secret,
+                'oauthRedirectUrl': oauth_redirect_url
+            }
+
+            # 2. Launch Docker Container
+            result = launch_bot_container(token, bot_type, config)
+
+            # 3. Save to database
+            db.bots.update_one(
+                {'_id': hash_id},
+                {
+                    '$set': {
+                        'type': bot_type,
+                        'encryptedToken': encrypt(token),
+                        'encryptedGeminiKey': encrypt(gemini_api_key),
+                        'encryptedGithubToken': encrypt(github_token),
+                        'maxRepoSize': max_repo_size,
+                        'githubClientId': github_client_id,
+                        'encryptedGithubClientSecret': encrypt(github_client_secret),
+                        'oauthRedirectUrl': oauth_redirect_url,
                         'status': 'running',
                         'updatedAt': datetime.utcnow()
                     }
@@ -185,7 +228,7 @@ def status_bot_api(request):
                             'ownerId': b.get('ownerId', ''),
                             'enabledPlugins': b.get('enabledPlugins', [])
                         })
-                    else:
+                    elif bot_type == 'ai_pdf_chat':
                         bot_record.update({
                             'supabaseUrl': b.get('supabaseUrl', ''),
                             'supabaseKey': decrypt(b['encryptedSupabaseKey']) if 'encryptedSupabaseKey' in b else '',
@@ -196,6 +239,16 @@ def status_bot_api(request):
                             'chunkSize': b.get('chunkSize', 1000),
                             'chunkOverlap': b.get('chunkOverlap', 200),
                             'retrieverK': b.get('retrieverK', 10)
+                        })
+                    else:
+                        # github_pr_bot
+                        bot_record.update({
+                            'geminiApiKey': decrypt(b['encryptedGeminiKey']) if 'encryptedGeminiKey' in b else '',
+                            'githubToken': decrypt(b['encryptedGithubToken']) if 'encryptedGithubToken' in b else '',
+                            'maxRepoSize': b.get('maxRepoSize', 100),
+                            'githubClientId': b.get('githubClientId', ''),
+                            'githubClientSecret': decrypt(b['encryptedGithubClientSecret']) if 'encryptedGithubClientSecret' in b else '',
+                            'oauthRedirectUrl': b.get('oauthRedirectUrl', '')
                         })
                     clean_bots.append(bot_record)
                 return JsonResponse({'bots': clean_bots})
@@ -228,7 +281,7 @@ def status_bot_api(request):
                     'ownerId': bot_data.get('ownerId', ''),
                     'enabledPlugins': bot_data.get('enabledPlugins', []),
                 })
-            else:
+            elif bot_data.get('type', 'anjani') == 'ai_pdf_chat':
                 response_data.update({
                     'supabaseUrl': bot_data.get('supabaseUrl', ''),
                     'supabaseKey': decrypt(bot_data['encryptedSupabaseKey']) if 'encryptedSupabaseKey' in bot_data else '',
@@ -239,6 +292,15 @@ def status_bot_api(request):
                     'chunkSize': bot_data.get('chunkSize', 1000),
                     'chunkOverlap': bot_data.get('chunkOverlap', 200),
                     'retrieverK': bot_data.get('retrieverK', 10)
+                })
+            else:
+                response_data.update({
+                    'geminiApiKey': decrypt(bot_data['encryptedGeminiKey']) if 'encryptedGeminiKey' in bot_data else '',
+                    'githubToken': decrypt(bot_data['encryptedGithubToken']) if 'encryptedGithubToken' in bot_data else '',
+                    'maxRepoSize': bot_data.get('maxRepoSize', 100),
+                    'githubClientId': bot_data.get('githubClientId', ''),
+                    'githubClientSecret': decrypt(bot_data['encryptedGithubClientSecret']) if 'encryptedGithubClientSecret' in bot_data else '',
+                    'oauthRedirectUrl': bot_data.get('oauthRedirectUrl', '')
                 })
                 
             return JsonResponse(response_data)
