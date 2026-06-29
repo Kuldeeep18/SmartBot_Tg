@@ -1,4 +1,4 @@
-﻿version: "3.9"
+version: "3.9"
 
 services:
   anjani:
@@ -21,6 +21,8 @@ services:
   mongo:
     image: "mongo:latest"
     container_name: anjaniMongo
+    ports:
+      - "27018:27017"
     volumes:
       - "mongo_anjani:/data/db"
     environment:
