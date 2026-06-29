@@ -3,6 +3,8 @@ Telegram bot handler: PDF save processing (/save command).
 Downloads the PDF, processes it through the RAG pipeline, and stores embeddings.
 """
 
+from pathlib import Path
+
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -39,17 +41,21 @@ async def save_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not document:
         await update.message.reply_text(
-            "❌ *No PDF found to save.*\n\n"
+            "❌ *No document found to save.*\n\n"
             "To save a document to this chat, either:\n"
-            "• Upload a PDF file with the caption `/save`\n"
-            "• Reply `/save` to any PDF file already in the chat",
+            "• Upload a PDF, MD, or TXT file with the caption `/save`\n"
+            "• Reply `/save` to any document already in the chat",
             parse_mode="Markdown"
         )
         return
 
     # Validate file type
-    if not file_name.lower().endswith(".pdf"):
-        await update.message.reply_text("❌ Only PDF files are supported. Please save a `.pdf` file.")
+    allowed_extensions = {".pdf", ".md", ".txt"}
+    file_ext = Path(file_name).suffix.lower()
+    if file_ext not in allowed_extensions:
+        await update.message.reply_text(
+            "❌ Unsupported file type. Only `.pdf`, `.md`, and `.txt` files are supported."
+        )
         return
 
     # Validate file size
@@ -106,16 +112,23 @@ async def save_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             doc_id = documents[0].metadata.get("document_id", "unknown")
             session.add_document(doc_id, file_name)
             await session_manager.save_session(chat_id)
+            
+            # Start background deletion task (10 minutes)
+            from telegram_bot.handlers.permsave import delete_temp_document
+            import asyncio
+            asyncio.create_task(delete_temp_document(chat_id, doc_id, file_name))
 
         # Step 8: Success message
         total_pages = documents[0].metadata.get("total_pages", "?") if documents else "?"
+        page_label = "Virtual Pages" if file_ext in {".md", ".txt"} else "Pages"
         await progress_msg.edit_text(
             f"✅ `{file_name}` saved successfully to this chat!\n\n"
             f"📊 Stats:\n"
-            f"• Pages: {total_pages}\n"
-            f"• Chunks created: {len(documents)}\n"
+            f"• {page_label}: {total_pages}\n"
+            f"• Chunks: {len(documents)}\n"
             f"• Vectors stored: {len(doc_ids)}\n\n"
-            f"💬 It has been set as the active document. You can now ask questions about it!",
+            f"💬 Active document set. Ask questions about it!\n\n"
+            f"⏳ *Note:* This file is stored temporarily and will be deleted in **10 minutes** unless you save it using `/permanentSave`.",
             parse_mode="Markdown"
         )
 

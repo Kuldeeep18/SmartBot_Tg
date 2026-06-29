@@ -24,6 +24,11 @@ from telegram_bot.handlers import (
     select_handler,
     select_callback_handler,
 )
+from telegram_bot.handlers.permsave import (
+    permsave_handler,
+    permsave_callback_handler,
+    initialize_startup_cleanup,
+)
 from telegram_bot.utils.config import config
 from telegram_bot.utils.logger import logger
 from telegram_bot.utils.decorators import enforce_group_tag
@@ -42,6 +47,7 @@ COMMAND_MAP = {
     "save": save_handler,
     "ask": question_handler,
     "chat": question_handler,
+    "permanentsave": permsave_handler,
 }
 
 # Regex: @botname /command  (with optional text after)
@@ -150,8 +156,8 @@ def create_bot() -> Application:
 
     logger.info("Building Telegram bot application...")
 
-    # Build the application
-    app = Application.builder().token(config.telegram_bot_token).build()
+    # Build the application with post_init startup cleanup hook
+    app = Application.builder().token(config.telegram_bot_token).post_init(initialize_startup_cleanup).build()
 
     # ──────────────────────────────────────
     # Register Command Handlers
@@ -165,14 +171,17 @@ def create_bot() -> Application:
     app.add_handler(CommandHandler("save", enforce_group_tag(save_handler)))
     app.add_handler(CommandHandler("ask", enforce_group_tag(question_handler)))
     app.add_handler(CommandHandler("chat", enforce_group_tag(question_handler)))
+    app.add_handler(CommandHandler("permanentSave", enforce_group_tag(permsave_handler)))
+    app.add_handler(CommandHandler("permanentsave", enforce_group_tag(permsave_handler)))
     
-    # Also handle PDF uploads with /save in the caption
+    # Also handle uploads with /save in the caption
     # Matches: "/save", "@botname /save", "/save@botname"
     app.add_handler(MessageHandler(
-        filters.Document.PDF & filters.CaptionRegex(r"(?:^|\s)/save(?:\s|@|$)|^@\S+\s+/save(?:\s|$)"),
+        filters.Document.ALL & filters.CaptionRegex(r"(?:^|\s)/save(?:\s|@|$)|^@\S+\s+/save(?:\s|$)"),
         enforce_group_tag(save_handler),
     ))
     
+    app.add_handler(CallbackQueryHandler(permsave_callback_handler, pattern="^permsave_"))
     app.add_handler(CallbackQueryHandler(select_callback_handler))
 
     # ──────────────────────────────────────
