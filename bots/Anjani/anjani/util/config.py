@@ -23,6 +23,7 @@ class Config:
 
     LOGIN_URL: Optional[str]
     PLUGIN_FLAG: list[str]
+    ENABLED_PLUGINS: list[str]
     FEATURE_FLAG: list[str]
 
     HEALTH_CHECK_INTERVAL: Optional[int]
@@ -54,6 +55,9 @@ class Config:
         self.LOGIN_URL = getenv("LOGIN_URL")
         self.PLUGIN_FLAG = list(
             filter(None, [i.strip() for i in getenv("PLUGIN_FLAG", "").split(";")])
+        )
+        self.ENABLED_PLUGINS = list(
+            filter(None, [i.strip() for i in getenv("ENABLED_PLUGINS", "").split(";")])
         )
         self.FEATURE_FLAG = list(
             filter(None, [i.strip() for i in getenv("FEATURE_FLAG", "").split(";")])
