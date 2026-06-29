@@ -22,6 +22,8 @@ class UserSession:
     active_filename: Optional[str] = None
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     last_active: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    permanent_doc_ids: List[str] = field(default_factory=list)
+    temp_docs: Dict[str, Dict[str, str]] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         """Convert session to dictionary for JSON serialization."""
@@ -33,6 +35,8 @@ class UserSession:
             "active_filename": self.active_filename,
             "created_at": self.created_at,
             "last_active": self.last_active,
+            "permanent_doc_ids": self.permanent_doc_ids,
+            "temp_docs": self.temp_docs,
         }
 
     @classmethod
@@ -46,6 +50,8 @@ class UserSession:
             active_filename=data.get("active_filename"),
             created_at=data.get("created_at", datetime.now(timezone.utc).isoformat()),
             last_active=data.get("last_active", datetime.now(timezone.utc).isoformat()),
+            permanent_doc_ids=data.get("permanent_doc_ids", []),
+            temp_docs=data.get("temp_docs", {}),
         )
 
     def add_message(self, role: str, content: str):
@@ -60,6 +66,13 @@ class UserSession:
             self.uploaded_doc_ids.append(doc_id)
         self.active_document_id = doc_id
         self.active_filename = filename
+        
+        # Track as temporary document initially
+        self.temp_docs[doc_id] = {
+            "filename": filename,
+            "uploaded_at": datetime.now(timezone.utc).isoformat()
+        }
+        
         self.last_active = datetime.now(timezone.utc).isoformat()
 
     def clear_history(self):
@@ -73,6 +86,8 @@ class UserSession:
         self.uploaded_doc_ids.clear()
         self.active_document_id = None
         self.active_filename = None
+        self.permanent_doc_ids.clear()
+        self.temp_docs.clear()
         self.last_active = datetime.now(timezone.utc).isoformat()
 
 
