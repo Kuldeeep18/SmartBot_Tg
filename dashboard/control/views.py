@@ -247,3 +247,18 @@ def status_bot_api(request):
             return JsonResponse({'error': str(e)}, status=500)
             
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+@csrf_exempt
+def log_error(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            print("\n" + "="*50)
+            print("CLIENT JS ERROR:")
+            print(f"Message: {data.get('message')}")
+            print(f"Source: {data.get('source')} (Line {data.get('lineno')}, Col {data.get('colno')})")
+            print(f"Stack Trace:\n{data.get('error')}")
+            print("="*50 + "\n")
+        except Exception as e:
+            print("Error logging failed:", e)
+    return JsonResponse({'status': 'ok'})
