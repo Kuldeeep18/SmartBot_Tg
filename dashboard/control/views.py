@@ -30,20 +30,38 @@ def launch_bot_api(request):
         data = json.loads(request.body)
         token = data.get('token', '').strip()
         bot_type = data.get('type', 'anjani').strip()
+        username = data.get('username', '').strip()
+        display_name = data.get('displayName', '').strip()
         
-        if not token:
-            return JsonResponse({'error': 'Missing Bot Token'}, status=400)
-            
-        hash_id = get_bot_hash(token)
+        hash_id = data.get('hash', '').strip()
         db = get_db()
         
+        if hash_id and not token:
+            bot_data = db.bots.find_one({'_id': hash_id})
+            if not bot_data:
+                return JsonResponse({'error': 'Bot configuration not found'}, status=404)
+            token = decrypt(bot_data['encryptedToken'])
+            if not username:
+                username = bot_data.get('username', '')
+            if not display_name:
+                display_name = bot_data.get('displayName', '')
+        else:
+            if not token:
+                return JsonResponse({'error': 'Missing Bot Token'}, status=400)
+            hash_id = get_bot_hash(token)
+            
         # 1. Setup specific configurations per type
         if bot_type == 'anjani':
             owner_id = data.get('ownerId', '').strip()
+            if not owner_id and hash_id:
+                bot_data = db.bots.find_one({'_id': hash_id})
+                if bot_data:
+                    owner_id = bot_data.get('ownerId', '').strip()
+                    
             enabled_plugins = data.get('enabledPlugins', [])
             
             if not owner_id or not isinstance(enabled_plugins, list):
-                return JsonResponse({'error': 'Missing required fields for Anjani: ownerId, enabledPlugins'}, status=400)
+                return JsonResponse({'error': 'Missing required fields: ownerId, enabledPlugins'}, status=400)
                 
             config = {
                 'ownerId': owner_id,
@@ -59,6 +77,8 @@ def launch_bot_api(request):
                 {
                     '$set': {
                         'type': bot_type,
+                        'username': username,
+                        'displayName': display_name,
                         'encryptedToken': encrypt(token),
                         'ownerId': owner_id,
                         'enabledPlugins': enabled_plugins,
@@ -105,6 +125,8 @@ def launch_bot_api(request):
                 {
                     '$set': {
                         'type': bot_type,
+                        'username': username,
+                        'displayName': display_name,
                         'encryptedToken': encrypt(token),
                         'supabaseUrl': supabase_url,
                         'encryptedSupabaseKey': encrypt(supabase_key),
@@ -151,6 +173,8 @@ def launch_bot_api(request):
                 {
                     '$set': {
                         'type': bot_type,
+                        'username': username,
+                        'displayName': display_name,
                         'encryptedToken': encrypt(token),
                         'encryptedGeminiKey': encrypt(gemini_api_key),
                         'encryptedGithubToken': encrypt(github_token),
@@ -178,7 +202,7 @@ def launch_bot_api(request):
 def status_bot_api(request):
     db = get_db()
     
-    # 1. Handle POST (Stop Bot)
+    # 1. Handle POST (Stop / Delete Bot)
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -186,7 +210,7 @@ def status_bot_api(request):
             token = data.get('token', '').strip()
             action = data.get('action', '').strip()
             
-            if action != 'stop':
+            if action not in ['stop', 'delete', 'start']:
                 return JsonResponse({'error': 'Invalid action'}, status=400)
                 
             target_hash = hash_id if hash_id else get_bot_hash(token)
@@ -197,16 +221,60 @@ def status_bot_api(request):
                 
             raw_token = decrypt(bot_data['encryptedToken'])
             
-            # Stop container
-            stop_bot_container(raw_token)
-            
-            # Update database status
-            db.bots.update_one(
-                {'_id': target_hash},
-                {'$set': {'status': 'stopped', 'updatedAt': datetime.utcnow()}}
-            )
-            
-            return JsonResponse({'success': True, 'message': 'Bot stopped successfully'})
+            if action == 'delete':
+                try:
+                    stop_bot_container(raw_token)
+                except Exception:
+                    pass
+                db.bots.delete_one({'_id': target_hash})
+                return JsonResponse({'success': True, 'message': 'Bot deleted successfully'})
+            elif action == 'stop':
+                try:
+                    stop_bot_container(raw_token)
+                except Exception:
+                    pass
+                db.bots.update_one(
+                    {'_id': target_hash},
+                    {'$set': {'status': 'stopped', 'updatedAt': datetime.utcnow()}}
+                )
+                return JsonResponse({'success': True, 'message': 'Bot stopped successfully'})
+            elif action == 'start':
+                bot_type = bot_data.get('type', 'anjani')
+                config = {}
+                if bot_type == 'anjani':
+                    config = {
+                        'ownerId': bot_data.get('ownerId', ''),
+                        'enabledPlugins': bot_data.get('enabledPlugins', [])
+                    }
+                elif bot_type == 'ai_pdf_chat':
+                    config = {
+                        'supabaseUrl': bot_data.get('supabaseUrl', ''),
+                        'supabaseKey': decrypt(bot_data['encryptedSupabaseKey']) if 'encryptedSupabaseKey' in bot_data else '',
+                        'llmProvider': bot_data.get('llmProvider', 'openai'),
+                        'llmModel': bot_data.get('llmModel', ''),
+                        'embeddingModel': bot_data.get('embeddingModel', ''),
+                        'llmApiKey': decrypt(bot_data['encryptedLlmApiKey']) if 'encryptedLlmApiKey' in bot_data else '',
+                        'chunkSize': bot_data.get('chunkSize', 1000),
+                        'chunkOverlap': bot_data.get('chunkOverlap', 200),
+                        'retrieverK': bot_data.get('retrieverK', 10)
+                    }
+                else:
+                    config = {
+                        'geminiApiKey': decrypt(bot_data['encryptedGeminiKey']) if 'encryptedGeminiKey' in bot_data else '',
+                        'githubToken': decrypt(bot_data['encryptedGithubToken']) if 'encryptedGithubToken' in bot_data else '',
+                        'maxRepoSize': bot_data.get('maxRepoSize', 100),
+                        'githubClientId': bot_data.get('githubClientId', ''),
+                        'githubClientSecret': decrypt(bot_data['encryptedGithubClientSecret']) if 'encryptedGithubClientSecret' in bot_data else '',
+                        'oauthRedirectUrl': bot_data.get('oauthRedirectUrl', '')
+                    }
+                
+                # Launch Bot container
+                launch_bot_container(raw_token, bot_type, config)
+                db.bots.update_one(
+                    {'_id': target_hash},
+                    {'$set': {'status': 'running', 'updatedAt': datetime.utcnow()}}
+                )
+                return JsonResponse({'success': True, 'message': 'Bot started successfully'})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
             
@@ -226,6 +294,8 @@ def status_bot_api(request):
                         'hash': b['_id'],
                         'type': bot_type,
                         'status': b.get('status', 'stopped'),
+                        'username': b.get('username', ''),
+                        'displayName': b.get('displayName', ''),
                         'updatedAt': b.get('updatedAt', datetime.utcnow()).isoformat() if isinstance(b.get('updatedAt'), datetime) else str(b.get('updatedAt'))
                     }
                     
@@ -279,6 +349,8 @@ def status_bot_api(request):
                 'hash': target_hash,
                 'type': bot_data.get('type', 'anjani'),
                 'status': live_status['status'],
+                'username': bot_data.get('username', ''),
+                'displayName': bot_data.get('displayName', ''),
                 'startedAt': live_status.get('started_at'),
             }
             

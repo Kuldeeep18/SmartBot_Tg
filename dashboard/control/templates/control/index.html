@@ -213,277 +213,60 @@
     <!-- DYNAMIC SECTION PANELS -->
     
     <!-- 1. MYBOTS SECTION -->
-    <section id="section-view-mybots" class="space-y-6 max-w-4xl">
-      <!-- Bot Type Tab Navigation -->
-      <div class="flex border-b border-gray-300/40 gap-6 overflow-x-auto whitespace-nowrap pb-1">
-        <button id="tab-anjani" class="pb-4 px-1 text-sm font-bold border-b-2 border-neumorphic-accent text-neumorphic-accent flex items-center gap-2 transition-all focus:outline-none">
-          <i data-lucide="message-square" class="w-4 h-4"></i>
-          Group Manager (Anjani)
-        </button>
-        <button id="tab-rag" class="pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-neumorphic-muted hover:text-neumorphic-fg flex items-center gap-2 transition-all focus:outline-none">
-          <i data-lucide="file-text" class="w-4 h-4"></i>
-          AI PDF Chatbot (RAG)
-        </button>
-        <button id="tab-github" class="pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-neumorphic-muted hover:text-neumorphic-fg flex items-center gap-2 transition-all focus:outline-none">
-          <i data-lucide="git-pull-request" class="w-4 h-4"></i>
-          GitHub PR Bot
+    <section id="section-view-mybots" class="space-y-6 max-w-5xl">
+      <!-- Section sub-header with connect CTA -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <h2 class="text-xl font-display font-bold text-neumorphic-fg">Connected Bot List</h2>
+          <p class="text-neumorphic-muted text-xs mt-0.5">Below is the complete database of Telegram bot runtimes.</p>
+        </div>
+        <button 
+          onclick="openConnectModal()" 
+          class="px-5 py-3 rounded-2xl text-xs font-bold neo-btn-primary flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2"
+        >
+          <i data-lucide="plus" class="w-4.5 h-4.5"></i>
+          Connect New Bot
         </button>
       </div>
 
-      <!-- Main Config Form -->
-      <form id="launch-form" class="bg-[#E0E5EC] rounded-[32px] p-6 md:p-8 space-y-8 neo-extruded">
-        
-        <!-- ANJANI SECTION -->
-        <div id="section-anjani" class="space-y-6">
-          <div>
-            <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
-              <i data-lucide="bot" class="w-5 h-5 text-neumorphic-accent"></i>
-              Link Group Moderator Triggers
-            </h2>
-            <p class="text-neumorphic-muted text-sm mt-1">
-              Select which templates plugins are loaded. Currently linked plugins: 
-              <span id="linked-template-count" class="font-bold text-neumorphic-accent">3 active plugins</span>. 
-              Edit selection in the <a href="#" onclick="setActiveSection('templates'); return false;" class="font-bold text-neumorphic-accent underline">Templates</a> tab.
-            </p>
-          </div>
-
-          <!-- Owner ID Input -->
-          <div class="space-y-2 max-w-md">
-            <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Owner User ID</label>
-            <input 
-              id="owner-id"
-              type="text"
-              placeholder="e.g. 1919814914"
-              class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-            />
-          </div>
+      <!-- Bot List Grid -->
+      <div id="my-bots-list" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Rendered dynamically -->
+        <div class="col-span-full text-center py-12 bg-[#E0E5EC] rounded-[32px] neo-extruded text-neumorphic-muted text-sm">
+          <i data-lucide="refresh-cw" class="w-8 h-8 animate-spin mx-auto mb-3 text-neumorphic-accent"></i>
+          Syncing bot database...
         </div>
-
-        <!-- RAG SECTION -->
-        <div id="section-rag" class="hidden space-y-8">
-          <div>
-            <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
-              <i data-lucide="database" class="w-5 h-5 text-neumorphic-accent"></i>
-              Vector Index Settings
-            </h2>
-            <p class="text-neumorphic-muted text-sm mt-1">Configure your Supabase vector store settings for PDF indexing.</p>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-2">
-              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Supabase URL</label>
-              <input 
-                id="supabase-url"
-                type="text"
-                placeholder="https://your-project.supabase.co"
-                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-              />
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Supabase Service Role Key</label>
-              <input 
-                id="supabase-key"
-                type="password"
-                placeholder="eyJhbGciOi..."
-                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-              />
-            </div>
-          </div>
-
-          <div class="border-t border-gray-300/30 pt-8 space-y-6">
-            <div>
-              <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
-                <i data-lucide="cpu" class="w-5 h-5 text-neumorphic-accent"></i>
-                LLM Provider Setup
-              </h2>
-              <p class="text-neumorphic-muted text-sm mt-1">Configure the AI brains behind the chatbot.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div class="space-y-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">LLM Provider</label>
-                <select 
-                  id="llm-provider"
-                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3.5 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all"
-                >
-                  <option value="openai">OpenAI</option>
-                  <option value="gemini">Google Gemini</option>
-                  <option value="groq">Groq</option>
-                  <option value="openrouter">OpenRouter</option>
-                </select>
-              </div>
-
-              <div class="space-y-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">LLM Model</label>
-                <input 
-                  id="llm-model"
-                  type="text"
-                  value="gpt-4o-mini"
-                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                />
-              </div>
-
-              <div class="space-y-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Embedding Model</label>
-                <input 
-                  id="embedding-model"
-                  type="text"
-                  value="text-embedding-3-small"
-                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                />
-              </div>
-            </div>
-
-            <div class="space-y-2 max-w-xl">
-              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">LLM Provider API Key</label>
-              <input 
-                id="llm-api-key"
-                type="password"
-                placeholder="Paste LLM API Key here..."
-                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-              />
-            </div>
-          </div>
-
-          <div class="border-t border-gray-300/30 pt-8 space-y-6">
-            <div>
-              <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
-                <i data-lucide="sliders" class="w-5 h-5 text-neumorphic-accent"></i>
-                RAG Settings
-              </h2>
-              <p class="text-neumorphic-muted text-sm mt-1">Chunk and retriever overrides.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div class="space-y-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Chunk Size</label>
-                <input 
-                  id="chunk-size"
-                  type="number"
-                  value="1000"
-                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                />
-              </div>
-
-              <div class="space-y-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Chunk Overlap</label>
-                <input 
-                  id="chunk-overlap"
-                  type="number"
-                  value="200"
-                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                />
-              </div>
-
-              <div class="space-y-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Retriever K (Matches)</label>
-                <input 
-                  id="retriever-k"
-                  type="number"
-                  value="10"
-                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- GITHUB SECTION -->
-        <div id="section-github" class="hidden space-y-8">
-          <div>
-            <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
-              <i data-lucide="git-pull-request" class="w-5 h-5 text-neumorphic-accent"></i>
-              GitHub Bot Configurations
-            </h2>
-            <p class="text-neumorphic-muted text-sm mt-1">Configure your Gemini and GitHub access keys.</p>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Gemini API Key -->
-            <div class="space-y-2 md:col-span-2">
-              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Gemini API Key</label>
-              <input 
-                id="gemini-api-key"
-                type="password"
-                placeholder="AIzaSy..."
-                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-              />
-            </div>
-
-            <!-- GitHub Token -->
-            <div class="space-y-2">
-              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">GitHub PAT (Token)</label>
-              <input 
-                id="github-token"
-                type="password"
-                placeholder="ghp_..."
-                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-              />
-            </div>
-
-            <!-- Max Repo Size -->
-            <div class="space-y-2">
-              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Max Repo Size (MB)</label>
-              <input 
-                id="max-repo-size"
-                type="number"
-                value="100"
-                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- COMMON CREDENTIALS -->
-        <div class="border-t border-gray-300/30 pt-8 space-y-6">
-          <div>
-            <h3 class="text-lg font-display font-bold text-neumorphic-fg">Telegram Connection</h3>
-            <p class="text-neumorphic-muted text-sm mt-0.5">Define the Telegram BotFather token to assign to this custom service.</p>
-          </div>
-
-          <div class="space-y-2 max-w-xl">
-            <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Bot Token</label>
-            <div class="relative">
-              <input 
-                id="bot-token"
-                type="password"
-                placeholder="e.g. 123456:ABC-DEF1234..."
-                required
-                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-              />
-              <button
-                type="button"
-                id="toggle-token-visibility"
-                class="absolute right-3 top-3.5 text-neumorphic-muted hover:text-neumorphic-fg transition-colors focus:outline-none"
-              >
-                <i data-lucide="eye" class="w-4 h-4" id="eye-icon"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Deploy Button -->
-        <div class="border-t border-gray-300/30 pt-6 flex justify-end">
-          <button
-            type="submit"
-            id="submit-btn"
-            class="px-6 py-3.5 rounded-2xl text-sm font-semibold neo-btn-primary flex items-center gap-2 group focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2"
-          >
-            <span>Launch Custom Instance</span>
-            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" id="submit-icon"></i>
-          </button>
-        </div>
-      </form>
+      </div>
     </section>
 
     <!-- 2. TEMPLATES SECTION -->
     <section id="section-view-templates" class="hidden space-y-6">
-      <div class="mb-4">
-        <h2 class="text-xl font-display font-bold text-neumorphic-fg">Templates & Feature Modules</h2>
-        <p class="text-neumorphic-muted text-sm mt-1">
-          Turn features on and off below. Click on any card to view commands, logs, and a simulated Telegram mockup.
-        </p>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-4">
+        <div>
+          <h2 class="text-xl font-display font-bold text-neumorphic-fg">Templates & Feature Modules</h2>
+          <p class="text-neumorphic-muted text-xs mt-1">
+            Toggle features on or off. Select a bot below to customize and save its active templates.
+          </p>
+        </div>
+        
+        <!-- Bot selector dropdown & Save button -->
+        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <select 
+            id="template-bot-select"
+            class="bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-2.5 text-xs text-neumorphic-fg focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-semibold shadow-sm w-full sm:w-56"
+          >
+            <option value="">-- Choose Bot --</option>
+          </select>
+          <button 
+            id="save-plugins-btn"
+            onclick="saveBotPlugins()"
+            disabled
+            class="px-5 py-2.5 rounded-2xl text-xs font-bold bg-[#A3B1C6] text-white opacity-50 cursor-not-allowed flex items-center gap-2 transition-all focus:outline-none"
+          >
+            <i data-lucide="save" class="w-4 h-4"></i>
+            Save Changes
+          </button>
+        </div>
       </div>
 
       <!-- Feature Cards Grid -->
@@ -592,6 +375,30 @@
           <div class="space-y-1">
             <h3 class="font-bold text-base text-neumorphic-muted">Notes & Triggers</h3>
             <p class="text-neumorphic-muted text-xs leading-relaxed">Save custom notes or text snippets for hash callouts.</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- GitHub PR Reviewer Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="github_pr_bot">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="git-pull-request" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">GitHub PR Reviewer</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Automated syntax checks, security warnings, and reviews on PR threads.</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- AI PDF Chatbot Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="ai_pdf_chat">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="database" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">AI PDF Chatbot (RAG)</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Upload PDF documents to Supabase and query them using natural language.</p>
           </div>
           <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
         </div>
@@ -783,6 +590,74 @@
     </div>
   </div>
 
+  <!-- Connect/Edit Bot Modal -->
+  <div id="connect-bot-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div class="absolute inset-0 bg-[#E0E5EC]/85 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" id="connect-modal-backdrop"></div>
+    <div class="relative w-full max-w-4xl bg-[#E0E5EC] rounded-[2.5rem] overflow-hidden flex flex-col neo-extruded transition-all duration-300 scale-95 opacity-0 m-4" id="connect-modal-content" style="max-height: 90vh;">
+      
+      <!-- Modal Header -->
+      <div class="p-6 md:p-8 border-b border-gray-300/35 flex justify-between items-center bg-[#E0E5EC]">
+        <div>
+          <h2 class="text-2xl font-display font-extrabold text-neumorphic-fg tracking-tight" id="connect-modal-title">Connect New Bot</h2>
+          <p class="text-neumorphic-muted text-xs mt-1">Configure bot credentials and thread parameters.</p>
+        </div>
+        <button id="connect-modal-close" type="button" class="p-2.5 bg-[#E0E5EC] rounded-xl neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset text-neumorphic-fg transition-all">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Form Container) -->
+      <form id="launch-form" class="flex-grow p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+        <!-- Token Input -->
+        <div class="space-y-2 max-w-xl font-body">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">Bot Token</label>
+          <div class="relative">
+            <input 
+              id="bot-token"
+              type="password"
+              placeholder="e.g. 123456:ABC-DEF1234..."
+              required
+              class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+            />
+            <button
+              type="button"
+              id="toggle-token-visibility"
+              class="absolute right-3 top-3.5 text-neumorphic-muted hover:text-neumorphic-fg transition-colors focus:outline-none"
+            >
+              <i data-lucide="eye" class="w-4 h-4" id="eye-icon"></i>
+            </button>
+          </div>
+          <!-- Token Validation Status Box -->
+          <div id="token-validation-status" class="transition-all duration-300"></div>
+        </div>
+
+        <!-- Owner ID Input -->
+        <div class="space-y-2 max-w-xl font-body">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">Owner User ID</label>
+          <input 
+            id="owner-id"
+            type="text"
+            placeholder="e.g. 1919814914"
+            required
+            class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+          />
+        </div>
+
+        <!-- Deploy Button -->
+        <div class="border-t border-gray-300/30 pt-6 flex justify-end sticky bottom-0 bg-[#E0E5EC] py-2">
+          <button
+            type="submit"
+            id="submit-btn"
+            class="px-6 py-3.5 rounded-2xl text-sm font-semibold neo-btn-primary flex items-center gap-2 group focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2"
+          >
+            <span id="submit-btn-text">Launch Custom Instance</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" id="submit-icon"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     // Initialize icons
     lucide.createIcons();
@@ -790,7 +665,9 @@
     // Active navigation state
     let activeTab = 'anjani'; // 'anjani', 'ai_pdf_chat', or 'github_pr_bot'
     let activeSection = 'mybots'; // 'mybots', 'templates', 'instances', 'settings'
-    const selectedFeatures = new Set(['muting', 'filters', 'welcome']);
+    let allBots = []; // Cached array of connected bots
+    let selectedFeatures = new Set(['muting', 'filters', 'welcome']);
+    let botTemplatesCache = {}; // Cache of local selections per bot hash
 
     // Setting Switch Toggle Action
     window.toggleSetting = function(btn) {
@@ -846,8 +723,11 @@
         }
       });
 
-      // Update linked templates count display in MyBots
-      document.getElementById('linked-template-count').textContent = `${selectedFeatures.size} active plugin${selectedFeatures.size === 1 ? '' : 's'}`;
+      // Update linked templates count display in MyBots Connect modal
+      const linkedTemplateCountEl = document.getElementById('linked-template-count');
+      if (linkedTemplateCountEl) {
+        linkedTemplateCountEl.textContent = `${selectedFeatures.size} active plugin${selectedFeatures.size === 1 ? '' : 's'}`;
+      }
 
       lucide.createIcons();
     };
@@ -1009,7 +889,7 @@
           { cmd: "/locks", desc: "List currently locked types" }
         ],
         chat: [
-          { type: 'admin', name: 'Admin', text: '/lock links' },
+          { type: 'admin', name: 'Admin', text: '/lock links font-mono' },
           { type: 'bot', text: '🔒 Links are now locked in this chat.' },
           { type: 'user', name: 'User', text: 'Check out my site! http://example.com' },
           { type: 'bot', text: '⚠️ <b>User</b>, links are not allowed here.' }
@@ -1035,46 +915,62 @@
           { type: 'user', name: 'User', text: '#website' },
           { type: 'bot', text: 'Official site: http://website.com', reply: true }
         ]
+      },
+      github_pr_bot: {
+        title: "GitHub PR Reviewer",
+        desc: "Automated syntax checks, performance warnings, and design reviews on PR threads using Google Gemini API.",
+        value: "Accelerate code reviews and keep security/performance regressions out of your repositories automatically.",
+        steps: [
+          "Add the webhook to your GitHub repository.",
+          "Developer opens a pull request.",
+          "PR Bot automatically reviews the code diffs and leaves detailed review remarks."
+        ],
+        commands: [
+          { cmd: "/review [pr_number]", desc: "Trigger manual code review check" },
+          { cmd: "/status", desc: "View repo queue and token limit status" }
+        ],
+        chat: [
+          { type: 'system', text: 'Pull Request #42 opened: Add parse_log helper' },
+          { type: 'bot', text: '🤖 <b>PR Review Bot</b>\n\n⚠️ Security warning: Replacing `eval` with `json.loads` in <code>utils.py:L12</code> prevents remote code execution vulnerability.\n\nGood change.' }
+        ]
+      },
+      ai_pdf_chat: {
+        title: "AI PDF Chatbot (RAG)",
+        desc: "Upload documents to Supabase Vector Store and chat with GPT-4, Gemini or Groq using customized index parameters.",
+        value: "Make internal documents, manuals, and FAQs instantly queryable by your team via natural language.",
+        steps: [
+          "Upload PDF manuals or guidelines to Supabase database.",
+          "Ask questions using natural language.",
+          "RAG query parses context embeddings and streams responses back."
+        ],
+        commands: [
+          { cmd: "/chat [query]", desc: "Ask a question about uploaded PDFs" },
+          { cmd: "/upload", desc: "Upload a document to the index" }
+        ],
+        chat: [
+          { type: 'user', name: 'Member', text: '/chat What is the Q3 refund policy?' },
+          { type: 'bot', text: '🔍 <i>Querying PDF embeddings...</i>\n\nAccording to <b>refund_policy.pdf (Page 3)</b>, refunds are accepted within 30 days of purchase if items are in original condition.' }
+        ]
       }
     };
 
     // UI elements selectors
-    const tabAnjaniBtn = document.getElementById('tab-anjani');
-    const tabRagBtn = document.getElementById('tab-rag');
-    const tabGithubBtn = document.getElementById('tab-github');
-    const sectionAnjani = document.getElementById('section-anjani');
-    const sectionRag = document.getElementById('section-rag');
-    const sectionGithub = document.getElementById('section-github');
-
     const cards = document.querySelectorAll('.feature-card');
     const tokenInput = document.getElementById('bot-token');
     const toggleTokenBtn = document.getElementById('toggle-token-visibility');
     const eyeIcon = document.getElementById('eye-icon');
     const ownerInput = document.getElementById('owner-id');
-    
-    // RAG Selectors
-    const supabaseUrlInput = document.getElementById('supabase-url');
-    const supabaseKeyInput = document.getElementById('supabase-key');
-    const llmProviderSelect = document.getElementById('llm-provider');
-    const llmModelInput = document.getElementById('llm-model');
-    const embeddingModelInput = document.getElementById('embedding-model');
-    const llmApiKeyInput = document.getElementById('llm-api-key');
-    const chunkSizeInput = document.getElementById('chunk-size');
-    const chunkOverlapInput = document.getElementById('chunk-overlap');
-    const retrieverKInput = document.getElementById('retriever-k');
-
-    // GitHub Selectors
-    const geminiApiKeyInput = document.getElementById('gemini-api-key');
-    const githubTokenInput = document.getElementById('github-token');
-    const maxRepoSizeInput = document.getElementById('max-repo-size');
 
     const launchForm = document.getElementById('launch-form');
     const submitBtn = document.getElementById('submit-btn');
+    const submitBtnText = document.getElementById('submit-btn-text');
     const refreshBtn = document.getElementById('refresh-btn');
     const refreshIcon = document.getElementById('refresh-icon');
     const alertBanner = document.getElementById('alert-banner');
     const alertText = document.getElementById('alert-text');
     const alertIconContainer = document.getElementById('alert-icon-container');
+    
+    const myBotsList = document.getElementById('my-bots-list');
     const instancesList = document.getElementById('instances-list');
 
     // Modal Selectors
@@ -1089,37 +985,50 @@
     const modalSteps = document.getElementById('modal-steps');
     const modalChat = document.getElementById('modal-chat');
 
+    // Connect Bot Modal Selectors
+    const connectBotModal = document.getElementById('connect-bot-modal');
+    const connectModalContent = document.getElementById('connect-modal-content');
+    const connectModalBackdrop = document.getElementById('connect-modal-backdrop');
+    const connectModalClose = document.getElementById('connect-modal-close');
+    const connectModalTitle = document.getElementById('connect-modal-title');
+
     let currentModalFeature = null;
+    let currentEditingHash = null; // null if connecting new, hash string if modifying
 
-    // Switch Tabs Helper (Inner MyBots credentials panels)
-    function switchTab(target) {
-      activeTab = target;
+    // Modal Toggle Connect Bot Modal
+    window.openConnectModal = function() {
+      currentEditingHash = null;
+      connectModalTitle.textContent = "Connect New Bot";
+      submitBtnText.textContent = "Launch Custom Instance";
       
-      // Reset borders & styling
-      tabAnjaniBtn.className = "pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-neumorphic-muted hover:text-neumorphic-fg flex items-center gap-2 transition-all focus:outline-none";
-      tabRagBtn.className = "pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-neumorphic-muted hover:text-neumorphic-fg flex items-center gap-2 transition-all focus:outline-none";
-      tabGithubBtn.className = "pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-neumorphic-muted hover:text-neumorphic-fg flex items-center gap-2 transition-all focus:outline-none";
-      
-      // Hide sections
-      sectionAnjani.classList.add('hidden');
-      sectionRag.classList.add('hidden');
-      sectionGithub.classList.add('hidden');
+      // Clear previous inputs
+      tokenInput.value = '';
+      tokenInput.dataset.username = '';
+      tokenInput.dataset.displayName = '';
+      document.getElementById('token-validation-status').innerHTML = '';
+      ownerInput.value = '';
 
-      if (target === 'anjani') {
-        tabAnjaniBtn.className = "pb-4 px-1 text-sm font-bold border-b-2 border-neumorphic-accent text-neumorphic-accent flex items-center gap-2 transition-all focus:outline-none";
-        sectionAnjani.classList.remove('hidden');
-      } else if (target === 'ai_pdf_chat') {
-        tabRagBtn.className = "pb-4 px-1 text-sm font-bold border-b-2 border-neumorphic-accent text-neumorphic-accent flex items-center gap-2 transition-all focus:outline-none";
-        sectionRag.classList.remove('hidden');
-      } else {
-        tabGithubBtn.className = "pb-4 px-1 text-sm font-bold border-b-2 border-neumorphic-accent text-neumorphic-accent flex items-center gap-2 transition-all focus:outline-none";
-        sectionGithub.classList.remove('hidden');
-      }
-    }
+      connectBotModal.classList.remove('hidden');
+      connectBotModal.classList.add('flex');
+      setTimeout(() => {
+        connectModalContent.classList.remove('scale-95', 'opacity-0');
+        connectModalContent.classList.add('scale-100', 'opacity-100');
+      }, 10);
+      lucide.createIcons();
+    };
 
-    tabAnjaniBtn.addEventListener('click', () => switchTab('anjani'));
-    tabRagBtn.addEventListener('click', () => switchTab('ai_pdf_chat'));
-    tabGithubBtn.addEventListener('click', () => switchTab('github_pr_bot'));
+    window.closeConnectModal = function() {
+      connectModalContent.classList.remove('scale-100', 'opacity-100');
+      connectModalContent.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => {
+        connectBotModal.classList.remove('flex');
+        connectBotModal.classList.add('hidden');
+        currentEditingHash = null;
+      }, 300);
+    };
+
+    connectModalClose.addEventListener('click', closeConnectModal);
+    connectModalBackdrop.addEventListener('click', closeConnectModal);
 
     function openModal(featureId) {
       currentModalFeature = featureId;
@@ -1235,27 +1144,22 @@
     modalToggleBtn.addEventListener('click', () => {
       if (!currentModalFeature) return;
       
-      const card = document.querySelector(`.feature-card[data-feature="${currentModalFeature}"]`);
-      const iconBox = card.querySelector('.feature-icon-box');
-      const title = card.querySelector('h3');
-      const dot = card.querySelector('.dot-indicator');
+      const select = document.getElementById('template-bot-select');
+      const selectedHash = select ? select.value : '';
       
       if (selectedFeatures.has(currentModalFeature)) {
         selectedFeatures.delete(currentModalFeature);
-        card.classList.remove('active');
-        iconBox.className = "feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted";
-        title.className = "font-bold text-base text-neumorphic-muted";
-        dot.classList.add('hidden');
       } else {
         selectedFeatures.add(currentModalFeature);
-        card.classList.add('active');
-        iconBox.className = "feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent";
-        title.className = "font-bold text-base text-neumorphic-fg";
-        dot.classList.remove('hidden');
       }
       
+      // Save changes back to selection cache for this bot
+      if (selectedHash) {
+        botTemplatesCache[selectedHash] = new Set(selectedFeatures);
+      }
+      
+      updateTemplateCardsState();
       updateModalToggleButton();
-      document.getElementById('linked-template-count').textContent = `${selectedFeatures.size} active plugin${selectedFeatures.size === 1 ? '' : 's'}`;
     });
 
     // Open Modal on card click
@@ -1295,101 +1199,281 @@
       lucide.createIcons();
     }
 
-    // Fetch and list bot containers
+    // Debounce Helper
+    function debounce(func, wait) {
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
+
+    // Real-Time Bot Token Verification Check
+    async function verifyBotToken() {
+      const token = tokenInput.value.trim();
+      const statusDiv = document.getElementById('token-validation-status');
+      
+      if (!token || token.length < 20 || !token.includes(':')) {
+        statusDiv.innerHTML = '';
+        return;
+      }
+      
+      statusDiv.innerHTML = `
+        <div class="flex items-center gap-2 text-xs text-neumorphic-muted mt-2 font-mono">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i>
+          Pinging telegram daemon...
+        </div>
+      `;
+      lucide.createIcons();
+      
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+        const data = await res.json();
+        if (data.ok && data.result) {
+          const bot = data.result;
+          tokenInput.dataset.username = `@${bot.username}`;
+          tokenInput.dataset.displayName = bot.first_name;
+          
+          statusDiv.innerHTML = `
+            <div class="flex items-center gap-3 p-3 bg-emerald-100/60 rounded-xl text-emerald-800 text-xs mt-2 border border-emerald-300/40 animate-in fade-in duration-300 font-body">
+              <div class="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[10px] shadow-sm">
+                ${bot.first_name[0].toUpperCase()}
+              </div>
+              <div>
+                <div class="font-bold">Token Verified: ${bot.first_name}</div>
+                <div class="text-[10px] opacity-75">@${bot.username} (ID: ${bot.id})</div>
+              </div>
+            </div>
+          `;
+        } else {
+          tokenInput.dataset.username = '';
+          tokenInput.dataset.displayName = '';
+          statusDiv.innerHTML = `
+            <div class="flex items-center gap-2 text-xs text-rose-700 mt-2 bg-rose-100/60 p-3 rounded-xl border border-rose-300/40 font-body">
+              <i data-lucide="x-circle" class="w-4 h-4 text-rose-600 flex-shrink-0"></i>
+              <span>Token signature invalid or expired. Check BotFather token.</span>
+            </div>
+          `;
+        }
+      } catch (err) {
+        // Fallback for isolated sandbox or network issues
+        tokenInput.dataset.username = 'Telegram Bot';
+        tokenInput.dataset.displayName = 'Telegram Bot';
+        statusDiv.innerHTML = `
+          <div class="flex items-center gap-2 text-xs text-amber-700 mt-2 bg-amber-100/60 p-3 rounded-xl border border-amber-300/40 font-body">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 flex-shrink-0"></i>
+            <span>Local mode: format valid, skip online verification.</span>
+          </div>
+        `;
+      }
+      lucide.createIcons();
+    }
+
+    tokenInput.addEventListener('input', debounce(verifyBotToken, 400));
+
+    // Fetch and list bot containers (renders both MyBots grid & Instances view)
     async function loadBots() {
       refreshIcon.classList.add('animate-spin');
       try {
         const res = await fetch('/api/bot/status');
         const data = await res.json();
         
+        allBots = data.bots || [];
+        
+        // Initialize cache for any bot that is not already tracked
+        allBots.forEach(bot => {
+          if (!botTemplatesCache[bot.hash]) {
+            botTemplatesCache[bot.hash] = new Set(bot.enabledPlugins || []);
+          }
+        });
+        
+        populateTemplateBotDropdown();
+        
+        // 1. Render Connected Bots (MyBots Grid)
         if (!data.bots || data.bots.length === 0) {
-          instancesList.innerHTML = `
-            <div class="col-span-full text-center py-10 border border-dashed border-gray-300/60 rounded-[32px] text-neumorphic-muted text-sm px-4">
-              No active bot containers found. Configure your bot in "My Bots" to start hosting.
+          myBotsList.innerHTML = `
+            <div class="col-span-full text-center py-12 border border-dashed border-gray-300/60 rounded-[32px] text-neumorphic-muted text-sm px-4">
+              <i data-lucide="bot" class="w-8 h-8 mx-auto mb-3 opacity-60"></i>
+              No bots connected yet. Click "+ Connect New Bot" above to connect your first botfather instance!
             </div>
           `;
-          return;
+        } else {
+          myBotsList.innerHTML = data.bots.map(bot => {
+            let typeBadgeColor = 'text-neumorphic-accent';
+            let typeLabel = 'Anjani';
+            let typeIcon = 'message-square';
+            
+            if (bot.type === 'ai_pdf_chat') {
+              typeBadgeColor = 'text-emerald-600';
+              typeLabel = 'AI PDF';
+              typeIcon = 'file-text';
+            } else if (bot.type === 'github_pr_bot') {
+              typeBadgeColor = 'text-amber-600';
+              typeLabel = 'GitHub PR';
+              typeIcon = 'git-pull-request';
+            }
+
+            const isRunning = bot.status === 'running';
+            const statusDotColor = isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400';
+            
+            let detailsText = '';
+            if (bot.type === 'anjani') {
+              detailsText = `Owner ID: ${bot.ownerId} | ${bot.enabledPlugins ? bot.enabledPlugins.length : 0} plugins`;
+            } else if (bot.type === 'ai_pdf_chat') {
+              detailsText = `LLM: ${bot.llmProvider} | Supabase URL: ${bot.supabaseUrl}`;
+            } else {
+              detailsText = `Max Size: ${bot.maxRepoSize}MB`;
+            }
+
+            return `
+              <div class="p-6 rounded-[32px] bg-[#E0E5EC] neo-extruded flex flex-col justify-between min-h-[180px] hover:shadow-neo-lifted transition-all">
+                <div class="space-y-3">
+                  <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl bg-[#E0E5EC] neo-inset flex items-center justify-center ${typeBadgeColor}">
+                        <i data-lucide="${typeIcon}" class="w-5 h-5"></i>
+                      </div>
+                      <div>
+                        <h3 class="font-bold text-base text-neumorphic-fg">${bot.displayName || 'Telegram Bot'}</h3>
+                        <p class="font-mono text-xs text-neumorphic-accent">${bot.username || '@unnamed_bot'}</p>
+                      </div>
+                    </div>
+                    <span class="px-2.5 py-1 text-[9px] font-bold rounded-lg bg-[#E0E5EC] neo-inset-sm ${typeBadgeColor}">
+                      ${typeLabel}
+                    </span>
+                  </div>
+                  
+                  <div class="text-xs text-neumorphic-muted font-body pl-1">
+                    ${detailsText}
+                  </div>
+                </div>
+
+                <div class="flex justify-between items-center border-t border-gray-300/35 pt-4 mt-4">
+                  <div class="flex items-center gap-2">
+                    <button
+                      onclick='editBot(${JSON.stringify(bot).replace(/'/g, "&#39;")})'
+                      class="px-3.5 py-2 rounded-xl bg-[#E0E5EC] neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset text-xs font-semibold text-neumorphic-fg transition-all focus:outline-none"
+                      title="Modify bot settings"
+                    >
+                      Modify
+                    </button>
+                    <button
+                      onclick="deleteBot('${bot.hash}')"
+                      class="p-2 rounded-xl bg-[#E0E5EC] neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset text-rose-500 hover:text-rose-600 transition-colors focus:outline-none"
+                      title="Remove configuration permanently"
+                    >
+                      <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+
+                  <div class="flex items-center gap-3">
+                    <span class="flex items-center gap-1.5 text-xs text-neumorphic-muted font-bold">
+                      <span class="w-2 h-2 rounded-full ${statusDotColor}"></span>
+                      ${bot.status.toUpperCase()}
+                    </span>
+                    <button
+                      onclick="toggleBotContainer('${bot.hash}', '${isRunning ? 'stop' : 'start'}')"
+                      class="px-4 py-2 rounded-xl text-xs font-bold transition-all focus:outline-none flex items-center gap-1.5 ${
+                        isRunning 
+                          ? 'bg-[#E0E5EC] neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset text-rose-500' 
+                          : 'neo-btn-primary'
+                      }"
+                    >
+                      <i data-lucide="${isRunning ? 'square' : 'play'}" class="w-3.5 h-3.5 ${isRunning ? 'fill-rose-500' : 'fill-white'} border-0"></i>
+                      <span>${isRunning ? 'Stop' : 'Run'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
         }
 
-        instancesList.innerHTML = data.bots.map(bot => {
-          let typeBadgeColor = 'text-neumorphic-accent';
-          let typeLabel = 'Anjani';
-          
-          if (bot.type === 'ai_pdf_chat') {
-            typeBadgeColor = 'text-emerald-600';
-            typeLabel = 'AI PDF';
-          } else if (bot.type === 'github_pr_bot') {
-            typeBadgeColor = 'text-amber-600';
-            typeLabel = 'GitHub PR';
-          }
-          
-          let featuresHtml = '';
-          if (bot.type === 'anjani' && bot.enabledPlugins) {
-            featuresHtml = bot.enabledPlugins.map(p => `
-              <span class="px-2 py-0.5 bg-[#E0E5EC] neo-inset-sm rounded-md text-[9px] text-neumorphic-accent font-medium">
-                ${p}
-              </span>
-            `).join('');
-          } else if (bot.type === 'ai_pdf_chat') {
-            featuresHtml = `
-              <span class="px-2 py-0.5 bg-[#E0E5EC] neo-inset-sm rounded-md text-[9px] text-emerald-600 font-medium">
-                LLM: ${bot.llmProvider} (${bot.llmModel})
-              </span>
-            `;
-          } else if (bot.type === 'github_pr_bot') {
-            featuresHtml = `
-              <span class="px-2 py-0.5 bg-[#E0E5EC] neo-inset-sm rounded-md text-[9px] text-amber-600 font-medium">
-                Repo Size Limit: ${bot.maxRepoSize}MB
-              </span>
-            `;
-          }
-
-          return `
-            <div class="p-5 rounded-[32px] bg-[#E0E5EC] neo-extruded flex flex-col gap-4 hover:shadow-neo-lifted transition-all">
-              <div class="flex justify-between items-start">
-                <div>
-                  <div class="flex items-center gap-2">
-                    <span class="font-mono text-xs font-semibold text-neumorphic-fg">ID: ${bot.hash}</span>
-                    <span class="px-2 py-0.5 text-[9px] font-bold rounded bg-[#E0E5EC] neo-inset-sm ${typeBadgeColor}">${typeLabel}</span>
-                  </div>
-                  <div class="text-[10px] text-neumorphic-muted mt-1.5">
-                    ${bot.type === 'anjani' ? `Owner: ${bot.ownerId}` : bot.type === 'ai_pdf_chat' ? `Supabase: ${bot.supabaseUrl}` : `Max Size: ${bot.maxRepoSize}MB`}
-                  </div>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <span class="w-1.5 h-1.5 rounded-full ${bot.status === 'running' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}"></span>
-                  <span class="text-[10px] uppercase font-bold text-neumorphic-muted tracking-wider">${bot.status}</span>
-                </div>
-              </div>
-
-              <div class="flex flex-wrap gap-1">
-                ${featuresHtml}
-              </div>
-
-              <div class="flex justify-between items-center border-t border-gray-300/35 pt-3 mt-1">
-                <button
-                  onclick='editBot(${JSON.stringify(bot).replace(/'/g, "&#39;")})'
-                  class="text-xs font-semibold text-neumorphic-accent hover:text-neumorphic-accentLight transition-colors focus:outline-none"
-                >
-                  Modify Config
-                </button>
-                <button
-                  onclick="stopBot('${bot.hash}')"
-                  class="p-1.5 bg-[#E0E5EC] neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset rounded-lg text-rose-500 hover:text-rose-600 transition-colors flex items-center gap-1.5 text-xs font-medium focus:outline-none"
-                >
-                  <i data-lucide="square" class="w-3.5 h-3.5 fill-rose-500 border-0"></i>
-                  Stop
-                </button>
-              </div>
+        // 2. Render Active Containers (Instances Grid)
+        const runningBots = data.bots ? data.bots.filter(b => b.status === 'running') : [];
+        if (runningBots.length === 0) {
+          instancesList.innerHTML = `
+            <div class="col-span-full text-center py-12 border border-dashed border-gray-300/60 rounded-[32px] text-neumorphic-muted text-sm px-4">
+              <i data-lucide="play" class="w-8 h-8 mx-auto mb-3 opacity-60"></i>
+              No running bot containers active. Boot a connected bot from the "My Bots" tab.
             </div>
           `;
-        }).join('');
+        } else {
+          instancesList.innerHTML = runningBots.map(bot => {
+            let typeBadgeColor = 'text-neumorphic-accent';
+            let typeLabel = 'Anjani';
+            
+            if (bot.type === 'ai_pdf_chat') {
+              typeBadgeColor = 'text-emerald-600';
+              typeLabel = 'AI PDF';
+            } else if (bot.type === 'github_pr_bot') {
+              typeBadgeColor = 'text-amber-600';
+              typeLabel = 'GitHub PR';
+            }
+
+            let featuresHtml = '';
+            if (bot.type === 'anjani' && bot.enabledPlugins) {
+              featuresHtml = bot.enabledPlugins.map(p => `
+                <span class="px-2 py-0.5 bg-[#E0E5EC] neo-inset-sm rounded-md text-[9px] text-neumorphic-accent font-medium">
+                  ${p}
+                </span>
+              `).join('');
+            } else if (bot.type === 'ai_pdf_chat') {
+              featuresHtml = `
+                <span class="px-2 py-0.5 bg-[#E0E5EC] neo-inset-sm rounded-md text-[9px] text-emerald-600 font-medium">
+                  LLM: ${bot.llmProvider} (${bot.llmModel})
+                </span>
+              `;
+            } else if (bot.type === 'github_pr_bot') {
+              featuresHtml = `
+                <span class="px-2 py-0.5 bg-[#E0E5EC] neo-inset-sm rounded-md text-[9px] text-amber-600 font-medium">
+                  Repo Limit: ${bot.maxRepoSize}MB
+                </span>
+              `;
+            }
+
+            return `
+              <div class="p-6 rounded-[32px] bg-[#E0E5EC] neo-extruded flex flex-col gap-4 hover:shadow-neo-lifted transition-all">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-sm text-neumorphic-fg">${bot.displayName || 'Telegram Bot'}</span>
+                      <span class="px-2 py-0.5 text-[8px] font-bold rounded bg-[#E0E5EC] neo-inset-sm ${typeBadgeColor}">${typeLabel}</span>
+                    </div>
+                    <div class="text-[10px] text-neumorphic-muted mt-1.5 font-mono">
+                      Hash ID: ${bot.hash}
+                    </div>
+                  </div>
+                  <span class="px-2 py-1 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded-lg flex items-center gap-1 animate-pulse">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    ONLINE
+                  </span>
+                </div>
+
+                <div class="flex flex-wrap gap-1">
+                  ${featuresHtml}
+                </div>
+
+                <div class="flex justify-between items-center border-t border-gray-300/35 pt-4 mt-2">
+                  <button
+                    onclick="toggleBotContainer('${bot.hash}', 'stop')"
+                    class="px-4 py-2 bg-[#E0E5EC] neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset rounded-xl text-rose-500 hover:text-rose-600 transition-colors flex items-center gap-1.5 text-xs font-bold focus:outline-none"
+                  >
+                    <i data-lucide="square" class="w-3.5 h-3.5 fill-rose-500 border-0"></i>
+                    Stop Container
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+
         lucide.createIcons();
       } catch (err) {
         console.error(err);
-        instancesList.innerHTML = `
+        myBotsList.innerHTML = `
           <div class="col-span-full text-center py-10 rounded-[32px] text-rose-600 text-sm px-4 bg-rose-100 border border-rose-300 shadow-sm">
-            Failed to query container status. Check database connection.
+            Failed to query container status database.
           </div>
         `;
       } finally {
@@ -1397,76 +1481,239 @@
       }
     }
 
-    // Populate form with existing configuration to edit
-    window.editBot = function(bot) {
-      if (bot.type === 'anjani') {
-        switchTab('anjani');
-        ownerInput.value = bot.ownerId;
-        
-        selectedFeatures.clear();
-        bot.enabledPlugins.forEach(p => selectedFeatures.add(p));
-        
-        cards.forEach(card => {
-          const featureId = card.getAttribute('data-feature');
-          const iconBox = card.querySelector('.feature-icon-box');
-          const title = card.querySelector('h3');
-          const dot = card.querySelector('.dot-indicator');
-          
-          if (selectedFeatures.has(featureId)) {
-            card.classList.add('active');
-            iconBox.className = "feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent";
-            title.className = "font-bold text-base text-neumorphic-fg";
-            dot.classList.remove('hidden');
-          } else {
-            card.classList.remove('active');
-            iconBox.className = "feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted";
-            title.className = "font-bold text-base text-neumorphic-muted";
-            dot.classList.add('hidden');
-          }
-        });
-      } else if (bot.type === 'ai_pdf_chat') {
-        switchTab('ai_pdf_chat');
-        supabaseUrlInput.value = bot.supabaseUrl;
-        supabaseKeyInput.value = bot.supabaseKey;
-        llmProviderSelect.value = bot.llmProvider;
-        llmModelInput.value = bot.llmModel;
-        embeddingModelInput.value = bot.embeddingModel;
-        llmApiKeyInput.value = bot.llmApiKey;
-        chunkSizeInput.value = bot.chunkSize;
-        chunkOverlapInput.value = bot.chunkOverlap;
-        retrieverKInput.value = bot.retrieverK;
+    // Populate the dropdown in Templates tab
+    function populateTemplateBotDropdown() {
+      const select = document.getElementById('template-bot-select');
+      const currentSelected = select.value;
+      
+      select.innerHTML = '<option value="">-- Choose Bot --</option>';
+      
+      allBots.forEach(bot => {
+        const option = document.createElement('option');
+        option.value = bot.hash;
+        option.textContent = `${bot.displayName || 'Bot'} (${bot.username || '@unnamed'})`;
+        select.appendChild(option);
+      });
+      
+      // Restore previous selection if it's still available
+      if (allBots.some(b => b.hash === currentSelected)) {
+        select.value = currentSelected;
       } else {
-        switchTab('github_pr_bot');
-        geminiApiKeyInput.value = bot.geminiApiKey;
-        githubTokenInput.value = bot.githubToken;
-        maxRepoSizeInput.value = bot.maxRepoSize;
+        select.value = '';
+        // If nothing selected, reset templates checkbox state to defaults
+        selectedFeatures.clear();
+        ['muting', 'filters', 'welcome'].forEach(f => selectedFeatures.add(f));
+        updateTemplateCardsState();
       }
-
-      showAlert('success', `Loaded configurations for bot ${bot.hash}. Re-enter the Bot Token to deploy updates.`);
-      setActiveSection('mybots');
     }
 
-    // Stop container trigger
-    window.stopBot = async function(hash) {
-      if (!confirm('Are you sure you want to stop and delete this bot container?')) return;
+    // Dropdown change handler inside Templates catalogue
+    document.getElementById('template-bot-select').addEventListener('change', (e) => {
+      const selectedHash = e.target.value;
+      
+      if (!selectedHash) {
+        selectedFeatures.clear();
+        ['muting', 'filters', 'welcome'].forEach(f => selectedFeatures.add(f));
+      } else {
+        // If not tracked yet, populate cache from database entry
+        if (!botTemplatesCache[selectedHash]) {
+          const bot = allBots.find(b => b.hash === selectedHash);
+          botTemplatesCache[selectedHash] = new Set(bot ? (bot.enabledPlugins || []) : []);
+        }
+        
+        // Load set values from cache
+        selectedFeatures.clear();
+        botTemplatesCache[selectedHash].forEach(p => selectedFeatures.add(p));
+      }
+      updateTemplateCardsState();
+    });
+
+    // Update active templates view states dynamically
+    function updateTemplateCardsState() {
+      cards.forEach(card => {
+        const featureId = card.getAttribute('data-feature');
+        const iconBox = card.querySelector('.feature-icon-box');
+        const title = card.querySelector('h3');
+        const dot = card.querySelector('.dot-indicator');
+        
+        if (selectedFeatures.has(featureId)) {
+          card.classList.add('active');
+          iconBox.className = "feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent";
+          title.className = "font-bold text-base text-neumorphic-fg";
+          dot.classList.remove('hidden');
+        } else {
+          card.classList.remove('active');
+          iconBox.className = "feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted";
+          title.className = "font-bold text-base text-neumorphic-muted";
+          dot.classList.add('hidden');
+        }
+      });
+      
+      const countEl = document.getElementById('linked-template-count');
+      if (countEl) {
+        countEl.textContent = `${selectedFeatures.size} active plugin${selectedFeatures.size === 1 ? '' : 's'}`;
+      }
+
+      // Sync the Save Changes button state dynamically
+      const select = document.getElementById('template-bot-select');
+      const selectedHash = select.value;
+      const saveBtn = document.getElementById('save-plugins-btn');
+      
+      if (selectedHash) {
+        const bot = allBots.find(b => b.hash === selectedHash);
+        if (bot) {
+          const dbPlugins = new Set(bot.enabledPlugins || []);
+          
+          // Check if differences exist between DB configuration and UI selections
+          let isDifferent = dbPlugins.size !== selectedFeatures.size;
+          if (!isDifferent) {
+            for (let f of selectedFeatures) {
+              if (!dbPlugins.has(f)) {
+                isDifferent = true;
+                break;
+              }
+            }
+          }
+          
+          if (isDifferent) {
+            saveBtn.disabled = false;
+            saveBtn.className = "px-5 py-2.5 rounded-2xl text-xs font-bold neo-btn-primary flex items-center gap-2 transition-all focus:outline-none animate-pulse";
+            saveBtn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i>Save Changes *`;
+          } else {
+            saveBtn.disabled = true;
+            saveBtn.className = "px-5 py-2.5 rounded-2xl text-xs font-bold bg-emerald-100/80 text-emerald-800 border border-emerald-300/40 flex items-center gap-2 transition-all focus:outline-none opacity-80 cursor-default";
+            saveBtn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>Synced`;
+          }
+        }
+      } else {
+        saveBtn.disabled = true;
+        saveBtn.className = "px-5 py-2.5 rounded-2xl text-xs font-bold bg-[#A3B1C6] text-white opacity-50 cursor-not-allowed flex items-center gap-2 transition-all focus:outline-none";
+        saveBtn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i>Save Changes`;
+      }
+      lucide.createIcons();
+    }
+
+    // Save Bot Plugins and Redeploy
+    window.saveBotPlugins = async function() {
+      const select = document.getElementById('template-bot-select');
+      const selectedHash = select.value;
+      const saveBtn = document.getElementById('save-plugins-btn');
+      
+      if (!selectedHash) return;
+      
+      const bot = allBots.find(b => b.hash === selectedHash);
+      if (!bot) return;
+
+      const originalHtml = saveBtn.innerHTML;
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4 animate-spin text-white"></i><span>Saving...</span>`;
+      lucide.createIcons();
+      
+      try {
+        const res = await fetch('/api/bot/launch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            hash: selectedHash,
+            type: bot.type || 'anjani',
+            enabledPlugins: Array.from(selectedFeatures)
+          })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          showAlert('success', `Active templates updated and container re-deployed successfully for ${bot.displayName || 'bot'}!`);
+          await loadBots();
+        } else {
+          showAlert('error', data.error || 'Failed to update templates configuration.');
+        }
+      } catch (err) {
+        showAlert('error', err.message || 'Error occurred saving plugins.');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalHtml;
+        lucide.createIcons();
+      }
+    };
+
+    // Connect/Edit Modal Prefills
+    window.editBot = function(bot) {
+      currentEditingHash = bot.hash;
+      connectModalTitle.textContent = "Modify Bot Configuration";
+      submitBtnText.textContent = "Save & Re-deploy";
+
+      // Prefill fields
+      ownerInput.value = bot.ownerId || '';
+      
+      // Auto-toggle plugin selections in templates tab if saved
+      if (bot.enabledPlugins) {
+        botTemplatesCache[bot.hash] = new Set(bot.enabledPlugins);
+        selectedFeatures = botTemplatesCache[bot.hash];
+        const select = document.getElementById('template-bot-select');
+        if (select) {
+          select.value = bot.hash;
+        }
+        updateTemplateCardsState();
+      }
+
+      // Open Modal
+      connectBotModal.classList.remove('hidden');
+      connectBotModal.classList.add('flex');
+      setTimeout(() => {
+        connectModalContent.classList.remove('scale-95', 'opacity-0');
+        connectModalContent.classList.add('scale-100', 'opacity-100');
+      }, 10);
+      lucide.createIcons();
+    };
+
+    // Toggle start/stop container
+    window.toggleBotContainer = async function(hash, action) {
+      const confirmMsg = action === 'stop' 
+        ? 'Are you sure you want to stop this bot container?' 
+        : 'Are you sure you want to start this bot container?';
+        
+      if (!confirm(confirmMsg)) return;
+
       try {
         const res = await fetch('/api/bot/status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ hash, action: 'stop' })
+          body: JSON.stringify({ hash, action })
         });
         const data = await res.json();
         if (data.success) {
+          showAlert('success', `Bot container ${action}ped successfully.`);
           loadBots();
         } else {
-          alert(data.error || 'Failed to stop container');
+          showAlert('error', data.error || `Failed to ${action} bot.`);
         }
       } catch (err) {
-        alert(err.message || 'Error occurred while stopping bot');
+        showAlert('error', err.message || `Error toggling bot state.`);
       }
-    }
+    };
 
-    // Handle Form Submit (Launch)
+    // Delete bot configuration permanently
+    window.deleteBot = async function(hash) {
+      if (!confirm('Are you sure you want to permanently delete this bot profile? This will stop its container and wipe its configuration from the database!')) return;
+      try {
+        const res = await fetch('/api/bot/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hash, action: 'delete' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showAlert('success', 'Bot credentials deleted successfully.');
+          loadBots();
+        } else {
+          showAlert('error', data.error || 'Failed to delete bot.');
+        }
+      } catch (err) {
+        showAlert('error', err.message || 'Error occurred during deletion.');
+      }
+    };
+
+    // Handle Form Submit (Connect/Modify Bot)
     launchForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -1476,59 +1723,35 @@
         return;
       }
 
+      const ownerId = ownerInput.value.trim();
+      if (!ownerId) {
+        showAlert('error', 'Owner User ID is required.');
+        return;
+      }
+
+      // Check if username/displayName was fetched client-side. Defaults otherwise.
+      const botUsername = tokenInput.dataset.username || 'Telegram Bot';
+      const botDisplayName = tokenInput.dataset.displayName || 'Telegram Bot';
+
       let payload = {
         token: token,
-        type: activeTab
+        type: 'anjani',
+        username: botUsername,
+        displayName: botDisplayName,
+        ownerId: ownerId,
+        enabledPlugins: Array.from(selectedFeatures)
       };
 
-      if (activeTab === 'anjani') {
-        const ownerId = ownerInput.value.trim();
-        if (!ownerId) {
-          showAlert('error', 'Owner User ID is required for Group Manager.');
-          return;
-        }
-        if (selectedFeatures.size === 0) {
-          showAlert('error', 'Select at least one feature plugin to load.');
-          return;
-        }
-        payload.ownerId = ownerId;
-        payload.enabledPlugins = Array.from(selectedFeatures);
-      } else if (activeTab === 'ai_pdf_chat') {
-        const supabaseUrl = supabaseUrlInput.value.trim();
-        const supabaseKey = supabaseKeyInput.value.trim();
-        const llmApiKey = llmApiKeyInput.value.trim();
-        
-        if (!supabaseUrl || !supabaseKey || !llmApiKey) {
-          showAlert('error', 'Supabase URL, Key, and LLM API Key are required.');
-          return;
-        }
-
-        payload.supabaseUrl = supabaseUrl;
-        payload.supabaseKey = supabaseKey;
-        payload.llmProvider = llmProviderSelect.value;
-        payload.llmModel = llmModelInput.value.trim();
-        payload.embeddingModel = embeddingModelInput.value.trim();
-        payload.llmApiKey = llmApiKey;
-        payload.chunkSize = parseInt(chunkSizeInput.value) || 1000;
-        payload.chunkOverlap = parseInt(chunkOverlapInput.value) || 200;
-        payload.retrieverK = parseInt(retrieverKInput.value) || 10;
-      } else {
-        const geminiApiKey = geminiApiKeyInput.value.trim();
-        if (!geminiApiKey) {
-          showAlert('error', 'Gemini API Key is required.');
-          return;
-        }
-        
-        payload.geminiApiKey = geminiApiKey;
-        payload.githubToken = githubTokenInput.value.trim();
-        payload.maxRepoSize = parseInt(maxRepoSizeInput.value) || 100;
+      // If modifying, pass currentEditingHash
+      if (currentEditingHash) {
+        payload.hash = currentEditingHash;
       }
 
       // Show loading UI
       submitBtn.disabled = true;
       submitBtn.innerHTML = `
-        <i data-lucide="refresh-cw" class="w-4 h-4 animate-spin"></i>
-        <span>Deploying container...</span>
+        <i data-lucide="refresh-cw" class="w-4 h-4 animate-spin text-white"></i>
+        <span>Connecting instance...</span>
       `;
       lucide.createIcons();
 
@@ -1542,29 +1765,18 @@
         const data = await res.json();
         
         if (data.success) {
-          showAlert('success', `Bot container launched successfully! Hash ID: ${data.hash}`);
-          tokenInput.value = '';
-          
-          if (activeTab === 'anjani') {
-            ownerInput.value = '';
-          } else if (activeTab === 'ai_pdf_chat') {
-            supabaseUrlInput.value = '';
-            supabaseKeyInput.value = '';
-            llmApiKeyInput.value = '';
-          } else {
-            geminiApiKeyInput.value = '';
-            githubTokenInput.value = '';
-          }
+          showAlert('success', `Bot successfully connected and container started! Hash ID: ${data.hash}`);
+          closeConnectModal();
           loadBots();
         } else {
-          showAlert('error', data.error || 'Failed to launch custom bot instance.');
+          showAlert('error', data.error || 'Failed to connect bot instance.');
         }
       } catch (err) {
         showAlert('error', err.message || 'Network error occurred.');
       } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = `
-          <span>Launch Custom Instance</span>
+          <span id="submit-btn-text">${currentEditingHash ? 'Save & Re-deploy' : 'Launch Custom Instance'}</span>
           <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-0.5 transition-transform"></i>
         `;
         lucide.createIcons();

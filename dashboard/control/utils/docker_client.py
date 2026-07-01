@@ -44,17 +44,11 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
     
     # Try stopping any existing container for this token under all three prefixes
     for pref in ["anjani-bot", "pdf-bot", "gh-pr-bot"]:
-        try:
-            existing = get_client().containers.get(f"{pref}-{hash_id}")
-            if existing.status == 'running' and pref == prefix:
-                return {
-                    "success": True, 
-                    "message": "Bot is already running", 
-                    "container_id": existing.id
-                }
-            existing.remove(force=True)
-        except docker.errors.NotFound:
-            pass
+      try:
+        existing = get_client().containers.get(f"{pref}-{hash_id}")
+        existing.remove(force=True)
+      except docker.errors.NotFound:
+        pass
         
     network = os.getenv('DOCKER_NETWORK', 'bridge')
     
