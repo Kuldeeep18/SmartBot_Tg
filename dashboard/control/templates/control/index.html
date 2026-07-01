@@ -120,31 +120,76 @@
       border-radius: 4px;
     }
   </style>
+</head>
+<body class="min-h-screen flex bg-[#E0E5EC]">
+
   <script>
     if (localStorage.getItem('isLoggedIn') !== 'true') {
       window.location.href = '/login/?msg=Please sign in to access the Control Hub.';
     }
   </script>
-</head>
-<body class="pb-16 px-4 md:px-8">
-  <div class="max-w-7xl mx-auto">
-    
-    <!-- Header -->
-    <header class="py-10 flex flex-col md:flex-row justify-between items-center border-b border-gray-300/40 mb-12">
-      <div class="flex items-center gap-4 mb-6 md:mb-0">
-        <!-- Logout Button -->
-        <button id="logout-btn" class="p-3 bg-[#E0E5EC] rounded-2xl neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset text-neumorphic-accent transition-all focus:outline-none" title="Sign Out">
-          <i data-lucide="log-out" class="w-6 h-6"></i>
-        </button>
-        <div>
-          <h1 class="text-3xl font-display font-extrabold tracking-tight text-neumorphic-fg">
-            Anjani Control Hub
-          </h1>
-          <p class="text-neumorphic-muted text-sm mt-1">Multi-tenant custom feature manager for Telegram groups</p>
+
+  <!-- Left Sidebar (Hover Expandable) -->
+  <aside class="fixed top-0 left-0 h-screen w-16 hover:w-64 bg-[#E0E5EC] neo-extruded transition-all duration-300 ease-out z-30 flex flex-col justify-between py-8 px-3 group overflow-hidden">
+    <!-- Top Brand & Nav -->
+    <div class="flex flex-col gap-10 items-center group-hover:items-start group-hover:px-2 transition-all">
+      <!-- Brand Logo -->
+      <a href="#" class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-[#E0E5EC] rounded-xl flex items-center justify-center neo-inset-deep flex-shrink-0">
+          <i data-lucide="layers" class="w-5 h-5 text-neumorphic-accent"></i>
         </div>
+        <span class="font-display font-extrabold text-sm tracking-tight text-neumorphic-fg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">SmartBot Hub</span>
+      </a>
+
+      <!-- Navigation links -->
+      <nav class="flex flex-col gap-4 w-full">
+        <!-- My Bots -->
+        <button onclick="setActiveSection('mybots')" id="nav-mybots" class="flex items-center gap-4 w-full p-3 rounded-2xl transition-all focus:outline-none neo-inset text-neumorphic-accent font-bold">
+          <i data-lucide="bot" class="w-5 h-5 flex-shrink-0"></i>
+          <span class="text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">My Bots</span>
+        </button>
+
+        <!-- Templates -->
+        <button onclick="setActiveSection('templates')" id="nav-templates" class="flex items-center gap-4 w-full p-3 rounded-2xl transition-all focus:outline-none text-neumorphic-fg hover:shadow-neo-lifted active:shadow-neo-inset">
+          <i data-lucide="layout" class="w-5 h-5 flex-shrink-0"></i>
+          <span class="text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Templates</span>
+        </button>
+
+        <!-- Instances -->
+        <button onclick="setActiveSection('instances')" id="nav-instances" class="flex items-center gap-4 w-full p-3 rounded-2xl transition-all focus:outline-none text-neumorphic-fg hover:shadow-neo-lifted active:shadow-neo-inset">
+          <i data-lucide="play" class="w-5 h-5 flex-shrink-0"></i>
+          <span class="text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Instances</span>
+        </button>
+
+        <!-- Settings -->
+        <button onclick="setActiveSection('settings')" id="nav-settings" class="flex items-center gap-4 w-full p-3 rounded-2xl transition-all focus:outline-none text-neumorphic-fg hover:shadow-neo-lifted active:shadow-neo-inset">
+          <i data-lucide="settings" class="w-5 h-5 flex-shrink-0"></i>
+          <span class="text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Settings</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Bottom Logout -->
+    <button id="logout-btn" class="flex items-center gap-4 w-full p-3 rounded-2xl transition-all focus:outline-none text-rose-500 hover:text-rose-600 hover:shadow-neo-lifted active:shadow-neo-inset">
+      <i data-lucide="log-out" class="w-5 h-5 flex-shrink-0"></i>
+      <span class="text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Sign Out</span>
+    </button>
+  </aside>
+
+  <!-- Main Viewport Area -->
+  <main class="flex-1 ml-16 p-8 md:p-12 overflow-y-auto">
+    <!-- Header -->
+    <header class="pb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-300/40 mb-10 gap-4">
+      <div>
+        <h1 class="text-3xl font-display font-extrabold text-neumorphic-fg" id="dashboard-title">
+          Anjani Control Hub
+        </h1>
+        <p class="text-neumorphic-muted text-sm mt-1" id="dashboard-subtitle">
+          Connect new Telegram bots and deploy sandboxed Docker host runtimes.
+        </p>
       </div>
-      
-      <div class="flex items-center gap-3">
+
+      <div class="flex items-center gap-3 self-end sm:self-auto">
         <button 
           id="refresh-btn"
           class="w-11 h-11 bg-[#E0E5EC] rounded-xl flex items-center justify-center neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset transition-all"
@@ -159,451 +204,507 @@
       </div>
     </header>
 
-    <!-- Grid Layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      
-      <!-- Left Side: Config Panel -->
-      <div class="lg:col-span-8 space-y-8">
+    <!-- Alerts Banner Area -->
+    <div id="alert-banner" class="hidden p-4 rounded-2xl flex items-start gap-3 border-0 shadow-sm transition-all duration-300 mb-8 max-w-4xl">
+      <div id="alert-icon-container"></div>
+      <span id="alert-text" class="text-sm font-semibold"></span>
+    </div>
+
+    <!-- DYNAMIC SECTION PANELS -->
+    
+    <!-- 1. MYBOTS SECTION -->
+    <section id="section-view-mybots" class="space-y-6 max-w-4xl">
+      <!-- Bot Type Tab Navigation -->
+      <div class="flex border-b border-gray-300/40 gap-6 overflow-x-auto whitespace-nowrap pb-1">
+        <button id="tab-anjani" class="pb-4 px-1 text-sm font-bold border-b-2 border-neumorphic-accent text-neumorphic-accent flex items-center gap-2 transition-all focus:outline-none">
+          <i data-lucide="message-square" class="w-4 h-4"></i>
+          Group Manager (Anjani)
+        </button>
+        <button id="tab-rag" class="pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-neumorphic-muted hover:text-neumorphic-fg flex items-center gap-2 transition-all focus:outline-none">
+          <i data-lucide="file-text" class="w-4 h-4"></i>
+          AI PDF Chatbot (RAG)
+        </button>
+        <button id="tab-github" class="pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-neumorphic-muted hover:text-neumorphic-fg flex items-center gap-2 transition-all focus:outline-none">
+          <i data-lucide="git-pull-request" class="w-4 h-4"></i>
+          GitHub PR Bot
+        </button>
+      </div>
+
+      <!-- Main Config Form -->
+      <form id="launch-form" class="bg-[#E0E5EC] rounded-[32px] p-6 md:p-8 space-y-8 neo-extruded">
         
-        <!-- Alerts Area -->
-        <div id="alert-banner" class="hidden p-4 rounded-xl flex items-start gap-3 border-0 shadow-sm transition-all duration-300">
-          <div id="alert-icon-container"></div>
-          <span id="alert-text" class="text-sm font-semibold"></span>
+        <!-- ANJANI SECTION -->
+        <div id="section-anjani" class="space-y-6">
+          <div>
+            <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
+              <i data-lucide="bot" class="w-5 h-5 text-neumorphic-accent"></i>
+              Link Group Moderator Triggers
+            </h2>
+            <p class="text-neumorphic-muted text-sm mt-1">
+              Select which templates plugins are loaded. Currently linked plugins: 
+              <span id="linked-template-count" class="font-bold text-neumorphic-accent">3 active plugins</span>. 
+              Edit selection in the <a href="#" onclick="setActiveSection('templates'); return false;" class="font-bold text-neumorphic-accent underline">Templates</a> tab.
+            </p>
+          </div>
+
+          <!-- Owner ID Input -->
+          <div class="space-y-2 max-w-md">
+            <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Owner User ID</label>
+            <input 
+              id="owner-id"
+              type="text"
+              placeholder="e.g. 1919814914"
+              class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+            />
+          </div>
         </div>
 
-        <!-- Bot Type Tab Navigation -->
-        <div class="flex border-b border-gray-300/40 gap-6 overflow-x-auto whitespace-nowrap pb-1">
-          <button id="tab-anjani" class="pb-4 px-1 text-sm font-bold border-b-2 border-neumorphic-accent text-neumorphic-accent flex items-center gap-2 transition-all focus:outline-none">
-            <i data-lucide="message-square" class="w-4 h-4"></i>
-            Group Manager (Anjani)
-          </button>
-          <button id="tab-rag" class="pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-neumorphic-muted hover:text-neumorphic-fg flex items-center gap-2 transition-all focus:outline-none">
-            <i data-lucide="file-text" class="w-4 h-4"></i>
-            AI PDF Chatbot (RAG)
-          </button>
-          <button id="tab-github" class="pb-4 px-1 text-sm font-medium border-b-2 border-transparent text-neumorphic-muted hover:text-neumorphic-fg flex items-center gap-2 transition-all focus:outline-none">
-            <i data-lucide="git-pull-request" class="w-4 h-4"></i>
-            GitHub PR Bot
-          </button>
-        </div>
+        <!-- RAG SECTION -->
+        <div id="section-rag" class="hidden space-y-8">
+          <div>
+            <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
+              <i data-lucide="database" class="w-5 h-5 text-neumorphic-accent"></i>
+              Vector Index Settings
+            </h2>
+            <p class="text-neumorphic-muted text-sm mt-1">Configure your Supabase vector store settings for PDF indexing.</p>
+          </div>
 
-        <!-- CONFIGURATION FORM -->
-        <form id="launch-form" class="bg-[#E0E5EC] rounded-[32px] p-6 md:p-8 space-y-8 neo-extruded">
-          
-          <!-- ANJANI CONFIGURATION SECTION -->
-          <div id="section-anjani" class="space-y-6">
-            <div>
-              <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
-                <i data-lucide="sparkles" class="w-5 h-5 text-neumorphic-accent"></i>
-                Customize Features
-              </h2>
-              <p class="text-neumorphic-muted text-sm mt-1">Select the specific plugins to load onto your bot container.</p>
-            </div>
-
-            <!-- Feature Cards Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- Muting Card -->
-              <div class="feature-card active rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden active" data-feature="muting">
-                <div class="feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent">
-                  <i data-lucide="volume-x" class="w-6 h-6"></i>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="font-semibold text-sm text-neumorphic-fg">Mute Management</h3>
-                  <p class="text-neumorphic-muted text-xs leading-relaxed">Mute/unmute members, manage temporary silence periods, and track mute logs.</p>
-                </div>
-                <div class="dot-indicator absolute top-2 right-2 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
-              </div>
-
-              <!-- Filters Card -->
-              <div class="feature-card active rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden active" data-feature="filters">
-                <div class="feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent">
-                  <i data-lucide="message-square" class="w-6 h-6"></i>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="font-semibold text-sm text-neumorphic-fg">Smart Filters</h3>
-                  <p class="text-neumorphic-muted text-xs leading-relaxed">Set keyword triggers to auto-respond, delete spam, or warn users.</p>
-                </div>
-                <div class="dot-indicator absolute top-2 right-2 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
-              </div>
-
-              <!-- Welcome Card -->
-              <div class="feature-card active rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden active" data-feature="welcome">
-                <div class="feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent">
-                  <i data-lucide="user-check" class="w-6 h-6"></i>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="font-semibold text-sm text-neumorphic-fg">Custom Greetings</h3>
-                  <p class="text-neumorphic-muted text-xs leading-relaxed">Greet new members with customized media, text, and interactive buttons.</p>
-                </div>
-                <div class="dot-indicator absolute top-2 right-2 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
-              </div>
-
-              <!-- Federation Card -->
-              <div class="feature-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="federation">
-                <div class="feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
-                  <i data-lucide="radio" class="w-6 h-6"></i>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="font-semibold text-sm text-neumorphic-muted">Federation Bans</h3>
-                  <p class="text-neumorphic-muted text-xs leading-relaxed">Share ban lists across multiple chats to keep toxic users out globally.</p>
-                </div>
-                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
-              </div>
-
-              <!-- Spam Shield Card -->
-              <div class="feature-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="spam_shield">
-                <div class="feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
-                  <i data-lucide="shield" class="w-6 h-6"></i>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="font-semibold text-sm text-neumorphic-muted">Spam Shield</h3>
-                  <p class="text-neumorphic-muted text-xs leading-relaxed">Combat automated raid attacks, flood messages, and malicious userbots.</p>
-                </div>
-                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
-              </div>
-
-              <!-- Rules Card -->
-              <div class="feature-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="rules">
-                <div class="feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
-                  <i data-lucide="book-open" class="w-6 h-6"></i>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="font-semibold text-sm text-neumorphic-muted">Chat Rules</h3>
-                  <p class="text-neumorphic-muted text-xs leading-relaxed">Define rules for your chat and allow users to view them via commands.</p>
-                </div>
-                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
-              </div>
-
-              <!-- Purge Card -->
-              <div class="feature-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="purge">
-                <div class="feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
-                  <i data-lucide="trash-2" class="w-6 h-6"></i>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="font-semibold text-sm text-neumorphic-muted">Quick Purges</h3>
-                  <p class="text-neumorphic-muted text-xs leading-relaxed">Instantly bulk delete messages by user or message count with one command.</p>
-                </div>
-                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
-              </div>
-
-              <!-- Lockings Card -->
-              <div class="feature-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="lockings">
-                <div class="feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
-                  <i data-lucide="lock" class="w-6 h-6"></i>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="font-semibold text-sm text-neumorphic-muted">Media Locking</h3>
-                  <p class="text-neumorphic-muted text-xs leading-relaxed">Block stickers, links, voice messages, documents, or games dynamically.</p>
-                </div>
-                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
-              </div>
-
-              <!-- Notes Card -->
-              <div class="feature-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="notes">
-                <div class="feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
-                  <i data-lucide="file-text" class="w-6 h-6"></i>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="font-semibold text-sm text-neumorphic-muted">Notes & Triggers</h3>
-                  <p class="text-neumorphic-muted text-xs leading-relaxed">Save custom text snippets or links for easy callout with hashtags.</p>
-                </div>
-                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
-              </div>
-
-              <!-- Admins Card -->
-              <div class="feature-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="admins">
-                <div class="feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
-                  <i data-lucide="users" class="w-6 h-6"></i>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="font-semibold text-sm text-neumorphic-muted">Admin Tools</h3>
-                  <p class="text-neumorphic-muted text-xs leading-relaxed">Quickly promote, demote, pin messages or demote members.</p>
-                </div>
-                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
-              </div>
-
-              <!-- Backups Card -->
-              <div class="feature-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="backups">
-                <div class="feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
-                  <i data-lucide="download" class="w-6 h-6"></i>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="font-semibold text-sm text-neumorphic-muted">Backup & Restore</h3>
-                  <p class="text-neumorphic-muted text-xs leading-relaxed">Export group configuration files and restore them in other chats.</p>
-                </div>
-                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
-              </div>
-
-              <!-- Reporting Card -->
-              <div class="feature-card rounded-2xl p-5 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="reporting">
-                <div class="feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
-                  <i data-lucide="alert-triangle" class="w-6 h-6"></i>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="font-semibold text-sm text-neumorphic-muted">User Reporting</h3>
-                  <p class="text-neumorphic-muted text-xs leading-relaxed">Allow members to report chat violations to all group admins instantly.</p>
-                </div>
-                <div class="dot-indicator hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
-              </div>
-            </div>
-
-            <!-- Owner ID Input for Anjani -->
-            <div class="space-y-2 max-w-md pt-4">
-              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Owner User ID</label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Supabase URL</label>
               <input 
-                id="owner-id"
+                id="supabase-url"
                 type="text"
-                placeholder="e.g. 1919814914"
+                placeholder="https://your-project.supabase.co"
+                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+              />
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Supabase Service Role Key</label>
+              <input 
+                id="supabase-key"
+                type="password"
+                placeholder="eyJhbGciOi..."
                 class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
               />
             </div>
           </div>
 
-          <!-- RAG / AI PDF CHATBOT CONFIGURATION SECTION -->
-          <div id="section-rag" class="hidden space-y-8">
+          <div class="border-t border-gray-300/30 pt-8 space-y-6">
             <div>
               <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
-                <i data-lucide="database" class="w-5 h-5 text-neumorphic-accent"></i>
-                Supabase & Vector Store
+                <i data-lucide="cpu" class="w-5 h-5 text-neumorphic-accent"></i>
+                LLM Provider Setup
               </h2>
-              <p class="text-neumorphic-muted text-sm mt-1">Configure your Supabase vector store settings for PDF indexing.</p>
+              <p class="text-neumorphic-muted text-sm mt-1">Configure the AI brains behind the chatbot.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div class="space-y-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Supabase URL</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">LLM Provider</label>
+                <select 
+                  id="llm-provider"
+                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3.5 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all"
+                >
+                  <option value="openai">OpenAI</option>
+                  <option value="gemini">Google Gemini</option>
+                  <option value="groq">Groq</option>
+                  <option value="openrouter">OpenRouter</option>
+                </select>
+              </div>
+
+              <div class="space-y-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">LLM Model</label>
                 <input 
-                  id="supabase-url"
+                  id="llm-model"
                   type="text"
-                  placeholder="https://your-project.supabase.co"
+                  value="gpt-4o-mini"
                   class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
                 />
               </div>
 
               <div class="space-y-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Supabase Service Role Key</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Embedding Model</label>
                 <input 
-                  id="supabase-key"
-                  type="password"
-                  placeholder="eyJhbGciOi..."
+                  id="embedding-model"
+                  type="text"
+                  value="text-embedding-3-small"
                   class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
                 />
               </div>
             </div>
 
-            <div class="border-t border-gray-300/30 pt-8 space-y-6">
-              <div>
-                <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
-                  <i data-lucide="cpu" class="w-5 h-5 text-neumorphic-accent"></i>
-                  LLM Provider Setup
-                </h2>
-                <p class="text-neumorphic-muted text-sm mt-1">Configure the AI brains behind the chatbot.</p>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="space-y-2">
-                  <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">LLM Provider</label>
-                  <select 
-                    id="llm-provider"
-                    class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3.5 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all"
-                  >
-                    <option value="openai">OpenAI</option>
-                    <option value="gemini">Google Gemini</option>
-                    <option value="groq">Groq</option>
-                    <option value="openrouter">OpenRouter</option>
-                  </select>
-                </div>
-
-                <div class="space-y-2">
-                  <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">LLM Model</label>
-                  <input 
-                    id="llm-model"
-                    type="text"
-                    value="gpt-4o-mini"
-                    class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                  />
-                </div>
-
-                <div class="space-y-2">
-                  <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Embedding Model</label>
-                  <input 
-                    id="embedding-model"
-                    type="text"
-                    value="text-embedding-3-small"
-                    class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                  />
-                </div>
-              </div>
-
-              <div class="space-y-2 max-w-xl">
-                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">LLM Provider API Key</label>
-                <input 
-                  id="llm-api-key"
-                  type="password"
-                  placeholder="Paste LLM API Key here..."
-                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                />
-              </div>
-            </div>
-
-            <div class="border-t border-gray-300/30 pt-8 space-y-6">
-              <div>
-                <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
-                  <i data-lucide="sliders" class="w-5 h-5 text-neumorphic-accent"></i>
-                  RAG Settings
-                </h2>
-                <p class="text-neumorphic-muted text-sm mt-1">Chunk and retriever overrides.</p>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="space-y-2">
-                  <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Chunk Size</label>
-                  <input 
-                    id="chunk-size"
-                    type="number"
-                    value="1000"
-                    class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                  />
-                </div>
-
-                <div class="space-y-2">
-                  <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Chunk Overlap</label>
-                  <input 
-                    id="chunk-overlap"
-                    type="number"
-                    value="200"
-                    class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                  />
-                </div>
-
-                <div class="space-y-2">
-                  <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Retriever K (Matches)</label>
-                  <input 
-                    id="retriever-k"
-                    type="number"
-                    value="10"
-                    class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                  />
-                </div>
-              </div>
+            <div class="space-y-2 max-w-xl">
+              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">LLM Provider API Key</label>
+              <input 
+                id="llm-api-key"
+                type="password"
+                placeholder="Paste LLM API Key here..."
+                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+              />
             </div>
           </div>
 
-          <!-- GITHUB PR BOT CONFIGURATION SECTION -->
-          <div id="section-github" class="hidden space-y-8">
+          <div class="border-t border-gray-300/30 pt-8 space-y-6">
             <div>
               <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
-                <i data-lucide="git-pull-request" class="w-5 h-5 text-neumorphic-accent"></i>
-                GitHub Bot Configurations
+                <i data-lucide="sliders" class="w-5 h-5 text-neumorphic-accent"></i>
+                RAG Settings
               </h2>
-              <p class="text-neumorphic-muted text-sm mt-1">Configure your Gemini and GitHub access keys.</p>
+              <p class="text-neumorphic-muted text-sm mt-1">Chunk and retriever overrides.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Gemini API Key -->
-              <div class="space-y-2 md:col-span-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Gemini API Key</label>
-                <input 
-                  id="gemini-api-key"
-                  type="password"
-                  placeholder="AIzaSy..."
-                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                />
-              </div>
-
-              <!-- GitHub Token -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div class="space-y-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">GitHub PAT (Token)</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Chunk Size</label>
                 <input 
-                  id="github-token"
-                  type="password"
-                  placeholder="ghp_..."
-                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                />
-              </div>
-
-              <!-- Max Repo Size -->
-              <div class="space-y-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Max Repo Size (MB)</label>
-                <input 
-                  id="max-repo-size"
+                  id="chunk-size"
                   type="number"
-                  value="100"
+                  value="1000"
+                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+                />
+              </div>
+
+              <div class="space-y-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Chunk Overlap</label>
+                <input 
+                  id="chunk-overlap"
+                  type="number"
+                  value="200"
+                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+                />
+              </div>
+
+              <div class="space-y-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Retriever K (Matches)</label>
+                <input 
+                  id="retriever-k"
+                  type="number"
+                  value="10"
                   class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
                 />
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- COMMON CREDENTIALS -->
-          <div class="border-t border-gray-300/30 pt-8 space-y-6">
-            <div>
-              <h3 class="text-lg font-display font-bold text-neumorphic-fg">Telegram Connection</h3>
-              <p class="text-neumorphic-muted text-sm mt-0.5">Define the Telegram BotFather token to assign to this custom service.</p>
-            </div>
-
-            <div class="space-y-2 max-w-xl">
-              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Bot Token</label>
-              <div class="relative">
-                <input 
-                  id="bot-token"
-                  type="password"
-                  placeholder="e.g. 123456:ABC-DEF1234..."
-                  required
-                  class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-                />
-                <button
-                  type="button"
-                  id="toggle-token-visibility"
-                  class="absolute right-3 top-3.5 text-neumorphic-muted hover:text-neumorphic-fg transition-colors focus:outline-none"
-                >
-                  <i data-lucide="eye" class="w-4 h-4" id="eye-icon"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Deploy Button -->
-          <div class="border-t border-gray-300/30 pt-6 flex justify-end">
-            <button
-              type="submit"
-              id="submit-btn"
-              class="px-6 py-3.5 rounded-2xl text-sm font-semibold neo-btn-primary flex items-center gap-2 group focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2"
-            >
-              <span>Launch Custom Instance</span>
-              <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" id="submit-icon"></i>
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Right Side: Active Instances Panel -->
-      <div class="lg:col-span-4 space-y-6">
-        <div class="bg-[#E0E5EC] rounded-[32px] p-6 space-y-6 neo-extruded">
+        <!-- GITHUB SECTION -->
+        <div id="section-github" class="hidden space-y-8">
           <div>
-            <h2 class="text-lg font-display font-bold text-neumorphic-fg flex items-center gap-2">
-              <i data-lucide="play" class="w-4 h-4 text-emerald-500 fill-emerald-500"></i>
-              Active Instances
+            <h2 class="text-xl font-display font-bold flex items-center gap-2 text-neumorphic-fg">
+              <i data-lucide="git-pull-request" class="w-5 h-5 text-neumorphic-accent"></i>
+              GitHub Bot Configurations
             </h2>
-            <p class="text-neumorphic-muted text-xs mt-0.5">Manage your running bot containers.</p>
+            <p class="text-neumorphic-muted text-sm mt-1">Configure your Gemini and GitHub access keys.</p>
           </div>
 
-          <div id="instances-list" class="space-y-4 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
-            <!-- Populated via JS -->
-            <div class="text-center py-8 text-neumorphic-muted text-sm">
-              <i data-lucide="refresh-cw" class="w-6 h-6 animate-spin mx-auto mb-2 text-neumorphic-muted"></i>
-              Querying containers...
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Gemini API Key -->
+            <div class="space-y-2 md:col-span-2">
+              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Gemini API Key</label>
+              <input 
+                id="gemini-api-key"
+                type="password"
+                placeholder="AIzaSy..."
+                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+              />
+            </div>
+
+            <!-- GitHub Token -->
+            <div class="space-y-2">
+              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">GitHub PAT (Token)</label>
+              <input 
+                id="github-token"
+                type="password"
+                placeholder="ghp_..."
+                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+              />
+            </div>
+
+            <!-- Max Repo Size -->
+            <div class="space-y-2">
+              <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Max Repo Size (MB)</label>
+              <input 
+                id="max-repo-size"
+                type="number"
+                value="100"
+                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+              />
             </div>
           </div>
         </div>
+
+        <!-- COMMON CREDENTIALS -->
+        <div class="border-t border-gray-300/30 pt-8 space-y-6">
+          <div>
+            <h3 class="text-lg font-display font-bold text-neumorphic-fg">Telegram Connection</h3>
+            <p class="text-neumorphic-muted text-sm mt-0.5">Define the Telegram BotFather token to assign to this custom service.</p>
+          </div>
+
+          <div class="space-y-2 max-w-xl">
+            <label class="block text-xs font-bold uppercase tracking-wider text-neumorphic-muted">Bot Token</label>
+            <div class="relative">
+              <input 
+                id="bot-token"
+                type="password"
+                placeholder="e.g. 123456:ABC-DEF1234..."
+                required
+                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+              />
+              <button
+                type="button"
+                id="toggle-token-visibility"
+                class="absolute right-3 top-3.5 text-neumorphic-muted hover:text-neumorphic-fg transition-colors focus:outline-none"
+              >
+                <i data-lucide="eye" class="w-4 h-4" id="eye-icon"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deploy Button -->
+        <div class="border-t border-gray-300/30 pt-6 flex justify-end">
+          <button
+            type="submit"
+            id="submit-btn"
+            class="px-6 py-3.5 rounded-2xl text-sm font-semibold neo-btn-primary flex items-center gap-2 group focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2"
+          >
+            <span>Launch Custom Instance</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" id="submit-icon"></i>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 2. TEMPLATES SECTION -->
+    <section id="section-view-templates" class="hidden space-y-6">
+      <div class="mb-4">
+        <h2 class="text-xl font-display font-bold text-neumorphic-fg">Templates & Feature Modules</h2>
+        <p class="text-neumorphic-muted text-sm mt-1">
+          Turn features on and off below. Click on any card to view commands, logs, and a simulated Telegram mockup.
+        </p>
       </div>
 
-    </div>
-  </div>
+      <!-- Feature Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Muting Card -->
+        <div class="feature-card active rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="muting">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent">
+            <i data-lucide="volume-x" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-fg">Mute Management</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Mute/unmute members, manage temporary silence, and track logs.</p>
+          </div>
+          <div class="dot-indicator absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- Filters Card -->
+        <div class="feature-card active rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="filters">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent">
+            <i data-lucide="message-square" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-fg">Smart Filters</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Set keyword triggers to auto-respond or delete spam.</p>
+          </div>
+          <div class="dot-indicator absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- Welcome Card -->
+        <div class="feature-card active rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="welcome">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent">
+            <i data-lucide="user-check" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-fg">Custom Greetings</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Greet new members with customized media, text, or buttons.</p>
+          </div>
+          <div class="dot-indicator absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- Federation Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="federation">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="radio" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">Federation Bans</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Share ban lists across multiple chats to keep spam out globally.</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- Spam Shield Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="spam_shield">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="shield" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">Spam Shield</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Combat automated raid attacks, floods, or userbots.</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- Rules Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="rules">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="book-open" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">Chat Rules</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Define rules for your chat and view them via custom commands.</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- Purge Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="purge">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="trash-2" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">Quick Purges</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Bulk delete messages in seconds via admin commands.</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- Lockings Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="lockings">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="lock" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">Media Locking</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Block stickers, URLs, voice notes, or games dynamically.</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- Notes Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="notes">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="file-text" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">Notes & Triggers</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Save custom notes or text snippets for hash callouts.</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. INSTANCES SECTION -->
+    <section id="section-view-instances" class="hidden space-y-6">
+      <div class="mb-4">
+        <h2 class="text-xl font-display font-bold text-neumorphic-fg">Running Bot Containers</h2>
+        <p class="text-neumorphic-muted text-sm mt-1">
+          Monitor status telemetry and adjust runtime parameters of live container partitions.
+        </p>
+      </div>
+
+      <!-- Container Grid -->
+      <div id="instances-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Rendered dynamically -->
+        <div class="col-span-full text-center py-10 bg-[#E0E5EC] rounded-[32px] neo-extruded text-neumorphic-muted text-sm">
+          <i data-lucide="refresh-cw" class="w-8 h-8 animate-spin mx-auto mb-3 text-neumorphic-accent"></i>
+          Connecting Docker daemon...
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. SETTINGS SECTION -->
+    <section id="section-view-settings" class="hidden space-y-8 max-w-4xl">
+      <div>
+        <h2 class="text-xl font-display font-bold text-neumorphic-fg">Hub & Daemon Preferences</h2>
+        <p class="text-neumorphic-muted text-sm mt-1">Configure global thread hooks and system parameters.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Toggle Switches Panel -->
+        <div class="bg-[#E0E5EC] rounded-[32px] p-6 neo-extruded space-y-5">
+          <h3 class="text-base font-bold text-neumorphic-fg mb-4">Automation Toggles</h3>
+          
+          <!-- Switch 1 -->
+          <div class="flex items-center justify-between p-4 bg-[#E0E5EC] rounded-2xl neo-extruded select-none">
+            <div>
+              <span class="text-sm font-semibold text-neumorphic-fg block">Auto-restart Containers</span>
+              <span class="text-[10px] text-neumorphic-muted mt-0.5 block">Restart instance if daemon crashes.</span>
+            </div>
+            <button type="button" onclick="toggleSetting(this)" class="w-12 h-6 bg-[#E0E5EC] neo-inset rounded-full p-0.5 relative transition-all focus:outline-none flex items-center">
+              <div class="w-5 h-5 rounded-full bg-[#A3B1C6] shadow-sm transform translate-x-0 transition-all duration-300"></div>
+            </button>
+          </div>
+
+          <!-- Switch 2 -->
+          <div class="flex items-center justify-between p-4 bg-[#E0E5EC] rounded-2xl neo-extruded select-none">
+            <div>
+              <span class="text-sm font-semibold text-neumorphic-fg block">Verbose Diagnostics Logs</span>
+              <span class="text-[10px] text-neumorphic-muted mt-0.5 block">Log full standard IO events.</span>
+            </div>
+            <button type="button" onclick="toggleSetting(this)" class="w-12 h-6 bg-[#E0E5EC] neo-inset rounded-full p-0.5 relative transition-all focus:outline-none flex items-center">
+              <div class="w-5 h-5 rounded-full bg-[#A3B1C6] shadow-sm transform translate-x-0 transition-all duration-300"></div>
+            </button>
+          </div>
+
+          <!-- Switch 3 -->
+          <div class="flex items-center justify-between p-4 bg-[#E0E5EC] rounded-2xl neo-extruded select-none">
+            <div>
+              <span class="text-sm font-semibold text-neumorphic-fg block">Daily Database Backups</span>
+              <span class="text-[10px] text-neumorphic-muted mt-0.5 block">Rotates configuration snapshots.</span>
+            </div>
+            <button type="button" onclick="toggleSetting(this)" class="w-12 h-6 bg-[#E0E5EC] neo-inset rounded-full p-0.5 relative transition-all focus:outline-none flex items-center">
+              <div class="w-5 h-5 rounded-full bg-[#A3B1C6] shadow-sm transform translate-x-0 transition-all duration-300"></div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Host System Metrics Panel -->
+        <div class="bg-[#E0E5EC] rounded-[32px] p-6 neo-extruded space-y-6">
+          <h3 class="text-base font-bold text-neumorphic-fg">Daemon Host Health</h3>
+
+          <!-- CPU Bar -->
+          <div class="space-y-2">
+            <div class="flex justify-between text-xs font-bold text-neumorphic-fg">
+              <span>CPU Core Allocation</span>
+              <span>12.4%</span>
+            </div>
+            <div class="h-4 bg-[#E0E5EC] neo-inset rounded-full p-0.5 overflow-hidden">
+              <div class="h-full bg-neumorphic-accent rounded-full transition-all duration-500" style="width: 12.4%"></div>
+            </div>
+          </div>
+
+          <!-- RAM Bar -->
+          <div class="space-y-2">
+            <div class="flex justify-between text-xs font-bold text-neumorphic-fg">
+              <span>Memory Usage (RAM)</span>
+              <span>2.1 GB / 8.0 GB (26%)</span>
+            </div>
+            <div class="h-4 bg-[#E0E5EC] neo-inset rounded-full p-0.5 overflow-hidden">
+              <div class="h-full bg-[#38B2AC] rounded-full transition-all duration-500" style="width: 26%"></div>
+            </div>
+          </div>
+
+          <!-- Uptime details -->
+          <div class="pt-4 border-t border-gray-300/30 flex justify-between text-xs text-neumorphic-muted">
+            <span>Uptime: 14d 6h 32m</span>
+            <span>Docker: v25.0.3</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
 
   <!-- Feature Detail Modal -->
   <div id="feature-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
-    <div class="absolute inset-0 bg-[#E0E5EC]/80 backdrop-blur-sm transition-opacity duration-300" id="feature-modal-backdrop"></div>
+    <div class="absolute inset-0 bg-[#E0E5EC]/85 backdrop-blur-sm transition-opacity duration-300" id="feature-modal-backdrop"></div>
     <div class="relative w-full max-w-5xl bg-[#E0E5EC] rounded-[2.5rem] overflow-hidden flex flex-col md:flex-row neo-extruded transition-all duration-300 scale-95 opacity-0 m-4" id="feature-modal-content" style="max-height: 90vh;">
       <!-- Left Content -->
       <div class="w-full md:w-1/2 p-8 md:p-10 flex flex-col overflow-y-auto bg-[#E0E5EC] custom-scrollbar">
@@ -686,9 +787,70 @@
     // Initialize icons
     lucide.createIcons();
 
-    // Active configuration state
+    // Active navigation state
     let activeTab = 'anjani'; // 'anjani', 'ai_pdf_chat', or 'github_pr_bot'
+    let activeSection = 'mybots'; // 'mybots', 'templates', 'instances', 'settings'
     const selectedFeatures = new Set(['muting', 'filters', 'welcome']);
+
+    // Setting Switch Toggle Action
+    window.toggleSetting = function(btn) {
+      const dot = btn.querySelector('div');
+      const isEnabled = btn.classList.contains('enabled');
+      if (isEnabled) {
+        btn.classList.remove('enabled');
+        btn.className = "w-12 h-6 bg-[#E0E5EC] neo-inset rounded-full p-0.5 relative transition-all focus:outline-none flex items-center";
+        dot.className = "w-5 h-5 rounded-full bg-[#A3B1C6] shadow-sm transform translate-x-0 transition-all duration-300";
+      } else {
+        btn.classList.add('enabled');
+        btn.className = "w-12 h-6 bg-[#E0E5EC] neo-inset rounded-full p-0.5 relative transition-all focus:outline-none flex items-center text-neumorphic-accent";
+        dot.className = "w-5 h-5 rounded-full bg-neumorphic-accent shadow-sm transform translate-x-6 transition-all duration-300";
+      }
+    };
+
+    // Sidebar navigation section switcher
+    window.setActiveSection = function(sectionId) {
+      activeSection = sectionId;
+      
+      // Update page titles
+      const pageTitle = document.getElementById('dashboard-title');
+      const pageSubtitle = document.getElementById('dashboard-subtitle');
+      
+      if (sectionId === 'mybots') {
+        pageTitle.textContent = "My Bots Dashboard";
+        pageSubtitle.textContent = "Connect new Telegram bots and deploy sandboxed Docker host runtimes.";
+      } else if (sectionId === 'templates') {
+        pageTitle.textContent = "Templates Catalogue";
+        pageSubtitle.textContent = "Select modular plugins and view command structures.";
+      } else if (sectionId === 'instances') {
+        pageTitle.textContent = "Active Container Instances";
+        pageSubtitle.textContent = "Monitor docker container runs, telemetry hashes and status.";
+      } else if (sectionId === 'settings') {
+        pageTitle.textContent = "Platform Preferences";
+        pageSubtitle.textContent = "Configure general Docker daemon thread preferences and health.";
+      }
+
+      // Toggle hidden attribute across section containers
+      document.getElementById('section-view-mybots').classList.toggle('hidden', sectionId !== 'mybots');
+      document.getElementById('section-view-templates').classList.toggle('hidden', sectionId !== 'templates');
+      document.getElementById('section-view-instances').classList.toggle('hidden', sectionId !== 'instances');
+      document.getElementById('section-view-settings').classList.toggle('hidden', sectionId !== 'settings');
+
+      // Update sidebar indicator highlights
+      const navButtons = ['mybots', 'templates', 'instances', 'settings'];
+      navButtons.forEach(btnKey => {
+        const btn = document.getElementById(`nav-${btnKey}`);
+        if (btnKey === sectionId) {
+          btn.className = "flex items-center gap-4 w-full p-3 rounded-2xl transition-all focus:outline-none neo-inset text-neumorphic-accent font-bold";
+        } else {
+          btn.className = "flex items-center gap-4 w-full p-3 rounded-2xl transition-all focus:outline-none text-neumorphic-fg hover:shadow-neo-lifted active:shadow-neo-inset";
+        }
+      });
+
+      // Update linked templates count display in MyBots
+      document.getElementById('linked-template-count').textContent = `${selectedFeatures.size} active plugin${selectedFeatures.size === 1 ? '' : 's'}`;
+
+      lucide.createIcons();
+    };
 
     const featureData = {
       muting: {
@@ -873,62 +1035,6 @@
           { type: 'user', name: 'User', text: '#website' },
           { type: 'bot', text: 'Official site: http://website.com', reply: true }
         ]
-      },
-      admins: {
-        title: "Admin Tools",
-        desc: "Quickly promote, demote, pin messages or demote members.",
-        value: "Provide administrators with standard tools to clean up, moderate, and pin messages.",
-        steps: [
-          "Admin can type <code>/pin</code> on a reply to pin a message.",
-          "Type <code>/promote @username</code> to give a member admin permissions."
-        ],
-        commands: [
-          { cmd: "/pin [loud]", desc: "Pin a replied message" },
-          { cmd: "/unpin [all]", desc: "Unpin current or all messages" },
-          { cmd: "/promote &lt;user&gt;", desc: "Promote member to administrator" },
-          { cmd: "/demote &lt;user&gt;", desc: "Demote administrator" },
-          { cmd: "/adminlist", desc: "View chat administrator details" }
-        ],
-        chat: [
-          { type: 'admin', name: 'Owner', text: '/promote @ActiveUser' },
-          { type: 'bot', text: '✅ <b>ActiveUser</b> has been promoted to administrator!' }
-        ]
-      },
-      backups: {
-        title: "Backup & Restore",
-        desc: "Export group configuration files and restore them in other chats.",
-        value: "Transfer all filters, custom triggers, and chat settings to another group instantly.",
-        steps: [
-          "Admin types <code>/backup</code> to download settings file.",
-          "Reply to settings file with <code>/restore</code> to import config."
-        ],
-        commands: [
-          { cmd: "/backup", desc: "Export chat settings backup file" },
-          { cmd: "/restore", desc: "Import settings from backup file" }
-        ],
-        chat: [
-          { type: 'admin', name: 'Admin', text: '/backup' },
-          { type: 'bot', text: '📦 <b>Backup Completed</b>. Here is your configuration backup file.', buttons: ['Download File'] }
-        ]
-      },
-      reporting: {
-        title: "User Reporting",
-        desc: "Allow members to report chat violations to all group admins instantly.",
-        value: "Keep the group safe by enabling crowdsourced spam moderation warnings.",
-        steps: [
-          "Member replies to a spam message with <code>/report</code> or <code>@admin</code>.",
-          "All registered group admins receive a tag notification alert."
-        ],
-        commands: [
-          { cmd: "/report", desc: "Alert group administrators" },
-          { cmd: "@admin / @admins", desc: "Tag alert group administrators" },
-          { cmd: "/reports on/off", desc: "Enable or disable report notifications" }
-        ],
-        chat: [
-          { type: 'user', name: 'Member', text: 'Spam links here!', reply: true },
-          { type: 'user', name: 'Member', text: '/report', reply: true },
-          { type: 'bot', text: '⚠️ <b>Report Sent</b> to all administrators.' }
-        ]
       }
     };
 
@@ -985,7 +1091,7 @@
 
     let currentModalFeature = null;
 
-    // Switch Tabs Helper
+    // Switch Tabs Helper (Inner MyBots credentials panels)
     function switchTab(target) {
       activeTab = target;
       
@@ -1137,18 +1243,19 @@
       if (selectedFeatures.has(currentModalFeature)) {
         selectedFeatures.delete(currentModalFeature);
         card.classList.remove('active');
-        iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted";
-        title.className = "font-semibold text-sm text-neumorphic-muted";
+        iconBox.className = "feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted";
+        title.className = "font-bold text-base text-neumorphic-muted";
         dot.classList.add('hidden');
       } else {
         selectedFeatures.add(currentModalFeature);
         card.classList.add('active');
-        iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent";
-        title.className = "font-semibold text-sm text-neumorphic-fg";
+        iconBox.className = "feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent";
+        title.className = "font-bold text-base text-neumorphic-fg";
         dot.classList.remove('hidden');
       }
       
       updateModalToggleButton();
+      document.getElementById('linked-template-count').textContent = `${selectedFeatures.size} active plugin${selectedFeatures.size === 1 ? '' : 's'}`;
     });
 
     // Open Modal on card click
@@ -1173,7 +1280,7 @@
 
     // Show Alert Banner
     function showAlert(type, message) {
-      alertBanner.className = `p-4 rounded-xl flex items-start gap-3 shadow-sm border-0 transition-all duration-300 ${
+      alertBanner.className = `p-4 rounded-2xl flex items-start gap-3 shadow-sm border-0 transition-all duration-300 ${
         type === 'success' 
           ? 'bg-emerald-100 text-emerald-800' 
           : 'bg-rose-100 text-rose-800'
@@ -1197,8 +1304,8 @@
         
         if (!data.bots || data.bots.length === 0) {
           instancesList.innerHTML = `
-            <div class="text-center py-10 border border-dashed border-gray-300/60 rounded-2xl text-neumorphic-muted text-sm px-4">
-              No active bot containers found. Configure your bot on the left to start hosting.
+            <div class="col-span-full text-center py-10 border border-dashed border-gray-300/60 rounded-[32px] text-neumorphic-muted text-sm px-4">
+              No active bot containers found. Configure your bot in "My Bots" to start hosting.
             </div>
           `;
           return;
@@ -1238,14 +1345,14 @@
           }
 
           return `
-            <div class="p-4 rounded-2xl bg-[#E0E5EC] neo-extruded flex flex-col gap-3 hover:shadow-neo-lifted transition-all">
+            <div class="p-5 rounded-[32px] bg-[#E0E5EC] neo-extruded flex flex-col gap-4 hover:shadow-neo-lifted transition-all">
               <div class="flex justify-between items-start">
                 <div>
                   <div class="flex items-center gap-2">
                     <span class="font-mono text-xs font-semibold text-neumorphic-fg">ID: ${bot.hash}</span>
                     <span class="px-2 py-0.5 text-[9px] font-bold rounded bg-[#E0E5EC] neo-inset-sm ${typeBadgeColor}">${typeLabel}</span>
                   </div>
-                  <div class="text-[10px] text-neumorphic-muted mt-1">
+                  <div class="text-[10px] text-neumorphic-muted mt-1.5">
                     ${bot.type === 'anjani' ? `Owner: ${bot.ownerId}` : bot.type === 'ai_pdf_chat' ? `Supabase: ${bot.supabaseUrl}` : `Max Size: ${bot.maxRepoSize}MB`}
                   </div>
                 </div>
@@ -1262,13 +1369,13 @@
               <div class="flex justify-between items-center border-t border-gray-300/35 pt-3 mt-1">
                 <button
                   onclick='editBot(${JSON.stringify(bot).replace(/'/g, "&#39;")})'
-                  class="text-xs font-semibold text-neumorphic-accent hover:text-neumorphic-accentLight transition-colors"
+                  class="text-xs font-semibold text-neumorphic-accent hover:text-neumorphic-accentLight transition-colors focus:outline-none"
                 >
                   Modify Config
                 </button>
                 <button
                   onclick="stopBot('${bot.hash}')"
-                  class="p-1.5 bg-[#E0E5EC] neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset rounded-lg text-rose-500 hover:text-rose-600 transition-colors flex items-center gap-1.5 text-xs font-medium"
+                  class="p-1.5 bg-[#E0E5EC] neo-extruded hover:shadow-neo-lifted active:shadow-neo-inset rounded-lg text-rose-500 hover:text-rose-600 transition-colors flex items-center gap-1.5 text-xs font-medium focus:outline-none"
                 >
                   <i data-lucide="square" class="w-3.5 h-3.5 fill-rose-500 border-0"></i>
                   Stop
@@ -1281,7 +1388,7 @@
       } catch (err) {
         console.error(err);
         instancesList.innerHTML = `
-          <div class="text-center py-10 rounded-2xl text-rose-600 text-sm px-4 bg-rose-100 border border-rose-300 shadow-sm">
+          <div class="col-span-full text-center py-10 rounded-[32px] text-rose-600 text-sm px-4 bg-rose-100 border border-rose-300 shadow-sm">
             Failed to query container status. Check database connection.
           </div>
         `;
@@ -1307,13 +1414,13 @@
           
           if (selectedFeatures.has(featureId)) {
             card.classList.add('active');
-            iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent";
-            title.className = "font-semibold text-sm text-neumorphic-fg";
+            iconBox.className = "feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-extruded-sm text-neumorphic-accent";
+            title.className = "font-bold text-base text-neumorphic-fg";
             dot.classList.remove('hidden');
           } else {
             card.classList.remove('active');
-            iconBox.className = "feature-icon-box p-3 rounded-xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted";
-            title.className = "font-semibold text-sm text-neumorphic-muted";
+            iconBox.className = "feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted";
+            title.className = "font-bold text-base text-neumorphic-muted";
             dot.classList.add('hidden');
           }
         });
@@ -1336,7 +1443,7 @@
       }
 
       showAlert('success', `Loaded configurations for bot ${bot.hash}. Re-enter the Bot Token to deploy updates.`);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setActiveSection('mybots');
     }
 
     // Stop container trigger
@@ -1476,6 +1583,7 @@
     });
 
     // Initial load
+    setActiveSection('mybots');
     loadBots();
   </script>
 </body>
