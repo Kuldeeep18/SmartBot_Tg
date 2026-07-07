@@ -43,11 +43,12 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
         
     container_name = f"{prefix}-{hash_id}"
     
-    # Try stopping any existing container for this token under the current prefix only
-    try:
-        existing = get_client().containers.get(f"{prefix}-{hash_id}")
+    # Try stopping any existing container for this token under all three prefixes
+    for pref in ["anjani-bot", "pdf-bot", "gh-pr-bot"]:
+      try:
+        existing = get_client().containers.get(f"{pref}-{hash_id}")
         existing.remove(force=True)
-    except docker.errors.NotFound:
+      except docker.errors.NotFound:
         pass
         
     # Anjani needs the custom network to reach the MongoDB container.

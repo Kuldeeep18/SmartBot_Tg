@@ -1394,6 +1394,59 @@
       const bot = allBots.find(b => b.hash === selectedHash);
       if (!bot) return;
 
+      const isSpecial = selectedFeatures.has('ai_pdf_chat') || selectedFeatures.has('github_pr_bot');
+
+      if (currentModalFeature === 'ai_pdf_chat') {
+        if (selectedFeatures.has('ai_pdf_chat')) {
+          if (confirm("Are you sure you want to deactivate the AI PDF Chatbot template? This will revert the bot to General Group Management (Anjani).")) {
+            selectedFeatures.clear();
+            ['muting', 'filters', 'welcome'].forEach(f => selectedFeatures.add(f));
+            botTemplatesCache[selectedHash] = new Set(selectedFeatures);
+            updateTemplateCardsState();
+            closeModal();
+          }
+        } else {
+          // Activate
+          selectedFeatures.clear();
+          selectedFeatures.add('ai_pdf_chat');
+          botTemplatesCache[selectedHash] = new Set(selectedFeatures);
+          updateTemplateCardsState();
+          closeModal();
+        }
+        return;
+      }
+
+      if (currentModalFeature === 'github_pr_bot') {
+        if (selectedFeatures.has('github_pr_bot')) {
+          if (confirm("Are you sure you want to deactivate the GitHub PR Reviewer template? This will revert the bot to General Group Management (Anjani).")) {
+            selectedFeatures.clear();
+            ['muting', 'filters', 'welcome'].forEach(f => selectedFeatures.add(f));
+            botTemplatesCache[selectedHash] = new Set(selectedFeatures);
+            updateTemplateCardsState();
+            closeModal();
+          }
+        } else {
+          // Activate (GitHub PR requires API keys, so open config modal)
+          closeModal();
+          editBot(bot, 'github_pr_bot');
+        }
+        return;
+      }
+
+      // Standard feature
+      if (isSpecial) {
+        const specialName = selectedFeatures.has('ai_pdf_chat') ? 'AI PDF Chatbot' : 'GitHub PR Reviewer';
+        if (confirm(`This bot is currently configured as a ${specialName}. Enabling this feature will revert it to General Group Management (Anjani). Do you want to proceed?`)) {
+          selectedFeatures.clear();
+          selectedFeatures.add(currentModalFeature);
+          botTemplatesCache[selectedHash] = new Set(selectedFeatures);
+          updateTemplateCardsState();
+          closeModal();
+        }
+        return;
+      }
+
+      // Normal toggle for Anjani
       if (selectedFeatures.has(currentModalFeature)) {
         selectedFeatures.delete(currentModalFeature);
       } else {
@@ -1530,13 +1583,13 @@
         // Initialize cache for any bot that is not already tracked
         allBots.forEach(bot => {
           if (!botTemplatesCache[bot.hash]) {
-            const plugins = new Set(bot.enabledPlugins || []);
             if (bot.type === 'ai_pdf_chat') {
-              plugins.add('ai_pdf_chat');
+              botTemplatesCache[bot.hash] = new Set(['ai_pdf_chat']);
             } else if (bot.type === 'github_pr_bot') {
-              plugins.add('github_pr_bot');
+              botTemplatesCache[bot.hash] = new Set(['github_pr_bot']);
+            } else {
+              botTemplatesCache[bot.hash] = new Set(bot.enabledPlugins || []);
             }
-            botTemplatesCache[bot.hash] = plugins;
           }
         });
         
@@ -1552,45 +1605,31 @@
           `;
         } else {
           myBotsList.innerHTML = data.bots.map(bot => {
-            let enabledTemplatesList = [];
-            const pluginsSet = new Set(bot.enabledPlugins || []);
-            if (bot.type === 'ai_pdf_chat' || pluginsSet.has('ai_pdf_chat')) enabledTemplatesList.push('AI PDF');
-            if (bot.type === 'github_pr_bot' || pluginsSet.has('github_pr_bot')) enabledTemplatesList.push('GitHub PR');
-            const hasAnjaniPlugins = Array.from(pluginsSet).some(p => p !== 'ai_pdf_chat' && p !== 'github_pr_bot');
-            if (bot.type === 'anjani' || hasAnjaniPlugins || enabledTemplatesList.length === 0) enabledTemplatesList.unshift('Anjani');
-            
-            let typeLabel = enabledTemplatesList.join(' + ');
             let typeBadgeColor = 'text-neumorphic-accent';
-            let typeIcon = 'bot';
-            if (enabledTemplatesList.includes('AI PDF') && !enabledTemplatesList.includes('Anjani')) {
+            let typeLabel = 'Anjani';
+            let typeIcon = 'message-square';
+            
+            if (bot.type === 'ai_pdf_chat') {
               typeBadgeColor = 'text-emerald-600';
+              typeLabel = 'AI PDF';
               typeIcon = 'file-text';
-            } else if (enabledTemplatesList.includes('GitHub PR') && !enabledTemplatesList.includes('Anjani')) {
+            } else if (bot.type === 'github_pr_bot') {
               typeBadgeColor = 'text-amber-600';
+              typeLabel = 'GitHub PR';
               typeIcon = 'git-pull-request';
-            } else if (enabledTemplatesList.includes('Anjani') && enabledTemplatesList.length > 1) {
-              typeBadgeColor = 'text-indigo-600';
-              typeIcon = 'package';
-            } else {
-              typeBadgeColor = 'text-neumorphic-accent';
-              typeIcon = 'message-square';
             }
 
             const isRunning = bot.status === 'running';
             const statusDotColor = isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400';
             
-            let detailsParts = [];
-            if (enabledTemplatesList.includes('Anjani')) {
-              const anjaniCount = (bot.enabledPlugins || []).filter(p => p !== 'ai_pdf_chat' && p !== 'github_pr_bot').length;
-              detailsParts.push(`Anjani: ${anjaniCount} plugins`);
+            let detailsText = '';
+            if (bot.type === 'anjani') {
+              detailsText = `Owner ID: ${bot.ownerId} | ${bot.enabledPlugins ? bot.enabledPlugins.length : 0} plugins`;
+            } else if (bot.type === 'ai_pdf_chat') {
+              detailsText = `LLM: ${bot.llmProvider} | Supabase URL: ${bot.supabaseUrl}`;
+            } else {
+              detailsText = `Max Size: ${bot.maxRepoSize}MB`;
             }
-            if (enabledTemplatesList.includes('AI PDF')) {
-              detailsParts.push(`AI PDF Chatbot`);
-            }
-            if (enabledTemplatesList.includes('GitHub PR')) {
-              detailsParts.push(`GitHub PR Reviewer`);
-            }
-            let detailsText = detailsParts.join(' | ');
 
             return `
               <div class="p-6 rounded-[32px] bg-[#E0E5EC] neo-extruded flex flex-col justify-between min-h-[180px] hover:shadow-neo-lifted transition-all">
@@ -1667,42 +1706,34 @@
           `;
         } else {
           instancesList.innerHTML = runningBots.map(bot => {
-            let enabledTemplatesList = [];
-            const pluginsSet = new Set(bot.enabledPlugins || []);
-            if (bot.type === 'ai_pdf_chat' || pluginsSet.has('ai_pdf_chat')) enabledTemplatesList.push('AI PDF');
-            if (bot.type === 'github_pr_bot' || pluginsSet.has('github_pr_bot')) enabledTemplatesList.push('GitHub PR');
-            const hasAnjaniPlugins = Array.from(pluginsSet).some(p => p !== 'ai_pdf_chat' && p !== 'github_pr_bot');
-            if (bot.type === 'anjani' || hasAnjaniPlugins || enabledTemplatesList.length === 0) enabledTemplatesList.unshift('Anjani');
-            
-            let typeLabel = enabledTemplatesList.join(' + ');
             let typeBadgeColor = 'text-neumorphic-accent';
-            if (enabledTemplatesList.includes('AI PDF') && !enabledTemplatesList.includes('Anjani')) {
+            let typeLabel = 'Anjani';
+            
+            if (bot.type === 'ai_pdf_chat') {
               typeBadgeColor = 'text-emerald-600';
-            } else if (enabledTemplatesList.includes('GitHub PR') && !enabledTemplatesList.includes('Anjani')) {
+              typeLabel = 'AI PDF';
+            } else if (bot.type === 'github_pr_bot') {
               typeBadgeColor = 'text-amber-600';
-            } else if (enabledTemplatesList.includes('Anjani') && enabledTemplatesList.length > 1) {
-              typeBadgeColor = 'text-indigo-600';
+              typeLabel = 'GitHub PR';
             }
 
             let featuresHtml = '';
-            if (enabledTemplatesList.includes('Anjani') && bot.enabledPlugins) {
-              featuresHtml += bot.enabledPlugins.filter(p => p !== 'ai_pdf_chat' && p !== 'github_pr_bot').map(p => `
+            if (bot.type === 'anjani' && bot.enabledPlugins) {
+              featuresHtml = bot.enabledPlugins.map(p => `
                 <span class="px-2 py-0.5 bg-[#E0E5EC] neo-inset-sm rounded-md text-[9px] text-neumorphic-accent font-medium">
                   ${p}
                 </span>
               `).join('');
-            }
-            if (enabledTemplatesList.includes('AI PDF')) {
-              featuresHtml += `
+            } else if (bot.type === 'ai_pdf_chat') {
+              featuresHtml = `
                 <span class="px-2 py-0.5 bg-[#E0E5EC] neo-inset-sm rounded-md text-[9px] text-emerald-600 font-medium">
-                  PDF (LLM: ${bot.llmProvider})
+                  LLM: ${bot.llmProvider} (${bot.llmModel})
                 </span>
               `;
-            }
-            if (enabledTemplatesList.includes('GitHub PR')) {
-              featuresHtml += `
+            } else if (bot.type === 'github_pr_bot') {
+              featuresHtml = `
                 <span class="px-2 py-0.5 bg-[#E0E5EC] neo-inset-sm rounded-md text-[9px] text-amber-600 font-medium">
-                  GitHub (${bot.maxRepoSize}MB)
+                  Repo Limit: ${bot.maxRepoSize}MB
                 </span>
               `;
             }
@@ -1794,13 +1825,13 @@
         if (!botTemplatesCache[selectedHash]) {
           const bot = allBots.find(b => b.hash === selectedHash);
           if (bot) {
-            const plugins = new Set(bot.enabledPlugins || []);
             if (bot.type === 'ai_pdf_chat') {
-              plugins.add('ai_pdf_chat');
+              botTemplatesCache[selectedHash] = new Set(['ai_pdf_chat']);
             } else if (bot.type === 'github_pr_bot') {
-              plugins.add('github_pr_bot');
+              botTemplatesCache[selectedHash] = new Set(['github_pr_bot']);
+            } else {
+              botTemplatesCache[selectedHash] = new Set(bot.enabledPlugins || []);
             }
-            botTemplatesCache[selectedHash] = plugins;
           } else {
             botTemplatesCache[selectedHash] = new Set();
           }
@@ -1896,12 +1927,14 @@
       
       try {
         let targetType = 'anjani';
-        if (selectedFeatures.has('ai_pdf_chat') && selectedFeatures.size === 1) {
-          targetType = 'ai_pdf_chat';
-        } else if (selectedFeatures.has('github_pr_bot') && selectedFeatures.size === 1) {
-          targetType = 'github_pr_bot';
-        }
         let pluginsList = Array.from(selectedFeatures);
+        if (selectedFeatures.has('ai_pdf_chat')) {
+          targetType = 'ai_pdf_chat';
+          pluginsList = [];
+        } else if (selectedFeatures.has('github_pr_bot')) {
+          targetType = 'github_pr_bot';
+          pluginsList = [];
+        }
 
         const res = await fetch('/api/bot/launch', {
           method: 'POST',
@@ -1964,13 +1997,15 @@
       handleBotTypeChange();
       
       // Auto-toggle plugin selections in templates tab if saved
-      const plugins = new Set(bot.enabledPlugins || []);
       if (type === 'ai_pdf_chat') {
-        plugins.add('ai_pdf_chat');
+        botTemplatesCache[bot.hash] = new Set(['ai_pdf_chat']);
       } else if (type === 'github_pr_bot') {
-        plugins.add('github_pr_bot');
+        botTemplatesCache[bot.hash] = new Set(['github_pr_bot']);
+      } else if (bot.enabledPlugins) {
+        botTemplatesCache[bot.hash] = new Set(bot.enabledPlugins);
+      } else {
+        botTemplatesCache[bot.hash] = new Set();
       }
-      botTemplatesCache[bot.hash] = plugins;
       
       selectedFeatures = botTemplatesCache[bot.hash];
       const select = document.getElementById('template-bot-select');
