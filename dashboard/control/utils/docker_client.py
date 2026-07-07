@@ -1,6 +1,7 @@
 import os
 import sys
 import hashlib
+from pathlib import Path
 import docker
 
 _client = None
@@ -42,15 +43,24 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
         
     container_name = f"{prefix}-{hash_id}"
     
-    # Try stopping any existing container for this token under all three prefixes
-    for pref in ["anjani-bot", "pdf-bot", "gh-pr-bot"]:
-      try:
-        existing = get_client().containers.get(f"{pref}-{hash_id}")
+    # Try stopping any existing container for this token under the current prefix only
+    try:
+        existing = get_client().containers.get(f"{prefix}-{hash_id}")
         existing.remove(force=True)
-      except docker.errors.NotFound:
+    except docker.errors.NotFound:
         pass
         
-    network = os.getenv('DOCKER_NETWORK', 'bridge')
+    # Anjani needs the custom network to reach the MongoDB container.
+    # AI PDF and GitHub PR bots only need internet access (Telegram API,
+    # Supabase, GitHub), so they use the default bridge network which has
+    # reliable DNS resolution via the Docker daemon.
+    custom_network = os.getenv('DOCKER_NETWORK', 'bridge')
+    if bot_type == "anjani":
+        network = custom_network
+    else:
+        network = "bridge"
+
+    volumes = None  # Volume mounts (used by ai_pdf_chat for .env file)
     
     if bot_type == "anjani":
         image_name = "anjani"
@@ -69,26 +79,52 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
         }
     elif bot_type == "ai_pdf_chat":
         image_name = "ai_chatbot_pdf"
-        provider = config.get('llmProvider', 'openai')
-        api_key = config.get('llmApiKey', '')
-        
         environment = {
             "TELEGRAM_BOT_TOKEN": token,
-            "SUPABASE_URL": config.get('supabaseUrl', ''),
-            "SUPABASE_SERVICE_ROLE_KEY": config.get('supabaseKey', ''),
-            "LLM_PROVIDER": provider,
-            "LLM_MODEL": config.get('llmModel', 'gpt-4o-mini'),
-            "EMBEDDING_MODEL": config.get('embeddingModel', 'text-embedding-3-small'),
-            
-            "OPENAI_API_KEY": api_key if provider == 'openai' else '',
-            "GOOGLE_API_KEY": api_key if provider == 'gemini' else '',
-            "GROQ_API_KEY": api_key if provider == 'groq' else '',
-            "OPENROUTER_API_KEY": api_key if provider == 'openrouter' else '',
-            
-            "CHUNK_SIZE": str(config.get('chunkSize', 1000)),
-            "CHUNK_OVERLAP": str(config.get('chunkOverlap', 200)),
-            "RETRIEVER_K": str(config.get('retrieverK', 10))
         }
+        
+        # Only add keys if they are truthy to prevent overwriting values from mounted .env
+        if config.get('supabaseUrl'):
+            environment["SUPABASE_URL"] = config['supabaseUrl']
+        if config.get('supabaseKey'):
+            environment["SUPABASE_SERVICE_ROLE_KEY"] = config['supabaseKey']
+        if config.get('llmProvider'):
+            environment["LLM_PROVIDER"] = config['llmProvider']
+        if config.get('llmModel'):
+            environment["LLM_MODEL"] = config['llmModel']
+        if config.get('embeddingModel'):
+            environment["EMBEDDING_MODEL"] = config['embeddingModel']
+            
+        provider = config.get('llmProvider', 'openai')
+        api_key = config.get('llmApiKey', '')
+        if api_key:
+            if provider == 'openai':
+                environment["OPENAI_API_KEY"] = api_key
+            elif provider == 'gemini':
+                environment["GOOGLE_API_KEY"] = api_key
+            elif provider == 'groq':
+                environment["GROQ_API_KEY"] = api_key
+            elif provider == 'openrouter':
+                environment["OPENROUTER_API_KEY"] = api_key
+            elif provider == 'g0i':
+                environment["G0I_API_KEY"] = api_key
+            elif provider == 'nvidia':
+                environment["NVIDIA_API_KEY"] = api_key
+                
+        if config.get('chunkSize'):
+            environment["CHUNK_SIZE"] = str(config['chunkSize'])
+        if config.get('chunkOverlap'):
+            environment["CHUNK_OVERLAP"] = str(config['chunkOverlap'])
+        if config.get('retrieverK'):
+            environment["RETRIEVER_K"] = str(config['retrieverK'])
+        
+        # Mount the bot's .env file into the container so that multi-key configs
+        # (GOOGLE_API_KEYS for embedding rotation, G0I_API_KEY, etc.) are available.
+        # The bot's config.py loads from /app/.env via python-dotenv.
+        # Docker env vars (above) take precedence over .env since dotenv won't override.
+        env_file = Path(__file__).resolve().parent.parent.parent.parent / "bots" / "ai_chatbot_pdf" / ".env"
+        if env_file.exists():
+            volumes = {str(env_file): {"bind": "/app/.env", "mode": "ro"}}
     else:
         # GitHub PR Bot
         image_name = "github_pr_bot"
@@ -103,14 +139,21 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
             "PORT": "3000"
         }
 
-    container = get_client().containers.run(
-        image=image_name,
-        name=container_name,
-        environment=environment,
-        detach=True,
-        restart_policy={"Name": "unless-stopped"},
-        network=network
-    )
+    run_kwargs = {
+        "image": image_name,
+        "name": container_name,
+        "environment": environment,
+        "detach": True,
+        "restart_policy": {"Name": "unless-stopped"},
+        "network": network,
+        # Explicit public DNS servers prevent "Name or service not known" errors
+        # when the Docker network's embedded DNS has temporary failures.
+        "dns": ["8.8.8.8", "8.8.4.4"],
+    }
+    if volumes:
+        run_kwargs["volumes"] = volumes
+    
+    container = get_client().containers.run(**run_kwargs)
     
     return {
         "success": True, 
@@ -120,15 +163,18 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
 
 def stop_bot_container(token: str) -> dict:
     hash_id = get_bot_hash(token)
+    stopped_any = False
     for prefix in ["anjani-bot", "pdf-bot", "gh-pr-bot"]:
         container_name = f"{prefix}-{hash_id}"
         try:
             container = get_client().containers.get(container_name)
             container.stop()
             container.remove(force=True)
-            return {"success": True, "message": "Bot container stopped and removed"}
+            stopped_any = True
         except docker.errors.NotFound:
             pass
+    if stopped_any:
+        return {"success": True, "message": "Bot containers stopped and removed"}
     return {"success": True, "message": "Bot was already stopped"}
 
 def get_bot_container_status(token: str) -> dict:

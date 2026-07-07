@@ -27,7 +27,7 @@ class Config:
     # LLM
     llm_provider: str = field(default_factory=lambda: os.getenv("LLM_PROVIDER", "openai"))
     llm_model: str = field(default_factory=lambda: os.getenv("LLM_MODEL", "gpt-4o-mini"))
-    embedding_model: str = field(default_factory=lambda: os.getenv("EMBEDDING_MODEL", "text-embedding-3-small"))
+    embedding_model: str = field(default_factory=lambda: os.getenv("EMBEDDING_MODEL", "models/gemini-embedding-001"))
 
     # API Keys
     openai_api_key: str = field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))

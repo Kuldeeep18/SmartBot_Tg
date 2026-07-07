@@ -50,61 +50,76 @@ def launch_bot_api(request):
                 return JsonResponse({'error': 'Missing Bot Token'}, status=400)
             hash_id = get_bot_hash(token)
             
-        # 1. Setup specific configurations per type
-        if bot_type == 'anjani':
-            owner_id = data.get('ownerId', '').strip()
-            if not owner_id and hash_id:
-                bot_data = db.bots.find_one({'_id': hash_id})
-                if bot_data:
-                    owner_id = bot_data.get('ownerId', '').strip()
-                    
-            enabled_plugins = data.get('enabledPlugins', [])
-            
-            if not owner_id or not isinstance(enabled_plugins, list):
-                return JsonResponse({'error': 'Missing required fields: ownerId, enabledPlugins'}, status=400)
-                
-            config = {
+        # Load existing config from database to retrieve API keys if they are not provided
+        bot_data = db.bots.find_one({'_id': hash_id}) or {}
+
+        # Merge new parameters with database parameters to construct full config
+        enabled_plugins = data.get('enabledPlugins')
+        if enabled_plugins is None:
+            enabled_plugins = bot_data.get('enabledPlugins', [])
+
+        # If they toggled special templates, update enabled_plugins accordingly
+        if bot_type == 'ai_pdf_chat' and 'ai_pdf_chat' not in enabled_plugins:
+            enabled_plugins = [p for p in enabled_plugins if p != 'github_pr_bot'] + ['ai_pdf_chat']
+        elif bot_type == 'github_pr_bot' and 'github_pr_bot' not in enabled_plugins:
+            enabled_plugins = [p for p in enabled_plugins if p != 'ai_pdf_chat'] + ['github_pr_bot']
+
+        # Determine which components are active
+        has_pdf = 'ai_pdf_chat' in enabled_plugins
+        has_github = 'github_pr_bot' in enabled_plugins
+        # Anjani is active if there is any other plugin in the list, or if the overall type was set to anjani
+        has_anjani = any(p not in ['ai_pdf_chat', 'github_pr_bot'] for p in enabled_plugins) or (bot_type == 'anjani')
+
+        db_updates = {
+            'username': username,
+            'displayName': display_name,
+            'encryptedToken': encrypt(token),
+            'enabledPlugins': enabled_plugins,
+            'status': 'running',
+            'updatedAt': datetime.utcnow()
+        }
+
+        # 1. Start/Stop Anjani
+        if has_anjani:
+            owner_id = data.get('ownerId', '').strip() or bot_data.get('ownerId', '').strip()
+            anjani_plugins = [p for p in enabled_plugins if p not in ['ai_pdf_chat', 'github_pr_bot']]
+            config_anjani = {
                 'ownerId': owner_id,
-                'enabledPlugins': enabled_plugins
+                'enabledPlugins': anjani_plugins
             }
-            
-            # 2. Launch Docker Container
-            result = launch_bot_container(token, bot_type, config)
-            
-            # 3. Save to database
-            db.bots.update_one(
-                {'_id': hash_id},
-                {
-                    '$set': {
-                        'type': bot_type,
-                        'username': username,
-                        'displayName': display_name,
-                        'encryptedToken': encrypt(token),
-                        'ownerId': owner_id,
-                        'enabledPlugins': enabled_plugins,
-                        'status': 'running',
-                        'updatedAt': datetime.utcnow()
-                    }
-                },
-                upsert=True
-            )
-            
-        elif bot_type == 'ai_pdf_chat':
-            # AI PDF Chatbot (RAG)
-            supabase_url = data.get('supabaseUrl', '').strip()
+            launch_bot_container(token, 'anjani', config_anjani)
+            db_updates['ownerId'] = owner_id
+        else:
+            try:
+                get_client().containers.get(f"anjani-bot-{hash_id}").remove(force=True)
+            except Exception:
+                pass
+
+        # 2. Start/Stop AI PDF Chatbot
+        if has_pdf:
+            supabase_url = data.get('supabaseUrl', '').strip() or bot_data.get('supabaseUrl', '').strip()
             supabase_key = data.get('supabaseKey', '').strip()
-            llm_provider = data.get('llmProvider', 'openai').strip()
-            llm_model = data.get('llmModel', 'gpt-4o-mini').strip()
-            embedding_model = data.get('embeddingModel', 'text-embedding-3-small').strip()
-            llm_api_key = data.get('llmApiKey', '').strip()
-            chunk_size = int(data.get('chunkSize', 1000))
-            chunk_overlap = int(data.get('chunkOverlap', 200))
-            retriever_k = int(data.get('retrieverK', 10))
+            if not supabase_key and 'encryptedSupabaseKey' in bot_data:
+                supabase_key = decrypt(bot_data['encryptedSupabaseKey'])
             
-            if not supabase_url or not supabase_key or not llm_api_key:
-                return JsonResponse({'error': 'Missing required fields for RAG: supabaseUrl, supabaseKey, llmApiKey'}, status=400)
-                
-            config = {
+            llm_provider = data.get('llmProvider', '').strip() or bot_data.get('llmProvider', 'openai').strip()
+            llm_model = data.get('llmModel', '').strip() or bot_data.get('llmModel', 'gpt-4o-mini').strip()
+            embedding_model = data.get('embeddingModel', '').strip() or bot_data.get('embeddingModel', 'models/gemini-embedding-001').strip()
+            
+            llm_api_key = data.get('llmApiKey', '').strip()
+            if not llm_api_key and 'encryptedLlmApiKey' in bot_data:
+                llm_api_key = decrypt(bot_data['encryptedLlmApiKey'])
+            
+            chunk_size_raw = data.get('chunkSize')
+            chunk_size = int(chunk_size_raw) if chunk_size_raw not in [None, ''] else bot_data.get('chunkSize', 1000)
+            
+            chunk_overlap_raw = data.get('chunkOverlap')
+            chunk_overlap = int(chunk_overlap_raw) if chunk_overlap_raw not in [None, ''] else bot_data.get('chunkOverlap', 200)
+            
+            retriever_k_raw = data.get('retrieverK')
+            retriever_k = int(retriever_k_raw) if retriever_k_raw not in [None, ''] else bot_data.get('retrieverK', 10)
+
+            config_pdf = {
                 'supabaseUrl': supabase_url,
                 'supabaseKey': supabase_key,
                 'llmProvider': llm_provider,
@@ -115,47 +130,47 @@ def launch_bot_api(request):
                 'chunkOverlap': chunk_overlap,
                 'retrieverK': retriever_k
             }
+            launch_bot_container(token, 'ai_pdf_chat', config_pdf)
             
-            # 2. Launch Docker Container
-            result = launch_bot_container(token, bot_type, config)
-            
-            # 3. Save to database
-            db.bots.update_one(
-                {'_id': hash_id},
-                {
-                    '$set': {
-                        'type': bot_type,
-                        'username': username,
-                        'displayName': display_name,
-                        'encryptedToken': encrypt(token),
-                        'supabaseUrl': supabase_url,
-                        'encryptedSupabaseKey': encrypt(supabase_key),
-                        'llmProvider': llm_provider,
-                        'llmModel': llm_model,
-                        'embeddingModel': embedding_model,
-                        'encryptedLlmApiKey': encrypt(llm_api_key),
-                        'chunkSize': chunk_size,
-                        'chunkOverlap': chunk_overlap,
-                        'retrieverK': retriever_k,
-                        'status': 'running',
-                        'updatedAt': datetime.utcnow()
-                    }
-                },
-                upsert=True
-            )
+            db_updates.update({
+                'supabaseUrl': supabase_url,
+                'encryptedSupabaseKey': encrypt(supabase_key),
+                'llmProvider': llm_provider,
+                'llmModel': llm_model,
+                'embeddingModel': embedding_model,
+                'encryptedLlmApiKey': encrypt(llm_api_key),
+                'chunkSize': chunk_size,
+                'chunkOverlap': chunk_overlap,
+                'retrieverK': retriever_k
+            })
         else:
-            # GitHub PR Bot
+            try:
+                get_client().containers.get(f"pdf-bot-{hash_id}").remove(force=True)
+            except Exception:
+                pass
+
+        # 3. Start/Stop GitHub PR Bot
+        if has_github:
             gemini_api_key = data.get('geminiApiKey', '').strip()
+            if not gemini_api_key and 'encryptedGeminiKey' in bot_data:
+                gemini_api_key = decrypt(bot_data['encryptedGeminiKey'])
+            
             github_token = data.get('githubToken', '').strip()
-            max_repo_size = int(data.get('maxRepoSize', 100))
-            github_client_id = data.get('githubClientId', '').strip()
+            if not github_token and 'encryptedGithubToken' in bot_data:
+                github_token = decrypt(bot_data['encryptedGithubToken'])
+                
+            max_repo_size_raw = data.get('maxRepoSize')
+            max_repo_size = int(max_repo_size_raw) if max_repo_size_raw not in [None, ''] else bot_data.get('maxRepoSize', 100)
+            
+            github_client_id = data.get('githubClientId', '').strip() or bot_data.get('githubClientId', '').strip()
+            
             github_client_secret = data.get('githubClientSecret', '').strip()
-            oauth_redirect_url = data.get('oauthRedirectUrl', '').strip()
+            if not github_client_secret and 'encryptedGithubClientSecret' in bot_data:
+                github_client_secret = decrypt(bot_data['encryptedGithubClientSecret'])
+                
+            oauth_redirect_url = data.get('oauthRedirectUrl', '').strip() or bot_data.get('oauthRedirectUrl', '').strip()
 
-            if not gemini_api_key:
-                return JsonResponse({'error': 'Missing Gemini API Key'}, status=400)
-
-            config = {
+            config_github = {
                 'geminiApiKey': gemini_api_key,
                 'githubToken': github_token,
                 'maxRepoSize': max_repo_size,
@@ -163,35 +178,41 @@ def launch_bot_api(request):
                 'githubClientSecret': github_client_secret,
                 'oauthRedirectUrl': oauth_redirect_url
             }
-
-            # 2. Launch Docker Container
-            result = launch_bot_container(token, bot_type, config)
-
-            # 3. Save to database
-            db.bots.update_one(
-                {'_id': hash_id},
-                {
-                    '$set': {
-                        'type': bot_type,
-                        'username': username,
-                        'displayName': display_name,
-                        'encryptedToken': encrypt(token),
-                        'encryptedGeminiKey': encrypt(gemini_api_key),
-                        'encryptedGithubToken': encrypt(github_token),
-                        'maxRepoSize': max_repo_size,
-                        'githubClientId': github_client_id,
-                        'encryptedGithubClientSecret': encrypt(github_client_secret),
-                        'oauthRedirectUrl': oauth_redirect_url,
-                        'status': 'running',
-                        'updatedAt': datetime.utcnow()
-                    }
-                },
-                upsert=True
-            )
+            launch_bot_container(token, 'github_pr_bot', config_github)
             
+            db_updates.update({
+                'encryptedGeminiKey': encrypt(gemini_api_key),
+                'encryptedGithubToken': encrypt(github_token),
+                'maxRepoSize': max_repo_size,
+                'githubClientId': github_client_id,
+                'encryptedGithubClientSecret': encrypt(github_client_secret),
+                'oauthRedirectUrl': oauth_redirect_url
+            })
+        else:
+            try:
+                get_client().containers.get(f"gh-pr-bot-{hash_id}").remove(force=True)
+            except Exception:
+                pass
+
+        # Backwards compatible type field
+        if has_anjani:
+            primary_type = 'anjani'
+        elif has_pdf:
+            primary_type = 'ai_pdf_chat'
+        else:
+            primary_type = 'github_pr_bot'
+            
+        db_updates['type'] = primary_type
+
+        db.bots.update_one(
+            {'_id': hash_id},
+            {'$set': db_updates},
+            upsert=True
+        )
+
         return JsonResponse({
             'success': True,
-            'message': result.get('message', 'Bot container started'),
+            'message': 'Bot instances configured and started successfully',
             'hash': hash_id
         })
         
@@ -239,15 +260,31 @@ def status_bot_api(request):
                 )
                 return JsonResponse({'success': True, 'message': 'Bot stopped successfully'})
             elif action == 'start':
+                enabled_plugins = bot_data.get('enabledPlugins', [])
                 bot_type = bot_data.get('type', 'anjani')
-                config = {}
-                if bot_type == 'anjani':
-                    config = {
+                
+                # Migrate older bot configurations if needed
+                if bot_type == 'ai_pdf_chat' and 'ai_pdf_chat' not in enabled_plugins:
+                    enabled_plugins.append('ai_pdf_chat')
+                elif bot_type == 'github_pr_bot' and 'github_pr_bot' not in enabled_plugins:
+                    enabled_plugins.append('github_pr_bot')
+
+                has_pdf = 'ai_pdf_chat' in enabled_plugins
+                has_github = 'github_pr_bot' in enabled_plugins
+                has_anjani = any(p not in ['ai_pdf_chat', 'github_pr_bot'] for p in enabled_plugins) or (bot_type == 'anjani')
+
+                # Start Anjani
+                if has_anjani:
+                    anjani_plugins = [p for p in enabled_plugins if p not in ['ai_pdf_chat', 'github_pr_bot']]
+                    config_anjani = {
                         'ownerId': bot_data.get('ownerId', ''),
-                        'enabledPlugins': bot_data.get('enabledPlugins', [])
+                        'enabledPlugins': anjani_plugins
                     }
-                elif bot_type == 'ai_pdf_chat':
-                    config = {
+                    launch_bot_container(raw_token, 'anjani', config_anjani)
+
+                # Start AI PDF Chatbot
+                if has_pdf:
+                    config_pdf = {
                         'supabaseUrl': bot_data.get('supabaseUrl', ''),
                         'supabaseKey': decrypt(bot_data['encryptedSupabaseKey']) if 'encryptedSupabaseKey' in bot_data else '',
                         'llmProvider': bot_data.get('llmProvider', 'openai'),
@@ -258,8 +295,11 @@ def status_bot_api(request):
                         'chunkOverlap': bot_data.get('chunkOverlap', 200),
                         'retrieverK': bot_data.get('retrieverK', 10)
                     }
-                else:
-                    config = {
+                    launch_bot_container(raw_token, 'ai_pdf_chat', config_pdf)
+
+                # Start GitHub PR Bot
+                if has_github:
+                    config_github = {
                         'geminiApiKey': decrypt(bot_data['encryptedGeminiKey']) if 'encryptedGeminiKey' in bot_data else '',
                         'githubToken': decrypt(bot_data['encryptedGithubToken']) if 'encryptedGithubToken' in bot_data else '',
                         'maxRepoSize': bot_data.get('maxRepoSize', 100),
@@ -267,9 +307,8 @@ def status_bot_api(request):
                         'githubClientSecret': decrypt(bot_data['encryptedGithubClientSecret']) if 'encryptedGithubClientSecret' in bot_data else '',
                         'oauthRedirectUrl': bot_data.get('oauthRedirectUrl', '')
                     }
-                
-                # Launch Bot container
-                launch_bot_container(raw_token, bot_type, config)
+                    launch_bot_container(raw_token, 'github_pr_bot', config_github)
+
                 db.bots.update_one(
                     {'_id': target_hash},
                     {'$set': {'status': 'running', 'updatedAt': datetime.utcnow()}}
@@ -289,43 +328,31 @@ def status_bot_api(request):
                 bots = list(db.bots.find())
                 clean_bots = []
                 for b in bots:
-                    bot_type = b.get('type', 'anjani')
                     bot_record = {
                         'hash': b['_id'],
-                        'type': bot_type,
+                        'type': b.get('type', 'anjani'),
                         'status': b.get('status', 'stopped'),
                         'username': b.get('username', ''),
                         'displayName': b.get('displayName', ''),
+                        'ownerId': b.get('ownerId', ''),
+                        'enabledPlugins': b.get('enabledPlugins', []),
+                        'supabaseUrl': b.get('supabaseUrl', ''),
+                        'supabaseKey': decrypt(b['encryptedSupabaseKey']) if 'encryptedSupabaseKey' in b else '',
+                        'llmProvider': b.get('llmProvider', 'openai'),
+                        'llmModel': b.get('llmModel', ''),
+                        'embeddingModel': b.get('embeddingModel', ''),
+                        'llmApiKey': decrypt(b['encryptedLlmApiKey']) if 'encryptedLlmApiKey' in b else '',
+                        'chunkSize': b.get('chunkSize', 1000),
+                        'chunkOverlap': b.get('chunkOverlap', 200),
+                        'retrieverK': b.get('retrieverK', 10),
+                        'geminiApiKey': decrypt(b['encryptedGeminiKey']) if 'encryptedGeminiKey' in b else '',
+                        'githubToken': decrypt(b['encryptedGithubToken']) if 'encryptedGithubToken' in b else '',
+                        'maxRepoSize': b.get('maxRepoSize', 100),
+                        'githubClientId': b.get('githubClientId', ''),
+                        'githubClientSecret': decrypt(b['encryptedGithubClientSecret']) if 'encryptedGithubClientSecret' in b else '',
+                        'oauthRedirectUrl': b.get('oauthRedirectUrl', ''),
                         'updatedAt': b.get('updatedAt', datetime.utcnow()).isoformat() if isinstance(b.get('updatedAt'), datetime) else str(b.get('updatedAt'))
                     }
-                    
-                    if bot_type == 'anjani':
-                        bot_record.update({
-                            'ownerId': b.get('ownerId', ''),
-                            'enabledPlugins': b.get('enabledPlugins', [])
-                        })
-                    elif bot_type == 'ai_pdf_chat':
-                        bot_record.update({
-                            'supabaseUrl': b.get('supabaseUrl', ''),
-                            'supabaseKey': decrypt(b['encryptedSupabaseKey']) if 'encryptedSupabaseKey' in b else '',
-                            'llmProvider': b.get('llmProvider', 'openai'),
-                            'llmModel': b.get('llmModel', ''),
-                            'embeddingModel': b.get('embeddingModel', ''),
-                            'llmApiKey': decrypt(b['encryptedLlmApiKey']) if 'encryptedLlmApiKey' in b else '',
-                            'chunkSize': b.get('chunkSize', 1000),
-                            'chunkOverlap': b.get('chunkOverlap', 200),
-                            'retrieverK': b.get('retrieverK', 10)
-                        })
-                    else:
-                        # github_pr_bot
-                        bot_record.update({
-                            'geminiApiKey': decrypt(b['encryptedGeminiKey']) if 'encryptedGeminiKey' in b else '',
-                            'githubToken': decrypt(b['encryptedGithubToken']) if 'encryptedGithubToken' in b else '',
-                            'maxRepoSize': b.get('maxRepoSize', 100),
-                            'githubClientId': b.get('githubClientId', ''),
-                            'githubClientSecret': decrypt(b['encryptedGithubClientSecret']) if 'encryptedGithubClientSecret' in b else '',
-                            'oauthRedirectUrl': b.get('oauthRedirectUrl', '')
-                        })
                     clean_bots.append(bot_record)
                 return JsonResponse({'bots': clean_bots})
                 
