@@ -2085,10 +2085,6 @@
         payload.retrieverK = parseInt(retrieverKInput.value) || 10;
       } else if (botType === 'github_pr_bot') {
         const geminiApiKey = geminiApiKeyInput.value.trim();
-        if (!currentEditingHash && !geminiApiKey) {
-          showAlert('error', 'Gemini API Key is required.');
-          return;
-        }
         payload.geminiApiKey = geminiApiKey;
         payload.githubToken = githubTokenInput.value.trim();
         payload.maxRepoSize = parseInt(maxRepoSizeInput.value) || 100;

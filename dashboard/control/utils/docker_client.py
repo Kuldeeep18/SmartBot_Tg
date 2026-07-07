@@ -130,14 +130,24 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
         image_name = "github_pr_bot"
         environment = {
             "TELEGRAM_BOT_TOKEN": token,
-            "GEMINI_API_KEY": config.get('geminiApiKey', ''),
-            "GITHUB_TOKEN": config.get('githubToken', ''),
-            "MAX_REPO_SIZE_MB": str(config.get('maxRepoSize', 100)),
-            "GITHUB_CLIENT_ID": config.get('githubClientId', ''),
-            "GITHUB_CLIENT_SECRET": config.get('githubClientSecret', ''),
-            "OAUTH_REDIRECT_URL": config.get('oauthRedirectUrl', ''),
             "PORT": "3000"
         }
+        if config.get('geminiApiKey'):
+            environment["GEMINI_API_KEY"] = config['geminiApiKey']
+        if config.get('githubToken'):
+            environment["GITHUB_TOKEN"] = config['githubToken']
+        if config.get('maxRepoSize'):
+            environment["MAX_REPO_SIZE_MB"] = str(config['maxRepoSize'])
+        if config.get('githubClientId'):
+            environment["GITHUB_CLIENT_ID"] = config['githubClientId']
+        if config.get('githubClientSecret'):
+            environment["GITHUB_CLIENT_SECRET"] = config['githubClientSecret']
+        if config.get('oauthRedirectUrl'):
+            environment["OAUTH_REDIRECT_URL"] = config['oauthRedirectUrl']
+
+        env_file = Path(__file__).resolve().parent.parent.parent.parent / "bots" / "github_pr_bot" / ".env"
+        if env_file.exists():
+            volumes = {str(env_file): {"bind": "/app/.env", "mode": "ro"}}
 
     run_kwargs = {
         "image": image_name,
