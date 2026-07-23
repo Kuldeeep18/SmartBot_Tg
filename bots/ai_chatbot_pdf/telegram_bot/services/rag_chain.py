@@ -140,6 +140,15 @@ def get_active_providers(primary_provider: str) -> List[Dict[str, Any]]:
             "keys": [config.openai_api_key],
         })
 
+    # 6. Gemini (uses all GOOGLE_API_KEYS for key rotation fallback)
+    gemini_keys = config.google_api_keys
+    if gemini_keys:
+        providers.append({
+            "name": "gemini",
+            "model": config.llm_model if config.llm_provider == "gemini" else "gemini-2.0-flash",
+            "keys": gemini_keys,
+        })
+
     # Rearrange so primary provider is tried first
     primary_lower = primary_provider.lower()
     primary_item = None

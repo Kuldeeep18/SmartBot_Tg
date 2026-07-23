@@ -91,18 +91,29 @@ def launch_bot_api(request):
             
         elif bot_type == 'ai_pdf_chat':
             # AI PDF Chatbot (RAG)
-            supabase_url = data.get('supabaseUrl', '').strip()
-            supabase_key = data.get('supabaseKey', '').strip()
-            llm_provider = data.get('llmProvider', 'openai').strip()
-            llm_model = data.get('llmModel', 'gpt-4o-mini').strip()
-            embedding_model = data.get('embeddingModel', 'text-embedding-3-small').strip()
-            llm_api_key = data.get('llmApiKey', '').strip()
-            chunk_size = int(data.get('chunkSize', 1000))
-            chunk_overlap = int(data.get('chunkOverlap', 200))
-            retriever_k = int(data.get('retrieverK', 10))
+            bot_data = db.bots.find_one({'_id': hash_id}) or {}
             
-            if not supabase_url or not supabase_key or not llm_api_key:
-                return JsonResponse({'error': 'Missing required fields for RAG: supabaseUrl, supabaseKey, llmApiKey'}, status=400)
+            supabase_url = data.get('supabaseUrl', '').strip() or bot_data.get('supabaseUrl', '').strip()
+            supabase_key = data.get('supabaseKey', '').strip()
+            if not supabase_key and 'encryptedSupabaseKey' in bot_data:
+                supabase_key = decrypt(bot_data['encryptedSupabaseKey'])
+                
+            llm_provider = data.get('llmProvider', '').strip() or bot_data.get('llmProvider', 'openai').strip()
+            llm_model = data.get('llmModel', '').strip() or bot_data.get('llmModel', 'gpt-4o-mini').strip()
+            embedding_model = data.get('embeddingModel', '').strip() or bot_data.get('embeddingModel', 'models/gemini-embedding-001').strip()
+            
+            llm_api_key = data.get('llmApiKey', '').strip()
+            if not llm_api_key and 'encryptedLlmApiKey' in bot_data:
+                llm_api_key = decrypt(bot_data['encryptedLlmApiKey'])
+            
+            chunk_size_raw = data.get('chunkSize')
+            chunk_size = int(chunk_size_raw) if chunk_size_raw not in [None, ''] else bot_data.get('chunkSize', 1000)
+            
+            chunk_overlap_raw = data.get('chunkOverlap')
+            chunk_overlap = int(chunk_overlap_raw) if chunk_overlap_raw not in [None, ''] else bot_data.get('chunkOverlap', 200)
+            
+            retriever_k_raw = data.get('retrieverK')
+            retriever_k = int(retriever_k_raw) if retriever_k_raw not in [None, ''] else bot_data.get('retrieverK', 10)
                 
             config = {
                 'supabaseUrl': supabase_url,
@@ -137,6 +148,7 @@ def launch_bot_api(request):
                         'chunkSize': chunk_size,
                         'chunkOverlap': chunk_overlap,
                         'retrieverK': retriever_k,
+                        'enabledPlugins': [],
                         'status': 'running',
                         'updatedAt': datetime.utcnow()
                     }
@@ -145,15 +157,32 @@ def launch_bot_api(request):
             )
         else:
             # GitHub PR Bot
+            bot_data = db.bots.find_one({'_id': hash_id}) or {}
+            
             gemini_api_key = data.get('geminiApiKey', '').strip()
+            if not gemini_api_key and 'encryptedGeminiKey' in bot_data:
+                gemini_api_key = decrypt(bot_data['encryptedGeminiKey'])
+                
             github_token = data.get('githubToken', '').strip()
-            max_repo_size = int(data.get('maxRepoSize', 100))
-            github_client_id = data.get('githubClientId', '').strip()
+            if not github_token and 'encryptedGithubToken' in bot_data:
+                github_token = decrypt(bot_data['encryptedGithubToken'])
+                
+            max_repo_size_raw = data.get('maxRepoSize')
+            max_repo_size = int(max_repo_size_raw) if max_repo_size_raw not in [None, ''] else bot_data.get('maxRepoSize', 100)
+            
+            github_client_id = data.get('githubClientId', '').strip() or bot_data.get('githubClientId', '').strip()
+            
             github_client_secret = data.get('githubClientSecret', '').strip()
-            oauth_redirect_url = data.get('oauthRedirectUrl', '').strip()
-
-            if not gemini_api_key:
-                return JsonResponse({'error': 'Missing Gemini API Key'}, status=400)
+            if not github_client_secret and 'encryptedGithubClientSecret' in bot_data:
+                github_client_secret = decrypt(bot_data['encryptedGithubClientSecret'])
+                
+            oauth_redirect_url = data.get('oauthRedirectUrl', '').strip() or bot_data.get('oauthRedirectUrl', '').strip()
+            
+            enabled_plugins = data.get('enabledPlugins', [])
+            if not enabled_plugins and 'enabledPlugins' in bot_data:
+                enabled_plugins = bot_data.get('enabledPlugins', [])
+            if not enabled_plugins:
+                enabled_plugins = ['pr_review', 'pr_description', 'code_improvements', 'security_audit']
 
             config = {
                 'geminiApiKey': gemini_api_key,
@@ -161,7 +190,8 @@ def launch_bot_api(request):
                 'maxRepoSize': max_repo_size,
                 'githubClientId': github_client_id,
                 'githubClientSecret': github_client_secret,
-                'oauthRedirectUrl': oauth_redirect_url
+                'oauthRedirectUrl': oauth_redirect_url,
+                'enabledPlugins': enabled_plugins
             }
 
             # 2. Launch Docker Container
@@ -182,6 +212,7 @@ def launch_bot_api(request):
                         'githubClientId': github_client_id,
                         'encryptedGithubClientSecret': encrypt(github_client_secret),
                         'oauthRedirectUrl': oauth_redirect_url,
+                        'enabledPlugins': enabled_plugins,
                         'status': 'running',
                         'updatedAt': datetime.utcnow()
                     }
@@ -289,43 +320,31 @@ def status_bot_api(request):
                 bots = list(db.bots.find())
                 clean_bots = []
                 for b in bots:
-                    bot_type = b.get('type', 'anjani')
                     bot_record = {
                         'hash': b['_id'],
-                        'type': bot_type,
+                        'type': b.get('type', 'anjani'),
                         'status': b.get('status', 'stopped'),
                         'username': b.get('username', ''),
                         'displayName': b.get('displayName', ''),
+                        'ownerId': b.get('ownerId', ''),
+                        'enabledPlugins': b.get('enabledPlugins', []),
+                        'supabaseUrl': b.get('supabaseUrl', ''),
+                        'supabaseKey': decrypt(b['encryptedSupabaseKey']) if 'encryptedSupabaseKey' in b else '',
+                        'llmProvider': b.get('llmProvider', 'openai'),
+                        'llmModel': b.get('llmModel', ''),
+                        'embeddingModel': b.get('embeddingModel', ''),
+                        'llmApiKey': decrypt(b['encryptedLlmApiKey']) if 'encryptedLlmApiKey' in b else '',
+                        'chunkSize': b.get('chunkSize', 1000),
+                        'chunkOverlap': b.get('chunkOverlap', 200),
+                        'retrieverK': b.get('retrieverK', 10),
+                        'geminiApiKey': decrypt(b['encryptedGeminiKey']) if 'encryptedGeminiKey' in b else '',
+                        'githubToken': decrypt(b['encryptedGithubToken']) if 'encryptedGithubToken' in b else '',
+                        'maxRepoSize': b.get('maxRepoSize', 100),
+                        'githubClientId': b.get('githubClientId', ''),
+                        'githubClientSecret': decrypt(b['encryptedGithubClientSecret']) if 'encryptedGithubClientSecret' in b else '',
+                        'oauthRedirectUrl': b.get('oauthRedirectUrl', ''),
                         'updatedAt': b.get('updatedAt', datetime.utcnow()).isoformat() if isinstance(b.get('updatedAt'), datetime) else str(b.get('updatedAt'))
                     }
-                    
-                    if bot_type == 'anjani':
-                        bot_record.update({
-                            'ownerId': b.get('ownerId', ''),
-                            'enabledPlugins': b.get('enabledPlugins', [])
-                        })
-                    elif bot_type == 'ai_pdf_chat':
-                        bot_record.update({
-                            'supabaseUrl': b.get('supabaseUrl', ''),
-                            'supabaseKey': decrypt(b['encryptedSupabaseKey']) if 'encryptedSupabaseKey' in b else '',
-                            'llmProvider': b.get('llmProvider', 'openai'),
-                            'llmModel': b.get('llmModel', ''),
-                            'embeddingModel': b.get('embeddingModel', ''),
-                            'llmApiKey': decrypt(b['encryptedLlmApiKey']) if 'encryptedLlmApiKey' in b else '',
-                            'chunkSize': b.get('chunkSize', 1000),
-                            'chunkOverlap': b.get('chunkOverlap', 200),
-                            'retrieverK': b.get('retrieverK', 10)
-                        })
-                    else:
-                        # github_pr_bot
-                        bot_record.update({
-                            'geminiApiKey': decrypt(b['encryptedGeminiKey']) if 'encryptedGeminiKey' in b else '',
-                            'githubToken': decrypt(b['encryptedGithubToken']) if 'encryptedGithubToken' in b else '',
-                            'maxRepoSize': b.get('maxRepoSize', 100),
-                            'githubClientId': b.get('githubClientId', ''),
-                            'githubClientSecret': decrypt(b['encryptedGithubClientSecret']) if 'encryptedGithubClientSecret' in b else '',
-                            'oauthRedirectUrl': b.get('oauthRedirectUrl', '')
-                        })
                     clean_bots.append(bot_record)
                 return JsonResponse({'bots': clean_bots})
                 

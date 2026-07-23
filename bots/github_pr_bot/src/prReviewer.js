@@ -10,8 +10,12 @@ dotenv.config();
  * @returns {Promise<string>} - Markdown formatted review
  */
 export async function analyzePullRequest(prMetadata, prDiff, mode = 'review') {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  const apiKeysRaw = process.env.GEMINI_API_KEY;
+  if (!apiKeysRaw) {
+    throw new Error('Gemini API Key is not configured. Please set GEMINI_API_KEY in the .env file.');
+  }
+  const apiKeys = apiKeysRaw.split(',').map(k => k.trim()).filter(Boolean);
+  if (apiKeys.length === 0) {
     throw new Error('Gemini API Key is not configured. Please set GEMINI_API_KEY in the .env file.');
   }
 
@@ -83,6 +87,27 @@ For each improvement recommendation, provide:
    - **After:** (your proposed improved code)
 
 Only suggest improvements that are highly relevant to the modified lines. Do not suggest generic improvements.`;
+  } else if (mode === 'security' || mode === 'security_audit') {
+    systemPrompt = `You are a Lead Cybersecurity Auditor and DevSecOps Specialist. Perform an in-depth security audit on the following Git Pull Request diff.
+
+Your report must be structured as follows:
+
+# 🔒 Security Audit & Vulnerability Report
+
+## 🛡️ Executive Summary
+- A high-level assessment of the security risk posture of this pull request (Risk Rating: Low / Medium / High / Critical).
+
+## 🔑 Credential & Secret Leak Checks
+- Audit diffs for hardcoded API keys, OAuth tokens, private keys, passwords, database URLs, or exposed environment variables.
+
+## ⚠️ OWASP & Logic Vulnerabilities
+- Check for SQL Injection, XSS, CSRF, Path Traversal, Unsafe Deserialization, Insecure Direct Object References, and missing input sanitization.
+
+## 📦 Dependency & Configuration Risks
+- Identify outdated, insecure, or untrusted dependencies added, as well as insecure server/CORS config additions.
+
+## 🛠️ Remediation Guidance
+- Concrete step-by-step security fixes for any vulnerabilities identified in the modified files.`;
   } else {
     // default: all-in-one
     systemPrompt = `You are an elite software reviewer and architect. Perform a comprehensive review, description, and improvement audit of the following Git Pull Request diff.
@@ -125,43 +150,60 @@ ${diffContent}
 
   // Call Gemini API using standard fetch
   const model = 'gemini-2.5-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  let lastError = null;
+  let response = null;
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            {
-              text: prompt
-            }
-          ]
-        }
-      ],
-      generationConfig: {
-        temperature: 0.2,
-        topP: 0.95,
-        topK: 40,
-        maxOutputTokens: 8192,
-        responseMimeType: 'text/plain'
-      }
-    })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    let parsedError;
+  for (const key of apiKeys) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    console.log(`Attempting Gemini API request with key starting with: ${key.slice(0, 8)}...`);
     try {
-      parsedError = JSON.parse(errorText);
-    } catch {
-      parsedError = errorText;
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 8192,
+            responseMimeType: 'text/plain'
+          }
+        })
+      });
+
+      if (response.ok) {
+        break;
+      } else {
+        const errorText = await response.text();
+        let parsedError;
+        try {
+          parsedError = JSON.parse(errorText);
+        } catch {
+          parsedError = errorText;
+        }
+        const errMsg = parsedError?.error?.message || errorText;
+        console.warn(`Gemini API key starting with ${key.slice(0, 8)} failed: status ${response.status} - ${errMsg}`);
+        lastError = new Error(`Gemini API request failed with status ${response.status}: ${errMsg}`);
+      }
+    } catch (err) {
+      console.warn(`Network error with Gemini API key starting with ${key.slice(0, 8)}: ${err.message}`);
+      lastError = err;
     }
-    console.error('Gemini API Error Response:', parsedError);
-    throw new Error(`Gemini API request failed with status ${response.status}: ${parsedError?.error?.message || errorText}`);
+  }
+
+  if (!response || !response.ok) {
+    throw lastError || new Error('All configured Gemini API keys failed.');
   }
 
   const result = await response.json();

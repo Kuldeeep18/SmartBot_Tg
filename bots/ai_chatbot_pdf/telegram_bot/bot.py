@@ -12,6 +12,7 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
+from telegram.request import HTTPXRequest
 
 from telegram_bot.handlers import (
     start_handler,
@@ -156,8 +157,20 @@ def create_bot() -> Application:
 
     logger.info("Building Telegram bot application...")
 
-    # Build the application with post_init startup cleanup hook
-    app = Application.builder().token(config.telegram_bot_token).post_init(initialize_startup_cleanup).build()
+    # Build the application with custom timeouts and post_init startup cleanup hook
+    request_config = HTTPXRequest(
+        connect_timeout=30.0,
+        read_timeout=30.0,
+        write_timeout=30.0,
+        pool_timeout=30.0
+    )
+    app = (
+        Application.builder()
+        .token(config.telegram_bot_token)
+        .request(request_config)
+        .post_init(initialize_startup_cleanup)
+        .build()
+    )
 
     # ──────────────────────────────────────
     # Register Command Handlers

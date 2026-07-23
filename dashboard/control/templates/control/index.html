@@ -379,14 +379,50 @@
           <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
         </div>
 
-        <!-- GitHub PR Reviewer Card -->
-        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="github_pr_bot">
+        <!-- Automated PR Review Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="pr_review">
           <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
             <i data-lucide="git-pull-request" class="w-6 h-6"></i>
           </div>
           <div class="space-y-1">
-            <h3 class="font-bold text-base text-neumorphic-muted">GitHub PR Reviewer</h3>
-            <p class="text-neumorphic-muted text-xs leading-relaxed">Automated syntax checks, security warnings, and reviews on PR threads.</p>
+            <h3 class="font-bold text-base text-neumorphic-muted">Automated PR Review</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Automated AI checks on PR diffs for bugs, syntax, and style (slash command: /review).</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- PR Description & Changelog Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="pr_description">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="file-text" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">PR Description & Changelog</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Auto-generate structured PR overviews, file changelogs, and checklists (slash command: /describe).</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- Refactoring & Code Suggestions Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="code_improvements">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="code" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">Refactoring & Suggestions</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Line-by-line "Before vs After" refactoring & optimization suggestions (slash command: /improve).</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- Security & Secret Scanner Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="security_audit">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="shield-alert" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">Security & Secret Scanner</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Scan diffs for exposed secrets, security risks, and unsafe dependencies (slash command: /security).</p>
           </div>
           <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
         </div>
@@ -631,16 +667,194 @@
           <div id="token-validation-status" class="transition-all duration-300"></div>
         </div>
 
-        <!-- Owner ID Input -->
-        <div class="space-y-2 max-w-xl font-body">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">Owner User ID</label>
-          <input 
-            id="owner-id"
-            type="text"
-            placeholder="e.g. 1919814914"
-            required
-            class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
-          />
+        <!-- Bot Type Selection -->
+        <div class="space-y-2 max-w-xl font-body hidden">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">Bot Service Type</label>
+          <select 
+            id="bot-type-select"
+            class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3.5 text-sm text-neumorphic-fg focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-semibold shadow-sm"
+          >
+            <option value="anjani">Anjani (General Group Management)</option>
+            <option value="ai_pdf_chat">AI PDF Chatbot (RAG)</option>
+            <option value="github_pr_bot">GitHub PR Reviewer</option>
+          </select>
+        </div>
+
+        <!-- Section: Anjani Fields -->
+        <div id="fields-anjani" class="space-y-6">
+          <div class="space-y-2 max-w-xl font-body">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">Owner User ID</label>
+            <input 
+              id="owner-id"
+              type="text"
+              placeholder="e.g. 1919814914"
+              required
+              class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+            />
+          </div>
+        </div>
+
+        <!-- Section: RAG Fields -->
+        <div id="fields-ai-pdf-chat" class="hidden space-y-6">
+          <div class="space-y-2 max-w-xl font-body">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">Supabase Project URL</label>
+            <input 
+              id="supabase-url"
+              type="text"
+              placeholder="https://your-project.supabase.co"
+              class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+            />
+          </div>
+          <div class="space-y-2 max-w-xl font-body">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">Supabase Service Role Key</label>
+            <input 
+              id="supabase-key"
+              type="password"
+              placeholder="eyJhbGciOi..."
+              class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+            />
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl">
+            <div class="space-y-2 font-body">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">LLM Provider</label>
+              <select 
+                id="llm-provider"
+                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3.5 text-sm text-neumorphic-fg focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-semibold"
+              >
+                <option value="openai">OpenAI</option>
+                <option value="gemini">Google Gemini</option>
+                <option value="groq">Groq</option>
+                <option value="openrouter">OpenRouter</option>
+                <option value="nvidia">NVIDIA NIM</option>
+                <option value="g0i">G0i AI</option>
+              </select>
+            </div>
+            <div class="space-y-2 font-body">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">LLM API Key</label>
+              <input 
+                id="llm-api-key"
+                type="password"
+                placeholder="sk-..."
+                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+              />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl">
+            <div class="space-y-2 font-body">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">LLM Model Name</label>
+              <input 
+                id="llm-model"
+                type="text"
+                value="gpt-4o-mini"
+                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all"
+              />
+            </div>
+            <div class="space-y-2 font-body">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">Embedding Model</label>
+              <input 
+                id="embedding-model"
+                type="text"
+                value="models/gemini-embedding-001"
+                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all"
+              />
+            </div>
+          </div>
+          
+          <details class="group max-w-xl bg-[#E0E5EC] neo-extruded rounded-2xl p-4 transition-all">
+            <summary class="flex justify-between items-center cursor-pointer text-xs font-bold uppercase tracking-wider text-neumorphic-muted select-none">
+              <span>Advanced RAG Parameters</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 transform group-open:rotate-180 transition-transform text-neumorphic-muted"></i>
+            </summary>
+            <div class="grid grid-cols-3 gap-4 mt-4">
+              <div class="space-y-2 font-body">
+                <label class="block text-[9px] font-bold uppercase tracking-wider text-neumorphic-muted">Chunk Size</label>
+                <input 
+                  id="chunk-size"
+                  type="number"
+                  value="1000"
+                  class="w-full bg-[#E0E5EC] neo-inset rounded-xl px-3 py-2 text-xs text-neumorphic-fg focus:outline-none focus:ring-1 focus:ring-neumorphic-accent"
+                />
+              </div>
+              <div class="space-y-2 font-body">
+                <label class="block text-[9px] font-bold uppercase tracking-wider text-neumorphic-muted">Chunk Overlap</label>
+                <input 
+                  id="chunk-overlap"
+                  type="number"
+                  value="200"
+                  class="w-full bg-[#E0E5EC] neo-inset rounded-xl px-3 py-2 text-xs text-neumorphic-fg focus:outline-none focus:ring-1 focus:ring-neumorphic-accent"
+                />
+              </div>
+              <div class="space-y-2 font-body">
+                <label class="block text-[9px] font-bold uppercase tracking-wider text-neumorphic-muted">Retriever K</label>
+                <input 
+                  id="retriever-k"
+                  type="number"
+                  value="10"
+                  class="w-full bg-[#E0E5EC] neo-inset rounded-xl px-3 py-2 text-xs text-neumorphic-fg focus:outline-none focus:ring-1 focus:ring-neumorphic-accent"
+                />
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <!-- Section: GitHub PR Fields -->
+        <div id="fields-github-pr" class="hidden space-y-6">
+          <div class="space-y-2 max-w-xl font-body">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">Gemini API Key</label>
+            <input 
+              id="gemini-api-key"
+              type="password"
+              placeholder="AIzaSy..."
+              class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+            />
+          </div>
+          <div class="space-y-2 max-w-xl font-body">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">GitHub Personal Access Token</label>
+            <input 
+              id="github-token"
+              type="password"
+              placeholder="ghp_..."
+              class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:shadow-neo-inset-deep focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+            />
+          </div>
+          <div class="space-y-2 max-w-xl font-body">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">Max Repository Size (MB)</label>
+            <input 
+              id="max-repo-size"
+              type="number"
+              value="100"
+              class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+            />
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl">
+            <div class="space-y-2 font-body">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">GitHub Client ID (Optional)</label>
+              <input 
+                id="github-client-id"
+                type="text"
+                placeholder="Ov23..."
+                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+              />
+            </div>
+            <div class="space-y-2 font-body">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">GitHub Client Secret (Optional)</label>
+              <input 
+                id="github-client-secret"
+                type="password"
+                placeholder="secret..."
+                class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+              />
+            </div>
+          </div>
+          <div class="space-y-2 max-w-xl font-body">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-neumorphic-muted">OAuth Redirect URL (Optional)</label>
+            <input 
+              id="oauth-redirect-url"
+              type="text"
+              placeholder="https://your-dashboard.com/oauth/callback"
+              class="w-full bg-[#E0E5EC] neo-inset rounded-2xl px-4 py-3 text-sm text-neumorphic-fg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neumorphic-accent focus:ring-offset-2 transition-all font-mono"
+            />
+          </div>
         </div>
 
         <!-- Deploy Button -->
@@ -668,6 +882,7 @@
     let allBots = []; // Cached array of connected bots
     let selectedFeatures = new Set(['muting', 'filters', 'welcome']);
     let botTemplatesCache = {}; // Cache of local selections per bot hash
+    const GITHUB_PR_PLUGINS = ['pr_review', 'pr_description', 'code_improvements', 'security_audit'];
 
     // Setting Switch Toggle Action
     window.toggleSetting = function(btn) {
@@ -916,22 +1131,72 @@
           { type: 'bot', text: 'Official site: http://website.com', reply: true }
         ]
       },
-      github_pr_bot: {
-        title: "GitHub PR Reviewer",
-        desc: "Automated syntax checks, performance warnings, and design reviews on PR threads using Google Gemini API.",
-        value: "Accelerate code reviews and keep security/performance regressions out of your repositories automatically.",
+      pr_review: {
+        title: "Automated PR Review",
+        desc: "Automated AI checks on PR diffs for bugs, syntax, and style.",
+        value: "Automate code quality reviews and surface logic bugs on every pull request.",
         steps: [
-          "Add the webhook to your GitHub repository.",
-          "Developer opens a pull request.",
-          "PR Bot automatically reviews the code diffs and leaves detailed review remarks."
+          "Send <code>/review https://github.com/owner/repo/pull/123</code> to bot.",
+          "Gemini AI analyzes changed diffs for bugs, naming conventions, and syntax errors.",
+          "Delivers markdown review report directly to Telegram chat."
         ],
         commands: [
-          { cmd: "/review [pr_number]", desc: "Trigger manual code review check" },
-          { cmd: "/status", desc: "View repo queue and token limit status" }
+          { cmd: "/review &lt;pr_url&gt;", desc: "Run automated AI code review" }
         ],
         chat: [
-          { type: 'system', text: 'Pull Request #42 opened: Add parse_log helper' },
-          { type: 'bot', text: '🤖 <b>PR Review Bot</b>\n\n⚠️ Security warning: Replacing `eval` with `json.loads` in <code>utils.py:L12</code> prevents remote code execution vulnerability.\n\nGood change.' }
+          { type: 'user', name: 'Dev', text: '/review https://github.com/org/repo/pull/42' },
+          { type: 'bot', text: '🔍 <b>Automated PR Review</b>\n\n- Overview: Refactored database connection pooling.\n- Bugs: None detected.\n- Verdict: Approved.' }
+        ]
+      },
+      pr_description: {
+        title: "PR Description & Changelog",
+        desc: "Auto-generate structured PR overviews, file changelogs, and testing checklists.",
+        value: "Save developer time creating release descriptions and grouped file changelogs.",
+        steps: [
+          "Send <code>/describe https://github.com/owner/repo/pull/123</code>.",
+          "Bot parses modified files and generates grouped changelog bullets.",
+          "Creates suggested manual verification checklist."
+        ],
+        commands: [
+          { cmd: "/describe &lt;pr_url&gt;", desc: "Generate PR description & changelog" }
+        ],
+        chat: [
+          { type: 'user', name: 'Dev', text: '/describe https://github.com/org/repo/pull/42' },
+          { type: 'bot', text: '📝 <b>PR Description & Changelog</b>\n\n<b>Changelog:</b>\n- `auth.js`: Added JWT token renewal\n- `server.js`: Mounted OAuth routes' }
+        ]
+      },
+      code_improvements: {
+        title: "Refactoring & Code Suggestions",
+        desc: "Line-by-line 'Before vs After' refactoring and optimization suggestions.",
+        value: "Elevate codebase architecture with automated Senior Architect refactoring tips.",
+        steps: [
+          "Send <code>/improve https://github.com/owner/repo/pull/123</code>.",
+          "Gemini inspects modified lines and detects performance & clarity bottlenecks.",
+          "Outputs side-by-side Before/After code blocks."
+        ],
+        commands: [
+          { cmd: "/improve &lt;pr_url&gt;", desc: "Get code refactoring suggestions" }
+        ],
+        chat: [
+          { type: 'user', name: 'Dev', text: '/improve https://github.com/org/repo/pull/42' },
+          { type: 'bot', text: '💡 <b>Code Suggestions</b>\n\n<b>File:</b> `utils.js:L45`\n- <i>Reasoning:</i> Use async/await over raw Promises for readability.' }
+        ]
+      },
+      security_audit: {
+        title: "Security & Secret Scanner",
+        desc: "Scan diffs for exposed secrets, security risks, and unsafe dependencies.",
+        value: "Prevent credential leaks, SQL injections, and OWASP vulnerabilities before merging.",
+        steps: [
+          "Send <code>/security https://github.com/owner/repo/pull/123</code>.",
+          "Bot audits diffs for API keys, SQLi, XSS, and unsafe dependencies.",
+          "Delivers vulnerability report with concrete remediation steps."
+        ],
+        commands: [
+          { cmd: "/security &lt;pr_url&gt;", desc: "Run security audit & secret scan" }
+        ],
+        chat: [
+          { type: 'user', name: 'Dev', text: '/security https://github.com/org/repo/pull/42' },
+          { type: 'bot', text: '🔒 <b>Security Audit Report</b>\n\n- Risk Rating: <b>LOW</b>\n- Secret Leak Checks: Passed\n- OWASP Audit: Clean' }
         ]
       },
       ai_pdf_chat: {
@@ -992,6 +1257,44 @@
     const connectModalClose = document.getElementById('connect-modal-close');
     const connectModalTitle = document.getElementById('connect-modal-title');
 
+    // Dynamic fields selectors
+    const botTypeSelect = document.getElementById('bot-type-select');
+    const fieldsAnjani = document.getElementById('fields-anjani');
+    const fieldsAiPdfChat = document.getElementById('fields-ai-pdf-chat');
+    const fieldsGithubPr = document.getElementById('fields-github-pr');
+
+    const supabaseUrlInput = document.getElementById('supabase-url');
+    const supabaseKeyInput = document.getElementById('supabase-key');
+    const llmProviderSelect = document.getElementById('llm-provider');
+    const llmApiKeyInput = document.getElementById('llm-api-key');
+    const llmModelInput = document.getElementById('llm-model');
+    const embeddingModelInput = document.getElementById('embedding-model');
+    const chunkSizeInput = document.getElementById('chunk-size');
+    const chunkOverlapInput = document.getElementById('chunk-overlap');
+    const retrieverKInput = document.getElementById('retriever-k');
+
+    const geminiApiKeyInput = document.getElementById('gemini-api-key');
+    const githubTokenInput = document.getElementById('github-token');
+    const maxRepoSizeInput = document.getElementById('max-repo-size');
+    const githubClientIdInput = document.getElementById('github-client-id');
+    const githubClientSecretInput = document.getElementById('github-client-secret');
+    const oauthRedirectUrlInput = document.getElementById('oauth-redirect-url');
+
+    function handleBotTypeChange() {
+      const type = botTypeSelect.value;
+      fieldsAnjani.classList.toggle('hidden', type !== 'anjani');
+      fieldsAiPdfChat.classList.toggle('hidden', type !== 'ai_pdf_chat');
+      fieldsGithubPr.classList.toggle('hidden', type !== 'github_pr_bot');
+
+      // Update required attributes
+      ownerInput.required = (type === 'anjani');
+      supabaseUrlInput.required = false;
+      supabaseKeyInput.required = false;
+      llmApiKeyInput.required = false;
+      geminiApiKeyInput.required = (type === 'github_pr_bot' && !currentEditingHash);
+    }
+    botTypeSelect.addEventListener('change', handleBotTypeChange);
+
     let currentModalFeature = null;
     let currentEditingHash = null; // null if connecting new, hash string if modifying
 
@@ -1006,7 +1309,29 @@
       tokenInput.dataset.username = '';
       tokenInput.dataset.displayName = '';
       document.getElementById('token-validation-status').innerHTML = '';
+      
+      botTypeSelect.disabled = false;
+      botTypeSelect.value = 'anjani';
       ownerInput.value = '';
+      
+      supabaseUrlInput.value = '';
+      supabaseKeyInput.value = '';
+      llmProviderSelect.value = 'openai';
+      llmApiKeyInput.value = '';
+      llmModelInput.value = 'gpt-4o-mini';
+      embeddingModelInput.value = 'models/gemini-embedding-001';
+      chunkSizeInput.value = '1000';
+      chunkOverlapInput.value = '200';
+      retrieverKInput.value = '10';
+
+      geminiApiKeyInput.value = '';
+      githubTokenInput.value = '';
+      maxRepoSizeInput.value = '100';
+      githubClientIdInput.value = '';
+      githubClientSecretInput.value = '';
+      oauthRedirectUrlInput.value = '';
+
+      handleBotTypeChange();
 
       connectBotModal.classList.remove('hidden');
       connectBotModal.classList.add('flex');
@@ -1147,19 +1472,74 @@
       const select = document.getElementById('template-bot-select');
       const selectedHash = select ? select.value : '';
       
+      if (!selectedHash) {
+        alert("Please select a bot first to set up this template.");
+        closeModal();
+        return;
+      }
+      
+      const bot = allBots.find(b => b.hash === selectedHash);
+      if (!bot) return;
+
+      const isGithubPrFeature = GITHUB_PR_PLUGINS.includes(currentModalFeature);
+
+      if (currentModalFeature === 'ai_pdf_chat') {
+        if (selectedFeatures.has('ai_pdf_chat')) {
+          if (confirm("Are you sure you want to deactivate the AI PDF Chatbot template? This will revert the bot to General Group Management (Anjani).")) {
+            selectedFeatures.clear();
+            ['muting', 'filters', 'welcome'].forEach(f => selectedFeatures.add(f));
+            botTemplatesCache[selectedHash] = new Set(selectedFeatures);
+            updateTemplateCardsState();
+            closeModal();
+          }
+        } else {
+          // Activate AI PDF Chatbot
+          selectedFeatures.clear();
+          selectedFeatures.add('ai_pdf_chat');
+          botTemplatesCache[selectedHash] = new Set(selectedFeatures);
+          updateTemplateCardsState();
+          closeModal();
+        }
+        return;
+      }
+
+      if (isGithubPrFeature) {
+        if (selectedFeatures.has('ai_pdf_chat')) {
+          if (confirm("This bot is currently configured as an AI PDF Chatbot. Enabling this template will switch it to GitHub PR Reviewer mode. Do you want to proceed?")) {
+            selectedFeatures.clear();
+            selectedFeatures.add(currentModalFeature);
+          } else {
+            return;
+          }
+        } else {
+          if (selectedFeatures.has(currentModalFeature)) {
+            selectedFeatures.delete(currentModalFeature);
+          } else {
+            selectedFeatures.add(currentModalFeature);
+          }
+        }
+        if (selectedHash) {
+          botTemplatesCache[selectedHash] = new Set(selectedFeatures);
+        }
+        updateTemplateCardsState();
+        closeModal();
+        return;
+      }
+
+      // Normal toggle for Anjani
       if (selectedFeatures.has(currentModalFeature)) {
         selectedFeatures.delete(currentModalFeature);
       } else {
         selectedFeatures.add(currentModalFeature);
       }
       
-      // Save changes back to selection cache for this bot
       if (selectedHash) {
         botTemplatesCache[selectedHash] = new Set(selectedFeatures);
       }
       
       updateTemplateCardsState();
       updateModalToggleButton();
+      closeModal();
     });
 
     // Open Modal on card click
@@ -1283,7 +1663,16 @@
         // Initialize cache for any bot that is not already tracked
         allBots.forEach(bot => {
           if (!botTemplatesCache[bot.hash]) {
-            botTemplatesCache[bot.hash] = new Set(bot.enabledPlugins || []);
+            if (bot.type === 'ai_pdf_chat') {
+              botTemplatesCache[bot.hash] = new Set(['ai_pdf_chat']);
+            } else if (bot.type === 'github_pr_bot') {
+              const prPlugins = (bot.enabledPlugins && bot.enabledPlugins.length > 0)
+                ? bot.enabledPlugins
+                : GITHUB_PR_PLUGINS;
+              botTemplatesCache[bot.hash] = new Set(prPlugins);
+            } else {
+              botTemplatesCache[bot.hash] = new Set(bot.enabledPlugins || []);
+            }
           }
         });
         
@@ -1518,7 +1907,20 @@
         // If not tracked yet, populate cache from database entry
         if (!botTemplatesCache[selectedHash]) {
           const bot = allBots.find(b => b.hash === selectedHash);
-          botTemplatesCache[selectedHash] = new Set(bot ? (bot.enabledPlugins || []) : []);
+          if (bot) {
+            if (bot.type === 'ai_pdf_chat') {
+              botTemplatesCache[selectedHash] = new Set(['ai_pdf_chat']);
+            } else if (bot.type === 'github_pr_bot') {
+              const prPlugins = (bot.enabledPlugins && bot.enabledPlugins.length > 0)
+                ? bot.enabledPlugins
+                : GITHUB_PR_PLUGINS;
+              botTemplatesCache[selectedHash] = new Set(prPlugins);
+            } else {
+              botTemplatesCache[selectedHash] = new Set(bot.enabledPlugins || []);
+            }
+          } else {
+            botTemplatesCache[selectedHash] = new Set();
+          }
         }
         
         // Load set values from cache
@@ -1610,13 +2012,25 @@
       lucide.createIcons();
       
       try {
+        let targetType = bot.type || 'anjani';
+        let pluginsList = Array.from(selectedFeatures);
+        const isGithubPr = GITHUB_PR_PLUGINS.some(p => selectedFeatures.has(p)) || bot.type === 'github_pr_bot';
+
+        if (selectedFeatures.has('ai_pdf_chat')) {
+          targetType = 'ai_pdf_chat';
+          pluginsList = [];
+        } else if (isGithubPr) {
+          targetType = 'github_pr_bot';
+          pluginsList = Array.from(selectedFeatures).filter(p => GITHUB_PR_PLUGINS.includes(p));
+        }
+
         const res = await fetch('/api/bot/launch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             hash: selectedHash,
-            type: bot.type || 'anjani',
-            enabledPlugins: Array.from(selectedFeatures)
+            type: targetType,
+            enabledPlugins: pluginsList
           })
         });
         const data = await res.json();
@@ -1637,24 +2051,56 @@
     };
 
     // Connect/Edit Modal Prefills
-    window.editBot = function(bot) {
+    window.editBot = function(bot, overrideType) {
       currentEditingHash = bot.hash;
       connectModalTitle.textContent = "Modify Bot Configuration";
       submitBtnText.textContent = "Save & Re-deploy";
 
       // Prefill fields
-      ownerInput.value = bot.ownerId || '';
+      const type = overrideType || bot.type || 'anjani';
+      botTypeSelect.value = type;
+      botTypeSelect.disabled = true;
+
+      if (type === 'anjani') {
+        ownerInput.value = bot.ownerId || '';
+      } else if (type === 'ai_pdf_chat') {
+        supabaseUrlInput.value = bot.supabaseUrl || '';
+        supabaseKeyInput.value = bot.supabaseKey || '';
+        llmProviderSelect.value = bot.llmProvider || 'openai';
+        llmApiKeyInput.value = bot.llmApiKey || '';
+        llmModelInput.value = bot.llmModel || 'gpt-4o-mini';
+        embeddingModelInput.value = bot.embeddingModel || 'models/gemini-embedding-001';
+        chunkSizeInput.value = bot.chunkSize || 1000;
+        chunkOverlapInput.value = bot.chunkOverlap || 200;
+        retrieverKInput.value = bot.retrieverK || 10;
+      } else if (type === 'github_pr_bot') {
+        geminiApiKeyInput.value = bot.geminiApiKey || '';
+        githubTokenInput.value = bot.githubToken || '';
+        maxRepoSizeInput.value = bot.maxRepoSize || 100;
+        githubClientIdInput.value = bot.githubClientId || '';
+        githubClientSecretInput.value = bot.githubClientSecret || '';
+        oauthRedirectUrlInput.value = bot.oauthRedirectUrl || '';
+      }
+
+      handleBotTypeChange();
       
       // Auto-toggle plugin selections in templates tab if saved
-      if (bot.enabledPlugins) {
+      if (type === 'ai_pdf_chat') {
+        botTemplatesCache[bot.hash] = new Set(['ai_pdf_chat']);
+      } else if (type === 'github_pr_bot') {
+        botTemplatesCache[bot.hash] = new Set(['github_pr_bot']);
+      } else if (bot.enabledPlugins) {
         botTemplatesCache[bot.hash] = new Set(bot.enabledPlugins);
-        selectedFeatures = botTemplatesCache[bot.hash];
-        const select = document.getElementById('template-bot-select');
-        if (select) {
-          select.value = bot.hash;
-        }
-        updateTemplateCardsState();
+      } else {
+        botTemplatesCache[bot.hash] = new Set();
       }
+      
+      selectedFeatures = botTemplatesCache[bot.hash];
+      const select = document.getElementById('template-bot-select');
+      if (select) {
+        select.value = bot.hash;
+      }
+      updateTemplateCardsState();
 
       // Open Modal
       connectBotModal.classList.remove('hidden');
@@ -1723,11 +2169,7 @@
         return;
       }
 
-      const ownerId = ownerInput.value.trim();
-      if (!ownerId) {
-        showAlert('error', 'Owner User ID is required.');
-        return;
-      }
+      const botType = botTypeSelect.value;
 
       // Check if username/displayName was fetched client-side. Defaults otherwise.
       const botUsername = tokenInput.dataset.username || 'Telegram Bot';
@@ -1735,12 +2177,50 @@
 
       let payload = {
         token: token,
-        type: 'anjani',
+        type: botType,
         username: botUsername,
-        displayName: botDisplayName,
-        ownerId: ownerId,
-        enabledPlugins: Array.from(selectedFeatures)
+        displayName: botDisplayName
       };
+
+      if (botType === 'anjani') {
+        const ownerId = ownerInput.value.trim();
+        if (!ownerId) {
+          showAlert('error', 'Owner User ID is required.');
+          return;
+        }
+        payload.ownerId = ownerId;
+        payload.enabledPlugins = Array.from(selectedFeatures);
+      } else if (botType === 'ai_pdf_chat') {
+        const supabaseUrl = supabaseUrlInput.value.trim();
+        const supabaseKey = supabaseKeyInput.value.trim();
+        const llmProvider = llmProviderSelect.value;
+        const llmApiKey = llmApiKeyInput.value.trim();
+        
+
+        payload.supabaseUrl = supabaseUrl;
+        payload.supabaseKey = supabaseKey;
+        payload.llmProvider = llmProvider;
+        payload.llmApiKey = llmApiKey;
+        payload.llmModel = llmModelInput.value.trim();
+        payload.embeddingModel = embeddingModelInput.value.trim();
+        payload.chunkSize = parseInt(chunkSizeInput.value) || 1000;
+        payload.chunkOverlap = parseInt(chunkOverlapInput.value) || 200;
+        payload.retrieverK = parseInt(retrieverKInput.value) || 10;
+      } else if (botType === 'github_pr_bot') {
+        const geminiApiKey = geminiApiKeyInput.value.trim();
+        payload.geminiApiKey = geminiApiKey;
+        payload.githubToken = githubTokenInput.value.trim();
+        payload.maxRepoSize = parseInt(maxRepoSizeInput.value) || 100;
+        payload.githubClientId = githubClientIdInput.value.trim();
+        payload.githubClientSecret = githubClientSecretInput.value.trim();
+        payload.oauthRedirectUrl = oauthRedirectUrlInput.value.trim();
+      }
+
+      if (currentEditingHash && botTemplatesCache[currentEditingHash]) {
+        payload.enabledPlugins = Array.from(botTemplatesCache[currentEditingHash]);
+      } else {
+        payload.enabledPlugins = Array.from(selectedFeatures);
+      }
 
       // If modifying, pass currentEditingHash
       if (currentEditingHash) {
