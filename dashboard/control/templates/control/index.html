@@ -379,14 +379,50 @@
           <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
         </div>
 
-        <!-- GitHub PR Reviewer Card -->
-        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="github_pr_bot">
+        <!-- Automated PR Review Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="pr_review">
           <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
             <i data-lucide="git-pull-request" class="w-6 h-6"></i>
           </div>
           <div class="space-y-1">
-            <h3 class="font-bold text-base text-neumorphic-muted">GitHub PR Reviewer</h3>
-            <p class="text-neumorphic-muted text-xs leading-relaxed">Automated syntax checks, security warnings, and reviews on PR threads.</p>
+            <h3 class="font-bold text-base text-neumorphic-muted">Automated PR Review</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Automated AI checks on PR diffs for bugs, syntax, and style (slash command: /review).</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- PR Description & Changelog Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="pr_description">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="file-text" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">PR Description & Changelog</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Auto-generate structured PR overviews, file changelogs, and checklists (slash command: /describe).</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- Refactoring & Code Suggestions Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="code_improvements">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="code" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">Refactoring & Suggestions</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Line-by-line "Before vs After" refactoring & optimization suggestions (slash command: /improve).</p>
+          </div>
+          <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
+        </div>
+
+        <!-- Security & Secret Scanner Card -->
+        <div class="feature-card rounded-[32px] p-6 cursor-pointer flex gap-4 text-left select-none relative overflow-hidden" data-feature="security_audit">
+          <div class="feature-icon-box p-3.5 rounded-2xl self-start bg-[#E0E5EC] neo-inset-deep text-neumorphic-muted">
+            <i data-lucide="shield-alert" class="w-6 h-6"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-bold text-base text-neumorphic-muted">Security & Secret Scanner</h3>
+            <p class="text-neumorphic-muted text-xs leading-relaxed">Scan diffs for exposed secrets, security risks, and unsafe dependencies (slash command: /security).</p>
           </div>
           <div class="dot-indicator hidden absolute top-3 right-3 w-2 h-2 rounded-full bg-neumorphic-accent shadow-sm"></div>
         </div>
@@ -846,6 +882,7 @@
     let allBots = []; // Cached array of connected bots
     let selectedFeatures = new Set(['muting', 'filters', 'welcome']);
     let botTemplatesCache = {}; // Cache of local selections per bot hash
+    const GITHUB_PR_PLUGINS = ['pr_review', 'pr_description', 'code_improvements', 'security_audit'];
 
     // Setting Switch Toggle Action
     window.toggleSetting = function(btn) {
@@ -1094,22 +1131,72 @@
           { type: 'bot', text: 'Official site: http://website.com', reply: true }
         ]
       },
-      github_pr_bot: {
-        title: "GitHub PR Reviewer",
-        desc: "Automated syntax checks, performance warnings, and design reviews on PR threads using Google Gemini API.",
-        value: "Accelerate code reviews and keep security/performance regressions out of your repositories automatically.",
+      pr_review: {
+        title: "Automated PR Review",
+        desc: "Automated AI checks on PR diffs for bugs, syntax, and style.",
+        value: "Automate code quality reviews and surface logic bugs on every pull request.",
         steps: [
-          "Add the webhook to your GitHub repository.",
-          "Developer opens a pull request.",
-          "PR Bot automatically reviews the code diffs and leaves detailed review remarks."
+          "Send <code>/review https://github.com/owner/repo/pull/123</code> to bot.",
+          "Gemini AI analyzes changed diffs for bugs, naming conventions, and syntax errors.",
+          "Delivers markdown review report directly to Telegram chat."
         ],
         commands: [
-          { cmd: "/review [pr_number]", desc: "Trigger manual code review check" },
-          { cmd: "/status", desc: "View repo queue and token limit status" }
+          { cmd: "/review &lt;pr_url&gt;", desc: "Run automated AI code review" }
         ],
         chat: [
-          { type: 'system', text: 'Pull Request #42 opened: Add parse_log helper' },
-          { type: 'bot', text: '🤖 <b>PR Review Bot</b>\n\n⚠️ Security warning: Replacing `eval` with `json.loads` in <code>utils.py:L12</code> prevents remote code execution vulnerability.\n\nGood change.' }
+          { type: 'user', name: 'Dev', text: '/review https://github.com/org/repo/pull/42' },
+          { type: 'bot', text: '🔍 <b>Automated PR Review</b>\n\n- Overview: Refactored database connection pooling.\n- Bugs: None detected.\n- Verdict: Approved.' }
+        ]
+      },
+      pr_description: {
+        title: "PR Description & Changelog",
+        desc: "Auto-generate structured PR overviews, file changelogs, and testing checklists.",
+        value: "Save developer time creating release descriptions and grouped file changelogs.",
+        steps: [
+          "Send <code>/describe https://github.com/owner/repo/pull/123</code>.",
+          "Bot parses modified files and generates grouped changelog bullets.",
+          "Creates suggested manual verification checklist."
+        ],
+        commands: [
+          { cmd: "/describe &lt;pr_url&gt;", desc: "Generate PR description & changelog" }
+        ],
+        chat: [
+          { type: 'user', name: 'Dev', text: '/describe https://github.com/org/repo/pull/42' },
+          { type: 'bot', text: '📝 <b>PR Description & Changelog</b>\n\n<b>Changelog:</b>\n- `auth.js`: Added JWT token renewal\n- `server.js`: Mounted OAuth routes' }
+        ]
+      },
+      code_improvements: {
+        title: "Refactoring & Code Suggestions",
+        desc: "Line-by-line 'Before vs After' refactoring and optimization suggestions.",
+        value: "Elevate codebase architecture with automated Senior Architect refactoring tips.",
+        steps: [
+          "Send <code>/improve https://github.com/owner/repo/pull/123</code>.",
+          "Gemini inspects modified lines and detects performance & clarity bottlenecks.",
+          "Outputs side-by-side Before/After code blocks."
+        ],
+        commands: [
+          { cmd: "/improve &lt;pr_url&gt;", desc: "Get code refactoring suggestions" }
+        ],
+        chat: [
+          { type: 'user', name: 'Dev', text: '/improve https://github.com/org/repo/pull/42' },
+          { type: 'bot', text: '💡 <b>Code Suggestions</b>\n\n<b>File:</b> `utils.js:L45`\n- <i>Reasoning:</i> Use async/await over raw Promises for readability.' }
+        ]
+      },
+      security_audit: {
+        title: "Security & Secret Scanner",
+        desc: "Scan diffs for exposed secrets, security risks, and unsafe dependencies.",
+        value: "Prevent credential leaks, SQL injections, and OWASP vulnerabilities before merging.",
+        steps: [
+          "Send <code>/security https://github.com/owner/repo/pull/123</code>.",
+          "Bot audits diffs for API keys, SQLi, XSS, and unsafe dependencies.",
+          "Delivers vulnerability report with concrete remediation steps."
+        ],
+        commands: [
+          { cmd: "/security &lt;pr_url&gt;", desc: "Run security audit & secret scan" }
+        ],
+        chat: [
+          { type: 'user', name: 'Dev', text: '/security https://github.com/org/repo/pull/42' },
+          { type: 'bot', text: '🔒 <b>Security Audit Report</b>\n\n- Risk Rating: <b>LOW</b>\n- Secret Leak Checks: Passed\n- OWASP Audit: Clean' }
         ]
       },
       ai_pdf_chat: {
@@ -1394,7 +1481,7 @@
       const bot = allBots.find(b => b.hash === selectedHash);
       if (!bot) return;
 
-      const isSpecial = selectedFeatures.has('ai_pdf_chat') || selectedFeatures.has('github_pr_bot');
+      const isGithubPrFeature = GITHUB_PR_PLUGINS.includes(currentModalFeature);
 
       if (currentModalFeature === 'ai_pdf_chat') {
         if (selectedFeatures.has('ai_pdf_chat')) {
@@ -1406,7 +1493,7 @@
             closeModal();
           }
         } else {
-          // Activate
+          // Activate AI PDF Chatbot
           selectedFeatures.clear();
           selectedFeatures.add('ai_pdf_chat');
           botTemplatesCache[selectedHash] = new Set(selectedFeatures);
@@ -1416,33 +1503,26 @@
         return;
       }
 
-      if (currentModalFeature === 'github_pr_bot') {
-        if (selectedFeatures.has('github_pr_bot')) {
-          if (confirm("Are you sure you want to deactivate the GitHub PR Reviewer template? This will revert the bot to General Group Management (Anjani).")) {
+      if (isGithubPrFeature) {
+        if (selectedFeatures.has('ai_pdf_chat')) {
+          if (confirm("This bot is currently configured as an AI PDF Chatbot. Enabling this template will switch it to GitHub PR Reviewer mode. Do you want to proceed?")) {
             selectedFeatures.clear();
-            ['muting', 'filters', 'welcome'].forEach(f => selectedFeatures.add(f));
-            botTemplatesCache[selectedHash] = new Set(selectedFeatures);
-            updateTemplateCardsState();
-            closeModal();
+            selectedFeatures.add(currentModalFeature);
+          } else {
+            return;
           }
         } else {
-          // Activate (GitHub PR requires API keys, so open config modal)
-          closeModal();
-          editBot(bot, 'github_pr_bot');
+          if (selectedFeatures.has(currentModalFeature)) {
+            selectedFeatures.delete(currentModalFeature);
+          } else {
+            selectedFeatures.add(currentModalFeature);
+          }
         }
-        return;
-      }
-
-      // Standard feature
-      if (isSpecial) {
-        const specialName = selectedFeatures.has('ai_pdf_chat') ? 'AI PDF Chatbot' : 'GitHub PR Reviewer';
-        if (confirm(`This bot is currently configured as a ${specialName}. Enabling this feature will revert it to General Group Management (Anjani). Do you want to proceed?`)) {
-          selectedFeatures.clear();
-          selectedFeatures.add(currentModalFeature);
+        if (selectedHash) {
           botTemplatesCache[selectedHash] = new Set(selectedFeatures);
-          updateTemplateCardsState();
-          closeModal();
         }
+        updateTemplateCardsState();
+        closeModal();
         return;
       }
 
@@ -1586,7 +1666,10 @@
             if (bot.type === 'ai_pdf_chat') {
               botTemplatesCache[bot.hash] = new Set(['ai_pdf_chat']);
             } else if (bot.type === 'github_pr_bot') {
-              botTemplatesCache[bot.hash] = new Set(['github_pr_bot']);
+              const prPlugins = (bot.enabledPlugins && bot.enabledPlugins.length > 0)
+                ? bot.enabledPlugins
+                : GITHUB_PR_PLUGINS;
+              botTemplatesCache[bot.hash] = new Set(prPlugins);
             } else {
               botTemplatesCache[bot.hash] = new Set(bot.enabledPlugins || []);
             }
@@ -1828,7 +1911,10 @@
             if (bot.type === 'ai_pdf_chat') {
               botTemplatesCache[selectedHash] = new Set(['ai_pdf_chat']);
             } else if (bot.type === 'github_pr_bot') {
-              botTemplatesCache[selectedHash] = new Set(['github_pr_bot']);
+              const prPlugins = (bot.enabledPlugins && bot.enabledPlugins.length > 0)
+                ? bot.enabledPlugins
+                : GITHUB_PR_PLUGINS;
+              botTemplatesCache[selectedHash] = new Set(prPlugins);
             } else {
               botTemplatesCache[selectedHash] = new Set(bot.enabledPlugins || []);
             }
@@ -1926,14 +2012,16 @@
       lucide.createIcons();
       
       try {
-        let targetType = 'anjani';
+        let targetType = bot.type || 'anjani';
         let pluginsList = Array.from(selectedFeatures);
+        const isGithubPr = GITHUB_PR_PLUGINS.some(p => selectedFeatures.has(p)) || bot.type === 'github_pr_bot';
+
         if (selectedFeatures.has('ai_pdf_chat')) {
           targetType = 'ai_pdf_chat';
           pluginsList = [];
-        } else if (selectedFeatures.has('github_pr_bot')) {
+        } else if (isGithubPr) {
           targetType = 'github_pr_bot';
-          pluginsList = [];
+          pluginsList = Array.from(selectedFeatures).filter(p => GITHUB_PR_PLUGINS.includes(p));
         }
 
         const res = await fetch('/api/bot/launch', {

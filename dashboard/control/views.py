@@ -177,6 +177,12 @@ def launch_bot_api(request):
                 github_client_secret = decrypt(bot_data['encryptedGithubClientSecret'])
                 
             oauth_redirect_url = data.get('oauthRedirectUrl', '').strip() or bot_data.get('oauthRedirectUrl', '').strip()
+            
+            enabled_plugins = data.get('enabledPlugins', [])
+            if not enabled_plugins and 'enabledPlugins' in bot_data:
+                enabled_plugins = bot_data.get('enabledPlugins', [])
+            if not enabled_plugins:
+                enabled_plugins = ['pr_review', 'pr_description', 'code_improvements', 'security_audit']
 
             config = {
                 'geminiApiKey': gemini_api_key,
@@ -184,7 +190,8 @@ def launch_bot_api(request):
                 'maxRepoSize': max_repo_size,
                 'githubClientId': github_client_id,
                 'githubClientSecret': github_client_secret,
-                'oauthRedirectUrl': oauth_redirect_url
+                'oauthRedirectUrl': oauth_redirect_url,
+                'enabledPlugins': enabled_plugins
             }
 
             # 2. Launch Docker Container
@@ -205,7 +212,7 @@ def launch_bot_api(request):
                         'githubClientId': github_client_id,
                         'encryptedGithubClientSecret': encrypt(github_client_secret),
                         'oauthRedirectUrl': oauth_redirect_url,
-                        'enabledPlugins': [],
+                        'enabledPlugins': enabled_plugins,
                         'status': 'running',
                         'updatedAt': datetime.utcnow()
                     }

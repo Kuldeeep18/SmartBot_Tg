@@ -30,33 +30,55 @@ class RobustGoogleEmbeddings(Embeddings):
         )
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        last_error = None
-        for attempt in range(len(self.api_keys)):
-            idx = (self.current_key_idx + attempt) % len(self.api_keys)
-            key = self.api_keys[idx]
+        # Batch size to prevent exceeding 100 requests per minute or API payload limits
+        batch_size = 16
+        results = []
+        
+        # Split texts into batches of batch_size
+        batches = [texts[i:i + batch_size] for i in range(0, len(texts), batch_size)]
+        logger.info(f"Splitting {len(texts)} chunks into {len(batches)} batches for embedding...")
+        
+        for batch_idx, batch in enumerate(batches):
+            batch_success = False
+            last_error = None
             
-            try:
-                # Mask key for secure logging
-                masked_key = key[:6] + "..." + key[-4:] if key else "None"
-                logger.info(f"Attempting document embedding with key index {idx} ({masked_key})")
+            # Try to embed this batch with key rotation
+            for attempt in range(len(self.api_keys)):
+                idx = (self.current_key_idx + attempt) % len(self.api_keys)
+                key = self.api_keys[idx]
                 
-                embeddings_model = self._get_embeddings_instance(key)
-                result = embeddings_model.embed_documents(texts)
+                try:
+                    masked_key = key[:6] + "..." + key[-4:] if key else "None"
+                    logger.info(f"Attempting batch {batch_idx + 1}/{len(batches)} with key index {idx} ({masked_key})")
+                    
+                    embeddings_model = self._get_embeddings_instance(key)
+                    batch_result = embeddings_model.embed_documents(batch)
+                    
+                    results.extend(batch_result)
+                    self.current_key_idx = idx
+                    batch_success = True
+                    break
+                except Exception as e:
+                    masked_key = key[:6] + "..." + key[-4:] if key else "None"
+                    logger.warning(
+                        f"Batch {batch_idx + 1} embedding failed with key index {idx} ({masked_key}). "
+                        f"Attempt {attempt + 1}/{len(self.api_keys)}. Error: {e}"
+                    )
+                    last_error = e
+                    # If it's a rate limit (429), sleep a bit longer before trying the next key
+                    if "429" in str(e) or "quota" in str(e).lower():
+                        time.sleep(2.0)
+                    else:
+                        time.sleep(0.5)
+            
+            if not batch_success:
+                logger.error(f"All Google API keys failed for batch {batch_idx + 1}.")
+                raise last_error or RuntimeError("Embedding failed with all API keys.")
                 
-                # Success! Save this key index as the starting point for future requests
-                self.current_key_idx = idx
-                return result
-            except Exception as e:
-                masked_key = key[:6] + "..." + key[-4:] if key else "None"
-                logger.warning(
-                    f"Embedding attempt failed with key index {idx} ({masked_key}). "
-                    f"Attempt {attempt + 1}/{len(self.api_keys)}. Error: {e}"
-                )
-                last_error = e
-                time.sleep(0.5)
-                
-        logger.error("All Google API keys failed for document embedding.")
-        raise last_error or RuntimeError("Embedding failed with all API keys.")
+            # Sleep slightly between successful batches to avoid spamming the API
+            time.sleep(0.5)
+            
+        return results
 
     def embed_query(self, text: str) -> List[float]:
         last_error = None

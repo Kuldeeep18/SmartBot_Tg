@@ -145,8 +145,14 @@ def launch_bot_container(token: str, bot_type: str, config: dict) -> dict:
             environment["GITHUB_CLIENT_SECRET"] = config['githubClientSecret']
         if config.get('oauthRedirectUrl'):
             environment["OAUTH_REDIRECT_URL"] = config['oauthRedirectUrl']
+        if config.get('enabledPlugins'):
+            environment["ENABLED_PLUGINS"] = ",".join(config['enabledPlugins'])
 
-        env_file = Path(__file__).resolve().parent.parent.parent.parent / "bots" / "github_pr_bot" / ".env"
+        base_dir = Path(__file__).resolve().parent.parent.parent.parent
+        env_file = base_dir / "bots" / "github_pr_bot" / ".env"
+        if not env_file.exists():
+            env_file = base_dir / "bots" / "github_pr" / ".env"
+
         if env_file.exists():
             volumes = {str(env_file): {"bind": "/app/.env", "mode": "ro"}}
 

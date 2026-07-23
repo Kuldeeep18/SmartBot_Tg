@@ -10,8 +10,12 @@ dotenv.config();
  * @returns {Promise<string>} - Markdown report
  */
 export async function analyzeRepository(filePath, repoName) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  const apiKeysRaw = process.env.GEMINI_API_KEY;
+  if (!apiKeysRaw) {
+    throw new Error('Gemini API Key is not configured. Please set GEMINI_API_KEY in the .env file.');
+  }
+  const apiKeys = apiKeysRaw.split(',').map(k => k.trim()).filter(Boolean);
+  if (apiKeys.length === 0) {
     throw new Error('Gemini API Key is not configured. Please set GEMINI_API_KEY in the .env file.');
   }
 
@@ -74,43 +78,60 @@ ${fileContent}
 
   // Call Gemini API using standard fetch
   const model = 'gemini-2.5-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  let lastError = null;
+  let response = null;
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            {
-              text: prompt
-            }
-          ]
-        }
-      ],
-      generationConfig: {
-        temperature: 0.2,
-        topP: 0.95,
-        topK: 40,
-        maxOutputTokens: 8192,
-        responseMimeType: 'text/plain'
-      }
-    })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    let parsedError;
+  for (const key of apiKeys) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    console.log(`Attempting Gemini API request with key starting with: ${key.slice(0, 8)}...`);
     try {
-      parsedError = JSON.parse(errorText);
-    } catch {
-      parsedError = errorText;
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 8192,
+            responseMimeType: 'text/plain'
+          }
+        })
+      });
+
+      if (response.ok) {
+        break;
+      } else {
+        const errorText = await response.text();
+        let parsedError;
+        try {
+          parsedError = JSON.parse(errorText);
+        } catch {
+          parsedError = errorText;
+        }
+        const errMsg = parsedError?.error?.message || errorText;
+        console.warn(`Gemini API key starting with ${key.slice(0, 8)} failed: status ${response.status} - ${errMsg}`);
+        lastError = new Error(`Gemini API request failed with status ${response.status}: ${errMsg}`);
+      }
+    } catch (err) {
+      console.warn(`Network error with Gemini API key starting with ${key.slice(0, 8)}: ${err.message}`);
+      lastError = err;
     }
-    console.error('Gemini API Error Response:', parsedError);
-    throw new Error(`Gemini API request failed with status ${response.status}: ${parsedError?.error?.message || errorText}`);
+  }
+
+  if (!response || !response.ok) {
+    throw lastError || new Error('All configured Gemini API keys failed.');
   }
 
   const result = await response.json();

@@ -28,19 +28,93 @@ export function startBot(token) {
 
   const bot = new Telegraf(token);
 
+  const ALL_PR_PLUGINS = ['pr_review', 'pr_description', 'code_improvements', 'security_audit'];
+
+  const getEnabledPlugins = () => {
+    const envVar = process.env.ENABLED_PLUGINS;
+    if (!envVar || !envVar.trim()) {
+      return new Set(ALL_PR_PLUGINS);
+    }
+    return new Set(envVar.split(',').map(p => p.trim()).filter(Boolean));
+  };
+
+  const isPluginEnabled = (pluginKey) => {
+    return getEnabledPlugins().has(pluginKey);
+  };
+
+  // Helper to handle PR slash commands
+  const handlePRSlashCommand = async (ctx, pluginKey, mode, commandName, friendlyName) => {
+    if (!isPluginEnabled(pluginKey)) {
+      return ctx.replyWithHTML(`⚠️ The <code>/${commandName}</code> template feature (<b>${friendlyName}</b>) is not enabled for this bot container.`);
+    }
+
+    const text = ctx.message.text.trim();
+    const parts = text.split(/\s+/);
+    const prUrlArg = parts.find(p => p.toLowerCase().includes('github.com') && p.toLowerCase().includes('/pull/'));
+
+    if (prUrlArg) {
+      try {
+        const { owner, repo, pullNumber } = parsePullRequestUrl(prUrlArg);
+        const state = {
+          type: 'pr',
+          url: prUrlArg,
+          owner,
+          repo,
+          pullNumber,
+          mode
+        };
+        userSessions.set(ctx.chat.id, state);
+        await ctx.replyWithHTML(getStatusText(state), getMenuMarkup(state));
+        return;
+      } catch (err) {
+        return ctx.reply(`❌ Invalid PR URL provided: ${err.message}`);
+      }
+    }
+
+    ctx.replyWithHTML(
+      `🔍 <b>${friendlyName} Command</b> (<code>/${commandName}</code>)\n\n` +
+      `Please provide a GitHub PR URL to run this analysis.\n\n` +
+      `<b>Usage:</b>\n` +
+      `<code>/${commandName} https://github.com/owner/repository/pull/123</code>`
+    );
+  };
+
+  // Slash Command: /review -> Automated PR Review
+  bot.command('review', (ctx) => {
+    handlePRSlashCommand(ctx, 'pr_review', 'review', 'review', 'Automated PR Review');
+  });
+
+  // Slash Command: /describe -> PR Description & Changelog
+  bot.command('describe', (ctx) => {
+    handlePRSlashCommand(ctx, 'pr_description', 'describe', 'describe', 'PR Description & Changelog');
+  });
+
+  // Slash Command: /improve -> Refactoring & Code Suggestions
+  bot.command('improve', (ctx) => {
+    handlePRSlashCommand(ctx, 'code_improvements', 'improve', 'improve', 'Refactoring & Code Suggestions');
+  });
+
+  // Slash Command: /security or /audit -> Security & Secret Scanner
+  bot.command('security', (ctx) => {
+    handlePRSlashCommand(ctx, 'security_audit', 'security_audit', 'security', 'Security & Secret Scanner');
+  });
+  bot.command('audit', (ctx) => {
+    handlePRSlashCommand(ctx, 'security_audit', 'security_audit', 'security', 'Security & Secret Scanner');
+  });
+
   // Command: /start
   bot.start((ctx) => {
     const username = ctx.from.first_name || 'Developer';
     ctx.replyWithHTML(
       `🤖 <b>Welcome to the Repomix Repo & PR Review Bot, ${username}!</b>\n\n` +
-      `I can help you package codebases and manage/review PR changes:\n\n` +
-      `📦 <b>Repo Analyzer:</b>\n` +
-      `Send any Git repository URL to pack it and run a structural/security audit.\n\n` +
-      `🔍 <b>PR Review Agent:</b>\n` +
-      `Send any GitHub PR URL to review changes, generate changelogs, or get code improvements.\n\n` +
-      `🔐 <b>GitHub Account Connection:</b>\n` +
-      `Use /login to link your GitHub account so you can merge or close PRs directly from Telegram!\n` +
-      `Use /logout to disconnect your GitHub account.`
+      `I can help you package codebases and manage/review PR changes.\n\n` +
+      `📦 <b>Repo Analyzer:</b> Send any Git repository URL to pack & analyze.\n\n` +
+      `🔍 <b>Active Template Commands:</b>\n` +
+      `/review [pr_url] - Automated PR Review\n` +
+      `/describe [pr_url] - PR Description & Changelog\n` +
+      `/improve [pr_url] - Code Refactoring & Suggestions\n` +
+      `/security [pr_url] - Security & Secret Audit\n\n` +
+      `🔐 <b>GitHub Account:</b> Use /login and /logout to link your GitHub account.`
     );
   });
 
@@ -77,25 +151,51 @@ export function startBot(token) {
 
   // Help description
   bot.help((ctx) => {
-    ctx.reply(
-      'Commands:\n' +
-      '/start - Welcome and guide\n' +
-      '/help - View available commands\n' +
+    const enabled = getEnabledPlugins();
+    let helpText = '🤖 <b>GitHub PR Reviewer Commands:</b>\n\n';
+
+    if (enabled.has('pr_review')) {
+      helpText += '🔍 <b>/review [pr_url]</b> - Automated AI review for bugs, syntax & style\n';
+    }
+    if (enabled.has('pr_description')) {
+      helpText += '📝 <b>/describe [pr_url]</b> - Auto-generate PR overview, changelog & checklist\n';
+    }
+    if (enabled.has('code_improvements')) {
+      helpText += '💡 <b>/improve [pr_url]</b> - Line-by-line code refactoring & suggestions\n';
+    }
+    if (enabled.has('security_audit')) {
+      helpText += '🔒 <b>/security [pr_url]</b> - Security audit for vulnerabilities & secret leaks\n';
+    }
+
+    helpText += '\n🔐 <b>GitHub Account:</b>\n' +
       '/login - Connect your GitHub account\n' +
       '/logout - Disconnect your GitHub account\n\n' +
-      'Send a repo URL to bundle it, or send a GitHub PR URL to review/merge/close!'
-    );
+      '💡 You can also send a raw GitHub PR URL or Repository URL in chat!';
+
+    ctx.replyWithHTML(helpText);
   });
+
+  const getAvailableModes = () => {
+    const enabled = getEnabledPlugins();
+    const modes = [];
+    if (enabled.has('pr_review')) modes.push('review');
+    if (enabled.has('pr_description')) modes.push('describe');
+    if (enabled.has('code_improvements')) modes.push('improve');
+    if (enabled.has('security_audit')) modes.push('security_audit');
+    if (modes.length === 0) modes.push('review');
+    return modes;
+  };
 
   // Action: Configuration Menu builder
   const getMenuMarkup = (state) => {
     if (state.type === 'pr') {
       const modeLabel = {
-        all: 'All-in-one Review 🏆',
         review: 'Code Review 🔍',
         describe: 'Changelog & Description 📖',
-        improve: 'Improvements & Refactoring 💡'
-      }[state.mode];
+        improve: 'Improvements & Refactoring 💡',
+        security_audit: 'Security Audit 🔒',
+        all: 'All-in-one Review 🏆'
+      }[state.mode] || 'Code Review 🔍';
 
       return Markup.inlineKeyboard([
         [Markup.button.callback(`Review Mode: ${modeLabel}`, 'toggle_pr_mode')],
@@ -160,6 +260,10 @@ export function startBot(token) {
   bot.on('text', async (ctx) => {
     const chatId = ctx.chat.id;
     const text = ctx.message.text.trim();
+    
+    // Ignore slash commands so bot.command handlers process them exclusively
+    if (text.startsWith('/')) return;
+
     const state = userSessions.get(chatId);
 
     // Case 1: Conversational branch input (Repo Analyzer mode only)
@@ -227,19 +331,17 @@ export function startBot(token) {
     }
   });
 
-  // Action Handler: Cycle PR Review Mode
+  // Action Handler: Cycle PR Review Mode among enabled templates
   bot.action('toggle_pr_mode', async (ctx) => {
     const chatId = ctx.chat?.id;
     const state = userSessions.get(chatId);
     if (!state || state.type !== 'pr') return ctx.answerCbQuery('Session expired.');
 
-    const nextMode = {
-      all: 'review',
-      review: 'describe',
-      describe: 'improve',
-      improve: 'all'
-    }[state.mode];
+    const availableModes = getAvailableModes();
+    let currIdx = availableModes.indexOf(state.mode);
+    if (currIdx === -1) currIdx = 0;
 
+    const nextMode = availableModes[(currIdx + 1) % availableModes.length];
     state.mode = nextMode;
     userSessions.set(chatId, state);
 
@@ -531,11 +633,12 @@ export function startBot(token) {
       );
 
       const modeTitle = {
-        all: 'All-in-one Audit',
         review: 'Code Quality Review',
-        describe: 'PR Description/Changelog',
-        improve: 'Refactor Recommendations'
-      }[state.mode];
+        describe: 'PR Description & Changelog',
+        improve: 'Refactor Recommendations',
+        security_audit: 'Security Audit & Secret Scan',
+        all: 'All-in-one Audit'
+      }[state.mode] || 'PR Audit';
 
       await ctx.replyWithDocument(
         { source: reportFilePath },
