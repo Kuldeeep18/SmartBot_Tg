@@ -1,6 +1,11 @@
 import json
+import hashlib
+import os
+import secrets
+import urllib.parse
+import urllib.request
 from datetime import datetime
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .utils.db import get_db
@@ -421,3 +426,307 @@ def log_error(request):
         except Exception as e:
             print("Error logging failed:", e)
     return JsonResponse({'status': 'ok'})
+
+
+def hash_password(password, salt=None):
+    if not salt:
+        salt = secrets.token_hex(16)
+    hashed = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000).hex()
+    return f"{salt}${hashed}"
+
+def verify_password(stored_password, provided_password):
+    if not stored_password or '$' not in stored_password:
+        return False
+    salt, hashed = stored_password.split('$', 1)
+    recalculated = hashlib.pbkdf2_hmac('sha256', provided_password.encode('utf-8'), salt.encode('utf-8'), 100000).hex()
+    return secrets.compare_digest(hashed, recalculated)
+
+@csrf_exempt
+def auth_signup_api(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    try:
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '').strip()
+        
+        if not email or not password or not name:
+            return JsonResponse({'error': 'Please fill in all required fields (Name, Email, Password)'}, status=400)
+            
+        db = get_db()
+        existing = db.users.find_one({'email': email})
+        if existing:
+            return JsonResponse({'error': 'An account with this email address already exists. Please sign in instead.'}, status=400)
+            
+        password_hashed = hash_password(password)
+        avatar = f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(name)}"
+        
+        user_doc = {
+            'name': name,
+            'email': email,
+            'password_hash': password_hashed,
+            'provider': 'email',
+            'avatar': avatar,
+            'created_at': datetime.utcnow()
+        }
+        res = db.users.insert_one(user_doc)
+        
+        request.session['user'] = {
+            'id': str(res.inserted_id),
+            'name': name,
+            'email': email,
+            'provider': 'email',
+            'avatar': avatar
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'user': request.session['user']
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def auth_login_api(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    try:
+        data = json.loads(request.body)
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '').strip()
+        
+        if not email or not password:
+            return JsonResponse({'error': 'Missing Email or Password'}, status=400)
+            
+        db = get_db()
+        user = db.users.find_one({'email': email})
+        
+        if not user:
+            return JsonResponse({'error': 'Invalid email address or password'}, status=401)
+            
+        if not verify_password(user.get('password_hash', ''), password):
+            return JsonResponse({'error': 'Invalid email address or password'}, status=401)
+            
+        request.session['user'] = {
+            'id': str(user['_id']),
+            'name': user.get('name', 'Developer'),
+            'email': user['email'],
+            'provider': user.get('provider', 'email'),
+            'avatar': user.get('avatar', f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(user.get('name', 'Developer'))}")
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'user': request.session['user']
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def auth_user_api(request):
+    user = request.session.get('user')
+    if user:
+        return JsonResponse({'authenticated': True, 'user': user})
+    return JsonResponse({'authenticated': False})
+
+def logout_view(request):
+    request.session.flush()
+    return redirect('/login/?msg=Logged out successfully.')
+
+def github_oauth_start(request):
+    from dotenv import load_dotenv
+    from pathlib import Path
+    load_dotenv(Path(__file__).resolve().parent.parent / '.env', override=True)
+    
+    client_id = os.getenv('GITHUB_CLIENT_ID', '').strip().strip('"\'')
+    if not client_id:
+        return redirect('/login/?msg=Please configure GITHUB_CLIENT_ID in your dashboard/.env file.')
+    redirect_uri = request.build_absolute_uri('/auth/github/callback/')
+    scope = 'user:email'
+    oauth_url = f"https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={urllib.parse.quote(redirect_uri)}&scope={scope}"
+    return redirect(oauth_url)
+
+def github_oauth_callback(request):
+    from dotenv import load_dotenv
+    from pathlib import Path
+    load_dotenv(Path(__file__).resolve().parent.parent / '.env', override=True)
+    
+    code = request.GET.get('code')
+    if not code:
+        return redirect('/login/?msg=GitHub authentication failed.')
+    
+    client_id = os.getenv('GITHUB_CLIENT_ID', '').strip().strip('"\'')
+    client_secret = os.getenv('GITHUB_CLIENT_SECRET', '').strip().strip('"\'') 
+    
+    try:
+        token_url = "https://github.com/login/oauth/access_token"
+        req_data = urllib.parse.urlencode({
+            'client_id': client_id,
+            'client_secret': client_secret,
+            'code': code
+        }).encode('utf-8')
+        
+        req = urllib.request.Request(token_url, data=req_data, headers={'Accept': 'application/json'})
+        with urllib.request.urlopen(req) as resp:
+            token_data = json.loads(resp.read().decode('utf-8'))
+            
+        access_token = token_data.get('access_token')
+        if not access_token:
+            return redirect('/login/?msg=Failed to obtain GitHub access token.')
+            
+        user_req = urllib.request.Request("https://api.github.com/user", headers={
+            'Authorization': f'token {access_token}',
+            'User-Agent': 'SmartBot-Tg-Dashboard'
+        })
+        with urllib.request.urlopen(user_req) as u_resp:
+            gh_user = json.loads(u_resp.read().decode('utf-8'))
+            
+        email = gh_user.get('email')
+        if not email:
+            email = f"{gh_user['login']}@users.noreply.github.com"
+            
+        name = gh_user.get('name') or gh_user.get('login')
+        avatar = gh_user.get('avatar_url') or f"https://github.com/{gh_user.get('login')}.png"
+        
+        db = get_db()
+        user_doc = db.users.find_one({'email': email})
+        if not user_doc:
+            user_doc = {
+                'name': name,
+                'email': email,
+                'provider': 'github',
+                'github_login': gh_user.get('login'),
+                'avatar': avatar,
+                'created_at': datetime.utcnow()
+            }
+            res = db.users.insert_one(user_doc)
+            user_id = str(res.inserted_id)
+        else:
+            user_id = str(user_doc['_id'])
+            db.users.update_one({'_id': user_doc['_id']}, {'$set': {'avatar': avatar, 'name': name}})
+            
+        request.session['user'] = {
+            'id': user_id,
+            'name': name,
+            'email': email,
+            'provider': 'github',
+            'avatar': avatar
+        }
+        from django.http import HttpResponse
+        return HttpResponse(
+            '<html><body><script>'
+            'localStorage.setItem("isLoggedIn","true");'
+            'window.location.href="/dashboard/";'
+            '</script></body></html>',
+            content_type='text/html'
+        )
+    except Exception as e:
+        return redirect(f'/login/?msg=GitHub Auth Error: {urllib.parse.quote(str(e))}')
+
+def get_google_redirect_uri(request):
+    uri = request.build_absolute_uri('/auth/google/callback/')
+    return uri.replace('127.0.0.1:8000', 'localhost:8000')
+
+def google_oauth_start(request):
+    from dotenv import load_dotenv
+    from pathlib import Path
+    load_dotenv(Path(__file__).resolve().parent.parent / '.env', override=True)
+    
+    client_id = os.getenv('GOOGLE_CLIENT_ID', '').strip().strip('"\'')
+    if not client_id:
+        return redirect('/login/?msg=Please configure GOOGLE_CLIENT_ID in your dashboard/.env file.')
+    redirect_uri = get_google_redirect_uri(request)
+    scope = 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email'
+    oauth_url = (
+        f"https://accounts.google.com/o/oauth2/v2/auth?"
+        f"client_id={urllib.parse.quote(client_id)}&redirect_uri={urllib.parse.quote(redirect_uri)}&"
+        f"response_type=code&scope={urllib.parse.quote(scope)}&access_type=offline"
+    )
+    return redirect(oauth_url)
+
+def google_oauth_callback(request):
+    from dotenv import load_dotenv
+    from pathlib import Path
+    load_dotenv(Path(__file__).resolve().parent.parent / '.env', override=True)
+
+    code = request.GET.get('code')
+    if not code:
+        return redirect('/login/?msg=Google authentication failed.')
+    
+    client_id = os.getenv('GOOGLE_CLIENT_ID', '').strip().strip('"\'')
+    client_secret = os.getenv('GOOGLE_CLIENT_SECRET', '').strip().strip('"\'')
+    redirect_uri = get_google_redirect_uri(request)
+    
+    try:
+        token_url = "https://oauth2.googleapis.com/token"
+        req_data = urllib.parse.urlencode({
+            'code': code,
+            'client_id': client_id,
+            'client_secret': client_secret,
+            'redirect_uri': redirect_uri,
+            'grant_type': 'authorization_code'
+        }).encode('utf-8')
+        
+        req = urllib.request.Request(token_url, data=req_data, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        with urllib.request.urlopen(req) as resp:
+            token_data = json.loads(resp.read().decode('utf-8'))
+            
+        access_token = token_data.get('access_token')
+        if not access_token:
+            return redirect('/login/?msg=Failed to obtain Google access token.')
+            
+        user_req = urllib.request.Request("https://www.googleapis.com/oauth2/v2/userinfo", headers={
+            'Authorization': f'Bearer {access_token}'
+        })
+        with urllib.request.urlopen(user_req) as u_resp:
+            g_user = json.loads(u_resp.read().decode('utf-8'))
+            
+        email = g_user.get('email')
+        name = g_user.get('name', 'Google User')
+        avatar = g_user.get('picture') or f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(name)}"
+        
+        db = get_db()
+        user_doc = db.users.find_one({'email': email})
+        if not user_doc:
+            user_doc = {
+                'name': name,
+                'email': email,
+                'provider': 'google',
+                'avatar': avatar,
+                'created_at': datetime.utcnow()
+            }
+            res = db.users.insert_one(user_doc)
+            user_id = str(res.inserted_id)
+        else:
+            user_id = str(user_doc['_id'])
+            db.users.update_one({'_id': user_doc['_id']}, {'$set': {'avatar': avatar, 'name': name}})
+            
+        request.session['user'] = {
+            'id': user_id,
+            'name': name,
+            'email': email,
+            'provider': 'google',
+            'avatar': avatar
+        }
+        request.session.modified = True
+        print(f"✅ Google OAuth Success for user: {email} ({name})")
+        # Return HTML that sets localStorage then redirects (syncs client+server auth)
+        from django.http import HttpResponse
+        return HttpResponse(
+            '<html><body><script>'
+            'localStorage.setItem("isLoggedIn","true");'
+            'window.location.href="/dashboard/";'
+            '</script></body></html>',
+            content_type='text/html'
+        )
+    except Exception as e:
+        err_msg = str(e)
+        if hasattr(e, 'read'):
+            try:
+                err_body = e.read().decode('utf-8')
+                print(f"❌ Google OAuth HTTP Error Body: {err_body}")
+                err_msg += f" - {err_body}"
+            except Exception:
+                pass
+        print(f"❌ Google OAuth Exception: {err_msg}")
+        return redirect(f'/login/?msg=Google Auth Error: {urllib.parse.quote(err_msg)}')

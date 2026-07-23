@@ -124,9 +124,16 @@
 <body class="min-h-screen flex bg-[#E0E5EC]">
 
   <script>
-    if (localStorage.getItem('isLoggedIn') !== 'true') {
-      window.location.href = '/login/?msg=Please sign in to access the Control Hub.';
-    }
+    // Check server session for auth (supports OAuth + email login)
+    fetch('/api/auth/user').then(r => r.json()).then(data => {
+      if (!data.authenticated && localStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = '/login/?msg=Please sign in to access the Control Hub.';
+      }
+    }).catch(() => {
+      if (localStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = '/login/?msg=Please sign in to access the Control Hub.';
+      }
+    });
   </script>
 
   <!-- Left Sidebar (Hover Expandable) -->
@@ -170,7 +177,7 @@
     </div>
 
     <!-- Bottom Logout -->
-    <button id="logout-btn" class="flex items-center gap-4 w-full p-3 rounded-2xl transition-all focus:outline-none text-rose-500 hover:text-rose-600 hover:shadow-neo-lifted active:shadow-neo-inset">
+    <button id="logout-btn" onclick="window.location.href='/logout/'" class="flex items-center gap-4 w-full p-3 rounded-2xl transition-all focus:outline-none text-rose-500 hover:text-rose-600 hover:shadow-neo-lifted active:shadow-neo-inset">
       <i data-lucide="log-out" class="w-5 h-5 flex-shrink-0"></i>
       <span class="text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Sign Out</span>
     </button>
@@ -201,6 +208,16 @@
           <span class="w-2 h-2 rounded-full bg-neumorphic-accent animate-pulse"></span>
           System Online
         </span>
+        <div id="user-profile-badge" class="px-3.5 py-1.5 bg-[#E0E5EC] neo-inset text-xs font-semibold text-neumorphic-fg rounded-2xl flex items-center gap-2.5">
+          <img id="user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Admin" class="w-6 h-6 rounded-full bg-white/50 border border-gray-300/40" />
+          <div class="text-left">
+            <div id="user-name" class="font-bold text-[11px] leading-tight">Developer</div>
+            <div id="user-email" class="text-[9px] text-neumorphic-muted leading-tight">admin@smartbot.tg</div>
+          </div>
+          <a href="/logout/" class="ml-1 text-rose-500 hover:text-rose-600 transition-colors p-1" title="Sign Out">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>
       </div>
     </header>
 
@@ -883,6 +900,25 @@
     let selectedFeatures = new Set(['muting', 'filters', 'welcome']);
     let botTemplatesCache = {}; // Cache of local selections per bot hash
     const GITHUB_PR_PLUGINS = ['pr_review', 'pr_description', 'code_improvements', 'security_audit'];
+
+    async function checkAuthSession() {
+      try {
+        const res = await fetch('/api/auth/user');
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          const u = data.user;
+          const nameEl = document.getElementById('user-name');
+          const emailEl = document.getElementById('user-email');
+          const avatarEl = document.getElementById('user-avatar');
+          if (nameEl) nameEl.textContent = u.name || u.email;
+          if (emailEl) emailEl.textContent = u.email;
+          if (avatarEl && u.avatar) avatarEl.src = u.avatar;
+        }
+      } catch (e) {
+        console.warn('Session check warning:', e);
+      }
+    }
+    checkAuthSession();
 
     // Setting Switch Toggle Action
     window.toggleSetting = function(btn) {
